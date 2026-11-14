@@ -1,193 +1,193 @@
 # status: draft
 # owner: Agent C
 # depends_on: [simulation/scenarios/operational_scenarios.md, docs/adr/FMEA_KRITIK_MODULLER.md, docs/architecture/SAFETY_STATE_MACHINE.md, domain/environment/uncertainty_policy.md, config/tbd_register.md]
-# open_items: [TBD-SIM-001..TBD-SIM-012 — araç parametreleri §10 bekleniyor; HIL donanım listesi P2 kapısına bağlı]
+# open_items: [TBD-SIM-001..TBD-SIM-012 — vehicle parameters awaiting §10; HIL hardware list gated on P2]
 
-# Dijital İkiz ve Simülatör Tasarımı — LUNA-AI v1.0
+# Digital Twin and Simulator Design — LUNA-AI v1.0
 
-**Belge ID:** LUNA-AI-SIM-001  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Bağlı Belgeler:** LUNA-AI-ARCH-001, LUNA-AI-FMEA-001, operational_scenarios.md (SC-001..SC-009)
+**Document ID:** LUNA-AI-SIM-001  
+**Version:** 0.1-draft  
+**Date:** 2026-11-14  
+**Related Documents:** LUNA-AI-ARCH-001, LUNA-AI-FMEA-001, operational_scenarios.md (SC-001..SC-009)
 
 ---
 
-## 1. Çevresel Model (Environment Model)
+## 1. Environment Model
 
-### 1.1 Ay Yerçekimi ve Yüzey Modeli
+### 1.1 Lunar Gravity and Surface Model
 
-Ay yerçekimi sabiti **g_moon = 1.62 m/s²** (referans: IAU lunar gravity model).
+Lunar gravitational constant **g_moon = 1.62 m/s²** (reference: IAU lunar gravity model).
 
-| Parametre | Değer | Kaynak / Not |
+| Parameter | Value | Source / Note |
 |-----------|-------|--------------|
-| Yerçekimi ivmesi | 1.62 m/s² | IAU sabit |
-| Yüzey ivme yereli sapması | ±0.01 m/s² (ekvator-kutup) | LRO veri referansı |
-| Yüzey yoğunluğu (regolith) | TBD-SIM-001 (source: §10 arazi modeli) | Tekerlek-toprak etkileşim modeli için |
-| DEM çözünürlüğü | TBD-SIM-002 (source: §10 bölge seçimi) | LRO LOLA veya eşdeğeri |
-| Hedef bölge referans koordinatı | TBD-TIME-001 bağımlı | Görev otoritesi onayı |
+| Gravitational acceleration | 1.62 m/s² | IAU constant |
+| Surface acceleration local deviation | ±0.01 m/s² (equator-pole) | LRO data reference |
+| Surface density (regolith) | TBD-SIM-001 (source: §10 terrain model) | For wheel-soil interaction model |
+| DEM resolution | TBD-SIM-002 (source: §10 region selection) | LRO LOLA or equivalent |
+| Target region reference coordinate | TBD-TIME-001 dependent | Mission authority approval |
 
-**Yüzey Model Entegrasyonu:**
+**Surface Model Integration:**
 
-Dijital yükseklik modeli (DEM) terrain_analyzer modülü (`data-platform/processing/terrain_analyzer.py`) üzerinden yüklenir. Simülatör DEM'i düzlemsel yaklaşımdan gerçek nokta-koordinat tablasına yükseltir:
+Digital elevation model (DEM) is loaded via the terrain_analyzer module (`data-platform/processing/terrain_analyzer.py`). The simulator upgrades DEM from a planar approximation to a real coordinate grid:
 
 ```
 TerrainGrid:
   resolution_m: TBD-SIM-002
   origin_lat, origin_lon: TBD-TIME-001
-  elevation_data: float32[N, M]   # LRO LOLA veya eş değer
-  slope_map: float32[N, M]        # eğim haritası (°)
-  roughness_map: float32[N, M]    # pürüzlülük indeksi
+  elevation_data: float32[N, M]   # LRO LOLA or equivalent
+  slope_map: float32[N, M]        # slope map (°)
+  roughness_map: float32[N, M]    # roughness index
 ```
 
-### 1.2 Güneş Işınımı Modeli
+### 1.2 Solar Irradiance Model
 
-| Parametre | Değer | Not |
+| Parameter | Value | Note |
 |-----------|-------|-----|
-| Güneş sabiti (1 AU) | 1361 W/m² | ASTM E490 |
-| Ay mesafesi düzeltmesi | ±3.3% (perigee/apogee) | NASA ephemeris |
-| Panel verim katsayısı | TBD-SOL-001 bağımlı (§10) | —  |
-| Panel yönelimi (servo açısı) | Araçtan gelen yönelim verisi + güneş açısı | ICD-003 vehicle_pose |
-| Gölge modeli | Ray-casting üzerinde DEM tabanlı | PSR = 0 W/m² (kalıcı gölge) |
+| Solar constant (1 AU) | 1361 W/m² | ASTM E490 |
+| Lunar distance correction | ±3.3% (perigee/apogee) | NASA ephemeris |
+| Panel efficiency factor | TBD-SOL-001 dependent (§10) | — |
+| Panel orientation (servo angle) | Vehicle attitude data + solar angle | ICD-003 vehicle_pose |
+| Shadow model | DEM-based ray-casting | PSR = 0 W/m² (permanent shadow) |
 
-Işınım modeli formülü:
+Irradiance model formula:
 
 ```
 P_panel(t) = P_nominal × cos(θ_incidence(t)) × η_cell × (1 - α_dust)
-  θ_incidence: panel normali ile güneş vektörü arası açı
-  η_cell: TBD-SOL-001 (hücre verimi, §10)
-  α_dust: TBD-SIM-003 (toz kaplama kaybı faktörü, §10 ortam analizi)
+  θ_incidence: angle between panel normal and solar vector
+  η_cell: TBD-SOL-001 (cell efficiency, §10)
+  α_dust: TBD-SIM-003 (dust coverage loss factor, §10 environment analysis)
 ```
 
-### 1.3 Termal Ortam Modeli
+### 1.3 Thermal Environment Model
 
-Ay termal ortamının üç bölgesi simülatörde ayrı modellenir:
+Three zones of the lunar thermal environment are modelled separately in the simulator:
 
-| Bölge | Yüzey Sıcaklığı | Simülasyon Yaklaşımı |
+| Zone | Surface Temperature | Simulation Approach |
 |-------|-----------------|----------------------|
-| Güneşli yüzey | ~+120 °C | Stefan-Boltzmann ışınım + güneş akısı; termal denge iterasyonu |
-| Karanlık/gölge | ~-173 °C | Sadece ışınım kaybı; regolith termal inersi |
-| PSR (kalıcı karanlık) | -200 °C ile -173 °C arası | Kalıcı gölge; yer ısısı ihmali (düşük etki) |
+| Sunlit surface | ~+120 °C | Stefan-Boltzmann radiation + solar flux; thermal equilibrium iteration |
+| Dark/shadow | ~-173 °C | Radiation loss only; regolith thermal inertia |
+| PSR (permanent darkness) | -200 °C to -173 °C | Permanent shadow; geothermal heat ignored (low impact) |
 
 ```
 T_surface(t) = f(solar_flux, albedo, emissivity, regolith_thermal_inertia)
-  albedo: TBD-SIM-004 (source: §10 bölgeye özgü ölçüm)
-  emissivity: ~0.95 (ay regolith ön değeri)
-  thermal_inertia: TBD-SIM-005 (source: §10 jeoloji analizi)
+  albedo: TBD-SIM-004 (source: §10 region-specific measurement)
+  emissivity: ~0.95 (lunar regolith default value)
+  thermal_inertia: TBD-SIM-005 (source: §10 geological analysis)
 ```
 
-Araç termal modeli ile yüzey modeli arasındaki ısı değişimi: §2.2 Termal Modeli.
+Heat exchange between vehicle thermal model and surface model: §2.2 Thermal Model.
 
-### 1.4 Arazi-Araç Etkileşimi
+### 1.4 Terrain-Vehicle Interaction
 
-| Etki | Model | Parametre |
+| Effect | Model | Parameter |
 |------|-------|-----------|
-| Tekerlek kayması | SCM (Soil Contact Mechanics) basitleştirilmiş | TBD-SIM-001 (zemin tipi + yoğunluk) |
-| Engel çarpışması | AABB (Axis-Aligned Bounding Box) + çözüm | TBD-MAS-001 (araç kütlesi) |
-| Eğimli arazi tepkisi | Yerçekimi kuvveti + normal kuvvet vektör ayrıştırması | g_moon = 1.62 m/s² |
-| Tekerlek-zemin tork | Basit rolling resistance modeli | TBD-SIM-001 |
+| Wheel slip | Simplified SCM (Soil Contact Mechanics) | TBD-SIM-001 (soil type + density) |
+| Obstacle collision | AABB (Axis-Aligned Bounding Box) + resolution | TBD-MAS-001 (vehicle mass) |
+| Sloped terrain response | Gravity force + normal force vector decomposition | g_moon = 1.62 m/s² |
+| Wheel-ground torque | Simple rolling resistance model | TBD-SIM-001 |
 
 ---
 
-## 2. Araç Modeli (Vehicle Model)
+## 2. Vehicle Model
 
-### 2.1 Güç Modeli
+### 2.1 Power Model
 
-Güç modeli üç alt modülden oluşur:
+The power model consists of three sub-modules:
 
-**Panel Üretimi:**
+**Panel Generation:**
 ```
-P_generated(t) = P_panel(t)  [§1.2 ışınım modelinden]
+P_generated(t) = P_panel(t)  [from §1.2 irradiance model]
 ```
 
-**Batarya Modeli:**
+**Battery Model:**
 ```
 SoC(t+dt) = SoC(t) + (P_generated - P_load) × dt / Capacity_Wh
   Capacity_Wh: TBD-BAT-001 (§10)
-  SoC_min: TBD-BAT-002 bağımlı (kimyaya göre cut-off voltaj)
-  SoC_max: 100% (şarj regülatörü sınırı)
-  Coulombic_efficiency: TBD-BAT-002 (kimya §10)
-  Capacity_degradation: SoH × Capacity_nominal (SoH: dijital ikiz §3.3)
+  SoC_min: TBD-BAT-002 dependent (cut-off voltage per chemistry)
+  SoC_max: 100% (charge regulator limit)
+  Coulombic_efficiency: TBD-BAT-002 (chemistry §10)
+  Capacity_degradation: SoH × Capacity_nominal (SoH: digital twin §3.3)
 ```
 
-**Yük Tüketimi:**
+**Load Consumption:**
 
-| Alt Sistem | Nominal Güç (W) | Kaynak |
+| Subsystem | Nominal Power (W) | Source |
 |------------|-----------------|--------|
-| OBC + Navigasyon işlemcisi | TBD-SIM-006 | §10 güç bütçesi |
-| Motor sürücüleri (hareket halinde) | TBD-SIM-007 | §10 güç bütçesi |
-| Isıtıcılar (nominal) | TBD-SIM-008 | §10 termal bütçe |
-| Haberleşme (HGA aktif) | TBD-SIM-009 | §10 güç bütçesi |
-| Bilimsel sensörler | TBD-SIM-010 | §10 güç bütçesi |
-| Beacon modu (SURVIVAL) | TBD-SIM-009 / 10 | §10 minimum güç |
+| OBC + Navigation processor | TBD-SIM-006 | §10 power budget |
+| Motor drivers (while moving) | TBD-SIM-007 | §10 power budget |
+| Heaters (nominal) | TBD-SIM-008 | §10 thermal budget |
+| Communication (HGA active) | TBD-SIM-009 | §10 power budget |
+| Science sensors | TBD-SIM-010 | §10 power budget |
+| Beacon mode (SURVIVAL) | TBD-SIM-009 / 10 | §10 minimum power |
 
-### 2.2 Termal Model
+### 2.2 Thermal Model
 
 ```
 dT_component/dt = (Q_heater + Q_solar_input - Q_radiation - Q_conduction) / (m × Cp)
-  m: TBD-MAS-001 (bileşen kütlesi, §10)
-  Cp: TBD-THM-001 (ısıl kapasite, §10)
-  Q_heater: ısıtıcı güç (termal kontrol sinyalinden)
+  m: TBD-MAS-001 (component mass, §10)
+  Cp: TBD-THM-001 (thermal capacity, §10)
+  Q_heater: heater power (from thermal control signal)
   Q_radiation: σ × ε × A × (T_component⁴ - T_env⁴)
-  Q_conduction: k × A × (T1 - T2) / L   [bileşenler arası]
+  Q_conduction: k × A × (T1 - T2) / L   [between components]
 ```
 
-**Kritik Bileşen Termal Parametreleri:**
+**Critical Component Thermal Parameters:**
 
-| Bileşen | Nominal Çalışma Aralığı (°C) | Kritik Alt Sınır | Kaynak |
+| Component | Nominal Operating Range (°C) | Critical Lower Limit | Source |
 |---------|------------------------------|------------------|--------|
-| Batarya | TBD-THM-001 | TBD-THM-003 | §10 termal |
-| OBC işlemcisi | TBD-THM-001 | TBD-THM-003 | §10 termal |
-| IMU | TBD-THM-001 | TBD-THM-003 | §10 termal |
-| RF modülü | TBD-THM-001 | TBD-THM-003 | §10 termal |
+| Battery | TBD-THM-001 | TBD-THM-003 | §10 thermal |
+| OBC processor | TBD-THM-001 | TBD-THM-003 | §10 thermal |
+| IMU | TBD-THM-001 | TBD-THM-003 | §10 thermal |
+| RF module | TBD-THM-001 | TBD-THM-003 | §10 thermal |
 
-### 2.3 Kinematik Model
+### 2.3 Kinematic Model
 
-Araç diferansiyel tahrik modeli:
+Vehicle differential drive model:
 
 ```
-Diferansiyel Sürüş Kinematiği:
+Differential Drive Kinematics:
   v_linear = (v_right + v_left) / 2
   ω_angular = (v_right - v_left) / wheel_base
-  wheel_base: TBD-MAS-001 bağımlı (araç genişliği, §10)
+  wheel_base: TBD-MAS-001 dependent (vehicle width, §10)
 
-Pozisyon Güncellemesi (Euler integrasyon, dt = 50 ms):
+Position Update (Euler integration, dt = 50 ms):
   x(t+dt) = x(t) + v_linear × cos(θ) × dt
   y(t+dt) = y(t) + v_linear × sin(θ) × dt
   θ(t+dt) = θ(t) + ω_angular × dt
 
-Tekerlek Dinamiği:
-  v_wheel_max: TBD-TRV-001 bağımlı (nominal hız §10)
+Wheel Dynamics:
+  v_wheel_max: TBD-TRV-001 dependent (nominal speed §10)
   max_slope: TBD-TRV-002 (°, §10)
-  traction_limit: TBD-SIM-001 bağımlı (zemin modeli)
+  traction_limit: TBD-SIM-001 dependent (ground model)
 ```
 
-### 2.4 Sensör Modeli
+### 2.4 Sensor Model
 
-**IMU Gürültü Modeli:**
+**IMU Noise Model:**
 
 ```
 a_measured = a_true + bias_a + noise_a
-  bias_a ~ N(0, σ_bias)     σ_bias: TBD-SNS-002 (§10 IMU parça)
-  noise_a ~ N(0, σ_noise)   σ_noise: TBD-SNS-002 (§10 IMU parça)
+  bias_a ~ N(0, σ_bias)     σ_bias: TBD-SNS-002 (§10 IMU component)
+  noise_a ~ N(0, σ_noise)   σ_noise: TBD-SNS-002 (§10 IMU component)
 
 ω_measured = ω_true + bias_g + noise_g
   bias_g: TBD-SNS-002
   noise_g: TBD-SNS-002
-  drift_rate: TBD-SNS-002 (°/h — parça seçimi ile kesinleşecek)
+  drift_rate: TBD-SNS-002 (°/h — will be confirmed with component selection)
 ```
 
-**Kamera FOV Modeli:**
+**Camera FOV Model:**
 
 ```
 Camera:
   horizontal_fov: TBD-SNS-001 (°)
   vertical_fov: TBD-SNS-001 (°)
   resolution: TBD-SNS-001 (px × px)
-  noise_sigma: TBD-SNS-001 (SNR modeli)
+  noise_sigma: TBD-SNS-001 (SNR model)
   landmark_detection_range_m: TBD-SNS-001
 ```
 
-**LiDAR Nokta Bulutu Modeli:**
+**LiDAR Point Cloud Model:**
 
 ```
 LiDAR:
@@ -195,87 +195,87 @@ LiDAR:
   angular_resolution: TBD-SNS-001 (°)
   point_cloud_rate_hz: TBD-SNS-001
   range_noise_sigma_m: TBD-SNS-001
-  dropout_probability: TBD-SIM-003 (toz modeli etkisi)
+  dropout_probability: TBD-SIM-003 (dust model effect)
 ```
 
-**Odometry Modeli:**
+**Odometry Model:**
 
 ```
 odometry_error:
   sigma_odo_distance: TBD-SNS-003 (§10 — %/m)
   sigma_odo_heading: TBD-SNS-003 (°/m)
-  slip_model: TBD-SIM-001 bağımlı (zemin modeli)
+  slip_model: TBD-SIM-001 dependent (ground model)
 ```
 
 ---
 
-## 3. Dijital İkiz (Digital Twin)
+## 3. Digital Twin
 
-### 3.1 Gerçek Telemetri ile Simülasyon Karşılaştırması
+### 3.1 Real Telemetry vs Simulation Comparison
 
-Dijital ikiz, gerçek araç telemetrisini paralel çalışan simülatör çıktısıyla karşılaştırır:
+The digital twin compares real vehicle telemetry against simulator output running in parallel:
 
 ```
-Karşılaştırma Metrikleri:
-  position_residual_m: |pos_real - pos_sim| (maks kabul: TBD-THM-002 bağımlı)
-  soc_residual_pct: |SoC_real - SoC_sim| (maks kabul: TBD-ENE-001)
-  temperature_residual_c: |T_real - T_sim| / komponent (maks kabul: TBD-THM-002)
+Comparison Metrics:
+  position_residual_m: |pos_real - pos_sim| (max accepted: TBD-THM-002 dependent)
+  soc_residual_pct: |SoC_real - SoC_sim| (max accepted: TBD-ENE-001)
+  temperature_residual_c: |T_real - T_sim| / component (max accepted: TBD-THM-002)
   nav_uncertainty_ratio: σ_pos_real / σ_pos_sim
 
-Anomali Tespiti:
-  residual > threshold → dijital ikiz uyarısı
-  → Parametre güncellemesi tetiklenir (§3.3)
-  → Yer segmentine bildirim (ICD-006 downlink)
+Anomaly Detection:
+  residual > threshold → digital twin alert
+  → Parameter update triggered (§3.3)
+  → Ground segment notification (ICD-006 downlink)
 ```
 
-### 3.2 Zaman İlerletilebilir Simülasyon
+### 3.2 Time-Accelerated Simulation
 
-Hızlandırılmış görev önizlemesi için simülatör gerçek zamanlı değil, belirlenmiş hız faktörünü destekler:
+For accelerated mission preview, the simulator supports a configurable speed factor rather than real-time:
 
 ```yaml
-# Simülasyon zaman parametreleri
+# Simulation time parameters
 time_acceleration_factor: [1x, 10x, 100x, 1000x]
-dt_physics_s: 0.05          # fizik motoru adım boyutu (sabit)
-dt_telemetry_log_s: 1.0     # telemetri kayıt adımı
-dt_snapshot_s: 60.0         # checkpoint kayıt aralığı
+dt_physics_s: 0.05          # physics engine step size (fixed)
+dt_telemetry_log_s: 1.0     # telemetry logging step
+dt_snapshot_s: 60.0         # checkpoint save interval
 
-# Zaman yönetimi
+# Time management
 mission_start_utc: TBD-TIME-001
-max_simulation_duration_h: TBD (görev senaryosuna göre)
+max_simulation_duration_h: TBD (depending on mission scenario)
 ```
 
-**Kullanım senaryoları:**
-- **Görev öncesi önizleme:** 100x hızda 72 saatlik yüzey keşfini ~43 dakikada simüle et.
-- **PSR operasyon planlama:** 10x hızda PSR giriş/çıkış enerjisi doğrulaması.
-- **Termal validasyon:** 1000x hızda bir lunar gece/gündüz döngüsünü ~90 saniyede simüle et.
+**Use cases:**
+- **Pre-mission preview:** Simulate 72-hour surface exploration in ~43 minutes at 100x speed.
+- **PSR operation planning:** PSR entry/exit energy validation at 10x speed.
+- **Thermal validation:** Simulate one lunar night/day cycle in ~90 seconds at 1000x speed.
 
-### 3.3 Parametre Güncelleme: Araç SoH Degradasyonu
+### 3.3 Parameter Update: Vehicle SoH Degradation
 
-State-of-Health (SoH) gerçek telemetri verisiyle güncellenir:
+State-of-Health (SoH) is updated with real telemetry data:
 
 ```python
-# SoH güncelleme döngüsü (konsept — simge kod)
+# SoH update loop (concept — pseudocode)
 class SoHUpdater:
     """
-    Gerçek telemetri ile simülatör parametrelerini senkronize eder.
+    Synchronises simulator parameters with real telemetry.
     """
     def update_battery_soh(self, real_capacity_wh: float, nominal_capacity_wh: float):
         """
         SoH = C_measured / C_nominal
-        Her şarj-deşarj döngüsünde güncellenir.
+        Updated on each charge-discharge cycle.
         """
         self.soh_battery = real_capacity_wh / nominal_capacity_wh  # 0.0–1.0
 
     def update_motor_efficiency(self, real_torque_nm: float, cmd_torque_nm: float):
-        """Motor mekanik verimi degradasyonu."""
+        """Motor mechanical efficiency degradation."""
         self.eta_motor = real_torque_nm / cmd_torque_nm
 
     def update_panel_efficiency(self, real_power_w: float, expected_power_w: float):
-        """Panel verimi: toz, radyasyon hasarı etkisi."""
+        """Panel efficiency: effect of dust, radiation damage."""
         self.eta_panel = real_power_w / expected_power_w
 
     def apply_to_simulator(self, sim: 'VehicleSimulator'):
-        """Güncel SoH değerlerini simülatör modellerine uygula."""
+        """Apply current SoH values to simulator models."""
         sim.battery.capacity_wh *= self.soh_battery
         sim.motor.efficiency = self.eta_motor
         sim.solar_panel.efficiency = self.eta_panel
@@ -283,42 +283,42 @@ class SoHUpdater:
 
 ---
 
-## 4. Senaryo Çalıştırıcısı (Scenario Runner)
+## 4. Scenario Runner
 
-### 4.1 Senaryo Formatı (YAML)
+### 4.1 Scenario Format (YAML)
 
-Her senaryo YAML dosyası üç ana bölümden oluşur: başlangıç koşulları, olaylar, bitiş kriterleri.
+Each scenario YAML file consists of three main sections: initial conditions, events, termination criteria.
 
 ```yaml
-# Senaryo YAML Şeması — LUNA-AI v1.0
+# Scenario YAML Schema — LUNA-AI v1.0
 scenario_id: "SC-XXX"
-name: "Senaryo Adı"
-description: "Kısa açıklama"
+name: "Scenario Name"
+description: "Brief description"
 version: "1.0"
 created: "YYYY-MM-DD"
 references:
   - operational_scenarios: "SC-XXX"
   - safety_state_machine: "LUNA-AI-ARCH-001"
 
-# --- Başlangıç Koşulları ---
+# --- Initial Conditions ---
 initial_conditions:
   position:
     x_m: 0.0
     y_m: 0.0
-    z_m: 0.0            # DEM'den hesaplanır
-    uncertainty_m: 0.3  # başlangıç konum belirsizliği
+    z_m: 0.0            # calculated from DEM
+    uncertainty_m: 0.3  # initial position uncertainty
   heading_deg: 0.0
   velocity_ms: 0.0
   soc_percent: 85.0
   safety_state: "NOMINAL"
   mission_phase: "SURFACE_EXPLORATION"
   thermal_state:
-    battery_temp_c: TBD    # §10 termal model
+    battery_temp_c: TBD    # §10 thermal model
     obc_temp_c: TBD
     nominal_all: true
-  time_utc: TBD-TIME-001   # görev başlangıç tarihi
+  time_utc: TBD-TIME-001   # mission start date
 
-# --- Olaylar (zaman veya koşul tetiklemeli) ---
+# --- Events (time or condition triggered) ---
 events:
   - id: "EVT-001"
     trigger:
@@ -326,9 +326,9 @@ events:
       time_offset_s: 0.0
     action:
       type: "waypoint_set"
-      waypoints: []          # koordinat listesi
+      waypoints: []          # coordinate list
 
-# --- Bitiş Kriterleri ---
+# --- Termination Criteria ---
 termination_criteria:
   success:
     - condition: "all_waypoints_reached"
@@ -342,88 +342,88 @@ termination_criteria:
     - condition: "max_time_exceeded"
       max_duration_s: TBD
 
-# --- Kabul Kriterleri ---
+# --- Acceptance Criteria ---
 acceptance_criteria:
   - id: "AC-001"
-    description: "Tüm waypoint'lere ±1m içinde ulaşıldı"
+    description: "All waypoints reached within ±1m"
   - id: "AC-002"
-    description: "SoC hiçbir zaman %10'un altına düşmedi"
+    description: "SoC never fell below 10%"
   - id: "AC-003"
-    description: "Nav belirsizliği 1.0m RMS'i aşmadı"
+    description: "Nav uncertainty did not exceed 1.0m RMS"
 ```
 
-### 4.2 Mevcut Senaryolarla Tutarlılık
+### 4.2 Consistency with Existing Scenarios
 
-`simulation/scenarios/operational_scenarios.md` (SC-001..SC-009) ile karşılık tablosu:
+Correspondence table with `simulation/scenarios/operational_scenarios.md` (SC-001..SC-009):
 
-| Operasyonel Senaryo | YAML Dosyası | Test Türü |
+| Operational Scenario | YAML File | Test Type |
 |---------------------|--------------|-----------|
-| SC-001 (Normal Keşif) | `nominal_surface_exploration.yaml` | SIL |
-| SC-002 (Link Kaybı) | `comm_loss_surface.yaml`, `comm_loss_psr.yaml` | SIL |
-| SC-003 (PSR Enerji Düşüşü) | `psr_energy_emergency.yaml` | SIL |
-| SC-004 (Lokalizasyon Kaybı) | `localization_loss_recovery.yaml` | SIL |
-| SC-005 (Safe Haven Erişilemiyor) | `safe_haven_blocked.yaml` | SIL |
-| SC-006 (Termal Limit İhlali) | `thermal_critical.yaml` | SIL |
-| SC-007 (Uzun İletişim Kesintisi) | `long_comm_outage.yaml` | SIL |
+| SC-001 (Nominal Exploration) | `nominal_surface_exploration.yaml` | SIL |
+| SC-002 (Link Loss) | `comm_loss_surface.yaml`, `comm_loss_psr.yaml` | SIL |
+| SC-003 (PSR Energy Drop) | `psr_energy_emergency.yaml` | SIL |
+| SC-004 (Localisation Loss) | `localization_loss_recovery.yaml` | SIL |
+| SC-005 (Safe Haven Unreachable) | `safe_haven_blocked.yaml` | SIL |
+| SC-006 (Thermal Limit Violation) | `thermal_critical.yaml` | SIL |
+| SC-007 (Long Communication Outage) | `long_comm_outage.yaml` | SIL |
 | SC-009 (Observer Height) | `observer_height_sensitivity.yaml` | Analysis + SIL |
 
-### 4.3 Nominal Görev Senaryosu
+### 4.3 Nominal Mission Scenario
 
-Bak: `simulation/scenarios/example_scenario.yaml` (bu belgede Ek A).
+See: `simulation/scenarios/example_scenario.yaml` (Appendix A of this document).
 
 ---
 
-## 5. Hata Enjeksiyonu (Fault Injection)
+## 5. Fault Injection
 
-### 5.1 Enjekte Edilebilir Hata Tipleri
+### 5.1 Injectable Fault Types
 
-| Hata ID | Tipi | Parametreler | FMEA Referansı |
+| Fault ID | Type | Parameters | FMEA Reference |
 |---------|------|--------------|----------------|
-| FI-001 | Sensör gürültüsü artışı (IMU) | scale_factor × σ_noise (ör: 5×) | FMEA-RPN-NAV-001 |
-| FI-002 | IMU bias kayması | bias_offset_dps (°/s) | FMEA-RPN-NAV-001 |
-| FI-003 | LiDAR toz filtresi (dropout artışı) | dropout_pct (%) | FMEA-RPN-NAV-002 |
-| FI-004 | Motor sıkışma (bir tekerlek) | wheel_id, stall_torque_nm | FMEA-RPN-MOT-001 |
-| FI-005 | Ani batarya kapasitesi düşüşü | delta_soc_pct (örn: -20%) | FMEA-RPN-PWR-001 (RPN:30) |
-| FI-006 | Link kaybı | duration_s | SC-002, SC-007 |
-| FI-007 | Isıtıcı açık devre | heater_id | FMEA-RPN-THM-001 (RPN:20) |
-| FI-008 | FDIR task freeze (watchdog testi) | freeze_duration_ms | FMEA-RPN-FDIR-001 |
-| FI-009 | EKF yanlış başlatma | initial_cov_scale (ör: 10×) | FMEA-RPN-NAV-003 |
-| FI-010 | PDU tek kanal kaybı | channel_id | redundancy_matrix SPF-001 |
+| FI-001 | Sensor noise increase (IMU) | scale_factor × σ_noise (e.g. 5×) | FMEA-RPN-NAV-001 |
+| FI-002 | IMU bias shift | bias_offset_dps (°/s) | FMEA-RPN-NAV-001 |
+| FI-003 | LiDAR dust filter (dropout increase) | dropout_pct (%) | FMEA-RPN-NAV-002 |
+| FI-004 | Motor stall (one wheel) | wheel_id, stall_torque_nm | FMEA-RPN-MOT-001 |
+| FI-005 | Sudden battery capacity drop | delta_soc_pct (e.g. -20%) | FMEA-RPN-PWR-001 (RPN:30) |
+| FI-006 | Link loss | duration_s | SC-002, SC-007 |
+| FI-007 | Heater open circuit | heater_id | FMEA-RPN-THM-001 (RPN:20) |
+| FI-008 | FDIR task freeze (watchdog test) | freeze_duration_ms | FMEA-RPN-FDIR-001 |
+| FI-009 | EKF wrong initialisation | initial_cov_scale (e.g. 10×) | FMEA-RPN-NAV-003 |
+| FI-010 | PDU single channel loss | channel_id | redundancy_matrix SPF-001 |
 
-### 5.2 FDIR Tepkisini Test Etme Yöntemi
+### 5.2 Method for Testing FDIR Response
 
 ```
-Adım 1: Nominal senaryo çalıştır → baseline oluştur (tüm metrikler)
-Adım 2: Hata enjekte et (FI-XXX parametreleri ile)
-Adım 3: FDIR tepki süresini ölç:
-         detection_latency_ms ≤ kabul kriteri (SC-004: < 5s)
-Adım 4: Durum geçişi doğrulaması:
-         güvenlik_durum_geçişi = beklenen_geçiş (ör: NOMINAL → CAUTION)
-Adım 5: Kurtarma testi:
-         recovery_süresi ≤ kabul kriteri
-Adım 6: Sonuç kaydı: hata_enjeksiyonu / FDIR_tepkisi / kurtarma / metrikler
+Step 1: Run nominal scenario → establish baseline (all metrics)
+Step 2: Inject fault (with FI-XXX parameters)
+Step 3: Measure FDIR response time:
+         detection_latency_ms ≤ acceptance criterion (SC-004: < 5s)
+Step 4: State transition validation:
+         safety_state_transition = expected_transition (e.g. NOMINAL → CAUTION)
+Step 5: Recovery test:
+         recovery_time ≤ acceptance criterion
+Step 6: Record result: fault_injection / FDIR_response / recovery / metrics
 ```
 
-**FDIR Test Metrikleri:**
+**FDIR Test Metrics:**
 
-| Metrik | Kabul Kriteri | Kaynak |
+| Metric | Acceptance Criterion | Source |
 |--------|---------------|--------|
-| Lokalizasyon kaybı tespit süresi | < 5 s | SC-004 |
-| HC-006 ihlali RETURN_REQUIRED geçiş süresi | < 5 s | SC-003 |
-| Termal kritik RETURN_REQUIRED geçiş süresi | < 5 s | SC-006 |
-| Motor sıkışma tespit süresi | < 500 ms | FMEA-RPN-MOT-001 |
-| Batarya anomali tespit süresi | < 2 s | FMEA-RPN-PWR-001 |
+| Localisation loss detection time | < 5 s | SC-004 |
+| HC-006 violation → RETURN_REQUIRED transition time | < 5 s | SC-003 |
+| Thermal critical → RETURN_REQUIRED transition time | < 5 s | SC-006 |
+| Motor stall detection time | < 500 ms | FMEA-RPN-MOT-001 |
+| Battery anomaly detection time | < 2 s | FMEA-RPN-PWR-001 |
 | FDIR HW watchdog kick miss → reset | < 30 s | SAFETY_STATE_MACHINE §3.1 |
 
-### 5.3 Regresyon Test Suite'i (Her PR)
+### 5.3 Regression Test Suite (Every PR)
 
-Her pull request CI pipeline'ında otomatik çalışan test suite'i:
+Test suite running automatically in CI pipeline on every pull request:
 
 ```yaml
-# regression_test_suite.yaml — CI tetiklemeli
+# regression_test_suite.yaml — CI triggered
 test_suite: "LUNA-AI Regression Tests v1.0"
 trigger: "every_PR"
-timeout_minutes: TBD-SIM-011   # §10 CI altyapısı kapasitesine göre
+timeout_minutes: TBD-SIM-011   # depends on §10 CI infrastructure capacity
 
 test_cases:
   - id: "RT-001"
@@ -434,25 +434,25 @@ test_cases:
 
   - id: "RT-002"
     scenario: "psr_energy_emergency.yaml"
-    fault_injection: "FI-005"   # Ani SoC düşüşü
+    fault_injection: "FI-005"   # Sudden SoC drop
     expected_result: "RETURN_REQUIRED_triggered"
     acceptance: "detection_latency < 5s"
 
   - id: "RT-003"
     scenario: "localization_loss_recovery.yaml"
-    fault_injection: "FI-001"   # IMU gürültü artışı
+    fault_injection: "FI-001"   # IMU noise increase
     expected_result: "CAUTION_then_recovery OR RETURN_REQUIRED"
     acceptance: "FDIR_state_matches_expected"
 
   - id: "RT-004"
     scenario: "comm_loss_psr.yaml"
-    fault_injection: "FI-006"   # Link kaybı
+    fault_injection: "FI-006"   # Link loss
     expected_result: "RETURN_REQUIRED_triggered"
     acceptance: "pre_planned_abort_activated"
 
   - id: "RT-005"
     scenario: "thermal_critical.yaml"
-    fault_injection: "FI-007"   # Isıtıcı açık devre
+    fault_injection: "FI-007"   # Heater open circuit
     expected_result: "CAUTION_then_RETURN_REQUIRED"
     acceptance: "heater_fallback_activated"
 
@@ -473,54 +473,54 @@ metrics_collected:
 
 ---
 
-## 6. SIL/HIL Stratejisi
+## 6. SIL/HIL Strategy
 
-### 6.1 SIL (Software-in-the-Loop) — P1 Aşaması
+### 6.1 SIL (Software-in-the-Loop) — P1 Phase
 
-SIL'de tüm araç yazılımı konak bilgisayarda çalışır; donanım yoktur. Çevresel ve araç modelleri bu belgede tanımlanmıştır.
+In SIL, all vehicle software runs on the host computer; no hardware is present. Environment and vehicle models are defined in this document.
 
-**SIL'de önce yürütülecek modüller:**
+**Modules to be executed first in SIL:**
 
-| Modül | SIL Önceliği | Neden SIL Önce |
+| Module | SIL Priority | Why SIL First |
 |-------|--------------|----------------|
-| FDIR durum makinesi | P1 — kritik | Formal doğrulama başlamadan HIL anlamlı değil |
-| Navigasyon EKF | P1 — kritik | Sensör füzyon algoritması donanımdan bağımsız |
-| Global planner (rota) | P1 | Hesaplama ağırlıklı; donanım bağımsız |
-| Power management mantığı | P1 | Enerji bütçe hesapları donanım bağımsız |
-| Thermal management mantığı | P1 | Kontrol döngüsü algoritmik |
-| Mission executive | P1 | Durum mantığı; ICD uyumluluğu |
-| Senaryo regresyon testleri | P1 | Her PR'da SIL ile çalışır |
+| FDIR state machine | P1 — critical | HIL is not meaningful before formal verification begins |
+| Navigation EKF | P1 — critical | Sensor fusion algorithm is hardware-independent |
+| Global planner (route) | P1 | Computation-heavy; hardware-independent |
+| Power management logic | P1 | Energy budget calculations are hardware-independent |
+| Thermal management logic | P1 | Control loop is algorithmic |
+| Mission executive | P1 | State logic; ICD compliance |
+| Scenario regression tests | P1 | Runs with SIL on every PR |
 
-### 6.2 HIL (Hardware-in-the-Loop) — P2/P3 Aşaması
+### 6.2 HIL (Hardware-in-the-Loop) — P2/P3 Phase
 
-HIL'de gerçek araç bilgisayarı (OBC + Navigasyon işlemcisi) simülatör ile gerçek zamanlı arayüzler üzerinden bağlanır.
+In HIL, the real vehicle computer (OBC + Navigation processor) connects to the simulator via real-time interfaces.
 
-**HIL gerektiren modüller:**
+**Modules requiring HIL:**
 
-| Modül | HIL Gerekçesi | P2/P3 |
+| Module | HIL Justification | P2/P3 |
 |-------|---------------|-------|
-| FDIR donanım watchdog | HW timer bağımsızlığı yalnızca gerçek HW'da test edilebilir | P2 |
-| FreeRTOS görev önceliklendirme | Gerçek RTOS zamanlama testleri | P2 |
-| IMU sensör arayüzü (SPI) | Gerçek sensör gürültüsü + timing | P2 |
-| Motor sürücü kontrol döngüsü | Gerçek CAN bus latency | P2 |
-| RF haberleşme zinciri | Gerçek CCSDS paket iletimi | P3 |
-| Güç dağıtım arayüzü (I2C/CAN) | Gerçek PDU komut gecikmesi | P3 |
-| Termal ısıtıcı donanım | Failback devre aktivasyon testi | P3 |
+| FDIR hardware watchdog | HW timer independence can only be tested on real HW | P2 |
+| FreeRTOS task prioritisation | Real RTOS scheduling tests | P2 |
+| IMU sensor interface (SPI) | Real sensor noise + timing | P2 |
+| Motor driver control loop | Real CAN bus latency | P2 |
+| RF communication chain | Real CCSDS packet transmission | P3 |
+| Power distribution interface (I2C/CAN) | Real PDU command delay | P3 |
+| Thermal heater hardware | Failback circuit activation test | P3 |
 
-**HIL Arayüz Köprüsü:**
+**HIL Interface Bridge:**
 
 ```
 SIL/HIL Bridge (simulation/digital-twin/sil_hil_bridge):
-  - Simülatör sensör çıktıları → Araç HW sensör arayüz formatına çevrilir
-  - Araç HW aktuatör komutları → Simülatör model girişlerine çevrilir
-  - Timing: 50 ms adım senkronizasyonu (ayarlanabilir)
-  - Protokol: TBD (§10 OBC arayüzü belirlendikten sonra)
+  - Simulator sensor outputs → converted to vehicle HW sensor interface format
+  - Vehicle HW actuator commands → converted to simulator model inputs
+  - Timing: 50 ms step synchronisation (adjustable)
+  - Protocol: TBD (after §10 OBC interface is confirmed)
 ```
 
 ---
 
-## Revizyon Geçmişi
+## Revision History
 
-| Versiyon | Tarih | Değişiklik |
+| Version | Date | Change |
 |----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — Agent C, C3 görevi |
+| 0.1 | 2026-11-14 | First draft — Agent C, C3 task |

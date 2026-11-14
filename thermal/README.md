@@ -1,5 +1,5 @@
 # thermal/
 
-Termal yönetim: sıcaklık izleme, ısıtıcı kontrolü, karanlık toleransı hesabı. Bkz. v1.0 §4.5, HC-007.
+Thermal management: temperature monitoring, heater control, darkness tolerance calculation. See v1.0 §4.5, HC-007.
 
-Not: Termal model parametreleri §10 araç verisi bekleniyor (TBD); VIPER parametresi kullanılıyorsa §6 uyarısına bakın.
+Note: Thermal model parameters pending §10 vehicle data (TBD); if VIPER parameters are in use, see §6 warning.

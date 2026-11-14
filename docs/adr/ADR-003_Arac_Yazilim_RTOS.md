@@ -1,96 +1,96 @@
-# ADR-003: Araç Yazılım Platformu ve RTOS Seçimi
+# ADR-003: Vehicle Software Platform and RTOS Selection
 
-**Durum:** Kabul Edildi  
-**Tarih:** 2026-11-14  
-**İlgili QAR:** FDIR-001, FDIR-002, FDIR-005, THM-001, PWR-003
-
----
-
-## Bağlam
-
-Flight Segment yazılımı aşağıdaki gereksinimleri karşılamalıdır:
-
-- **Deterministik zamanlama:** FDIR < 50 ms anomali tespit (FDIR-001), < 10 ms yük kesme (PWR-004) gibi hard deadline'lar mevcuttur
-- **FDIR güvenilirliği:** Kritik güvenlik kararları preempt edilemez veya stall edilemez; worst-case execution time (WCET) analizi yapılabilmeli
-- **Radyasyon toleransı:** Uzay ışıması nedeniyle SEU (Single Event Upset) olayları beklenir; yazılım bu olaylardan sonra kurtarılabilir olmalı
-- **Bellek kısıtı:** Araç üzerindeki RAM ve Flash **TBD** (donanım seçimine bağlı); deterministik bellek yönetimi kritik
-- **Uzun görev ömrü:** Yazılım günler/haftalar boyunca hatasız çalışmalı; bellek sızıntısı tolerans edilemez
-- **Donanım bağımsızlığı (kısmi):** Sensor ve motor arayüzleri değişebilir; sürücü katmanı ayrışık olmalı
+**Status:** Accepted
+**Date:** 2026-11-14
+**Related QAR:** FDIR-001, FDIR-002, FDIR-005, THM-001, PWR-003
 
 ---
 
-## Değerlendirilen Alternatifler
+## Context
 
-### Alternatif 1: C++ / FreeRTOS
+The Flight Segment software must meet the following requirements:
 
-**Artılar:**
-- FreeRTOS: geniş uzay proje kullanım geçmişi (CubeSat, küçük gezegen araçları)
-- Açık kaynak; tam kaynak kodu erişimi; özelleştirme esnekliği
-- C++ ile modern yazılım tasarımı (RAII, interface segregation); FDIR ve durum makineleri için güçlü araçlar
-- Kütüphane ekosistemi geniş: CAN, SPI, I2C sürücüler kolayca eklenebilir
-- Gerçek zamanlı performans yeterli: tick granülaritesi < 1 ms, preemptive scheduling
-- MISRA-C++ uyumu zor değil; düşük seviyeli kontrol kolaylaşır
-
-**Eksiler:**
-- FreeRTOS zaman damgaları ve özellikler platform bağımlı; portability sınırlı
-- Resmi DO-178C / ECSS sertifikası yok (ek çaba gerekir)
-- C++ dinamik bellek yönetimi (new/delete) dikkatli kısıtlanmalı; operator override gerektirir
+- **Deterministic timing:** Hard deadlines exist such as FDIR < 50 ms anomaly detection (FDIR-001) and < 10 ms load shedding (PWR-004); worst-case execution time (WCET) analysis must be possible
+- **FDIR reliability:** Critical safety decisions cannot be preempted or stalled; WCET analysis must be feasible
+- **Radiation tolerance:** SEU (Single Event Upset) events are expected from space radiation; software must be recoverable after such events
+- **Memory constraint:** Vehicle RAM and Flash are **TBD** (dependent on hardware selection); deterministic memory management is critical
+- **Long mission lifetime:** Software must run faultlessly for days/weeks; memory leaks cannot be tolerated
+- **Partial hardware independence:** Sensor and motor interfaces may change; the driver layer must be decoupled
 
 ---
 
-### Alternatif 2: C++ / VxWorks
+## Alternatives Evaluated
 
-**Artılar:**
-- Havacılık/uzay sektöründe geniş sertifikasyon geçmişi; DO-178C desteği
-- Determinizm ve WCET analizi araçları olgun
-- Yüksek güvenilirlik kanıtlanmış; Mars Rover (Spirit, Opportunity) VxWorks kullanmıştır
+### Alternative 1: C++ / FreeRTOS
 
-**Eksiler:**
-- **Lisans maliyeti:** Ticari lisans; proje bütçesine önemli yük ekler
-- Kaynak kodu erişimi kısıtlı; bağımsız audit zorlaşır
-- Topluluk desteği ve açık kaynak ekosistemi FreeRTOS/Zephyr'e kıyasla daha kapalı
-- Küçük geliştirme ekibi için öğrenme eğrisi ve araç bağımlılığı
+**Pros:**
+- FreeRTOS: wide space project usage history (CubeSats, small planetary rovers)
+- Open source; full source code access; customisation flexibility
+- Modern software design with C++ (RAII, interface segregation); strong tools for FDIR and state machines
+- Wide library ecosystem: CAN, SPI, I2C drivers easily added
+- Real-time performance sufficient: tick granularity < 1 ms, preemptive scheduling
+- MISRA-C++ compliance is not difficult; low-level control is simplified
 
----
-
-### Alternatif 3: Ada / RTEMS
-
-**Artılar:**
-- Ada güçlü tip sistemi ve derleme zamanı güvenlik kontrolleri: overflow, range, null dereference büyük oranda derleme zamanında yakalanır
-- RTEMS (Real-Time Executive for Multiprocessor Systems): NASA projeleri kökenli, uzay sektöründe sertifikalı kullanım geçmişi
-- SPARK Ada alt kümesi formal doğrulamayı mümkün kılar; FDIR durum makinesi formal kanıtlanabilir
-
-**Eksiler:**
-- Ada yetkin geliştirici bulmak son derece güç; ekip kadrosu riski yüksek
-- Topluluk ve kütüphane ekosistemi C/C++'a kıyasla çok küçük; sürücü yazımı büyük oranda sıfırdan
-- Geliştirme araçları (GNAT) ticari; açık kaynak GNAT FSF versiyonu bazı platform kısıtları içerir
-- Prototipleme hızı yavaş; erken dönem iterasyon için olumsuz
+**Cons:**
+- FreeRTOS timestamps and features are platform-dependent; portability limited
+- No official DO-178C / ECSS certification (additional effort required)
+- C++ dynamic memory management (new/delete) must be carefully restricted; operator override required
 
 ---
 
-## Karar
+### Alternative 2: C++ / VxWorks
 
-**C++ / FreeRTOS** seçilmiştir; ilerleyen fazlarda ECSS-E-ST-40C uyum çalışması planlanmıştır.
+**Pros:**
+- Wide certification history in aerospace/space; DO-178C support
+- Determinism and WCET analysis tools are mature
+- Proven high reliability; Mars Rovers (Spirit, Opportunity) used VxWorks
 
-**Gerekçe:**
-- VxWorks lisans maliyeti ve bağımlılığı proje için orantısız; açık kaynak mimarisi tercih edilir.
-- Ada/RTEMS formal doğrulama avantajı cazip olmakla birlikte, ekip geliştirme kapasitesi ve kütüphane yokluğu riski kabul edilemez büyüklüktedir.
-- FreeRTOS, ihtiyaç duyulan hard-realtime garantileri (preemptive scheduling, deterministic context switch) C++'ın güçlü tip sistemi ile birlikte sağlar.
-- CubeSat ve küçük gezegen araçlarında kanıtlanmış kombinasyon olması olgunluk güvencesi verir.
+**Cons:**
+- **Licence cost:** Commercial licence; adds significant burden to project budget
+- Source code access restricted; independent audit is harder
+- Community support and open-source ecosystem more closed than FreeRTOS/Zephyr
+- Learning curve and tool dependency for a small development team
 
-**Zorunlu C++ kısıtları (uçuş kodu):**
-- Dinamik bellek tahsisi (`new`/`delete`) uçuş kodu kritik yollarında yasak; önceden ayrılmış bellek havuzları (memory pool) kullanılır
-- İstisnalar (exceptions) disabled; hata yönetimi return code + FDIR yoluyla
+---
+
+### Alternative 3: Ada / RTEMS
+
+**Pros:**
+- Ada's strong type system and compile-time safety checks: overflow, range, null dereference largely caught at compile time
+- RTEMS (Real-Time Executive for Multiprocessor Systems): NASA-originated, certified use history in space sector
+- SPARK Ada subset enables formal verification; FDIR state machine can be formally proven
+
+**Cons:**
+- Extremely difficult to find Ada-proficient developers; high team staffing risk
+- Community and library ecosystem is very small compared to C/C++; driver writing largely from scratch
+- Development tools (GNAT) are commercial; open-source GNAT FSF version contains some platform restrictions
+- Slow prototyping speed; negative for early-phase iteration
+
+---
+
+## Decision
+
+**C++ / FreeRTOS** has been selected; ECSS-E-ST-40C compliance work is planned for later phases.
+
+**Rationale:**
+- VxWorks licence cost and dependency are disproportionate for this project; open-source architecture is preferred.
+- Ada/RTEMS formal verification advantage is attractive, but team development capacity and library absence risk are unacceptably large.
+- FreeRTOS, combined with C++'s strong type system, provides the required hard-realtime guarantees (preemptive scheduling, deterministic context switch).
+- Being a proven combination in CubeSats and small planetary rovers provides maturity assurance.
+
+**Mandatory C++ restrictions (flight code):**
+- Dynamic memory allocation (`new`/`delete`) is forbidden in critical paths of flight code; pre-allocated memory pools are used
+- Exceptions disabled; error handling via return code + FDIR
 - RTTI (runtime type information) disabled
-- Şablon kullanımı WCET etkisiz olanlarla sınırlı
-- MISRA-C++ 2008 profiline uyum zorunlu; statik analiz (cppcheck, clang-tidy) CI'da gate
+- Template usage restricted to those with no WCET impact
+- MISRA-C++ 2008 profile compliance mandatory; static analysis (cppcheck, clang-tidy) gated in CI
 
 ---
 
-## Sonuçlar ve Kısıtlar
+## Consequences and Constraints
 
-1. **Scheduler konfigürasyonu:** FreeRTOS görev öncelikleri FDIR > Navigasyon > Güç > Termal > Planlayıcı > Haberleşme olarak yapılandırılır; öncelik inversiyon mekanizması (priority inheritance mutex) aktif edilir.
-2. **Watchdog tasarımı:** Her kritik görev (task) FreeRTOS watchdog timer'a heartbeat gönderir; heartbeat kaybı FDIR'ı doğrudan tetikler (ADR-005 ve SAFETY_STATE_MACHINE.md ile uyumlu).
-3. **WCET analizi:** Kritik yollar (FDIR karar, yük kesme, navigasyon güncelleme) için WCET analizi yapılması zorunludur; araç: **TBD** (AbsInt aiT veya eşdeğeri).
-4. **Bellek bütçesi:** Flash ve RAM kullanımı **TBD** (donanım BoM bekleniyor); statik bellek bütçesi analizi tasarım aşamasında tamamlanacak.
-5. **Sürüm kontrolü:** Uçuş kodu build'ı git hash ile etiketlenir; bootloader sürüm doğrulaması yapılır.
+1. **Scheduler configuration:** FreeRTOS task priorities configured as FDIR > Navigation > Power > Thermal > Planner > Communication; priority inversion mechanism (priority inheritance mutex) activated.
+2. **Watchdog design:** Every critical task sends a heartbeat to the FreeRTOS watchdog timer; heartbeat loss directly triggers FDIR (consistent with ADR-005 and SAFETY_STATE_MACHINE.md).
+3. **WCET analysis:** WCET analysis is mandatory for critical paths (FDIR decision, load shedding, navigation update); tool: **TBD** (AbsInt aiT or equivalent).
+4. **Memory budget:** Flash and RAM usage **TBD** (hardware BoM pending); static memory budget analysis to be completed in design phase.
+5. **Version control:** Flight code builds are tagged with the git hash; bootloader performs version verification.

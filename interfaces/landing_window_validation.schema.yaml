@@ -1,18 +1,18 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on: [interfaces/earth_visibility.schema.yaml, interfaces/multi_site_comparison.schema.yaml, power/, thermal/, communication/]
-# open_items: [confidence hesaplama metodolojisi TBD, link_budget_ok alanı communication/ şemasına bağlı]
+# open_items: [confidence calculation methodology TBD, link_budget_ok field tied to communication/ schema]
 
 # Landing Window Validation Schema
-# İniş zamanı <-> GNC/güç/termal/haberleşme doğrulama sözleşmesi
-# Kaynak referans: lunar-navigator when-to-land analizi
+# Landing time <-> GNC/power/thermal/communication validation contract
+# Reference source: lunar-navigator when-to-land analysis
 
 $schema: "https://json-schema.org/draft/2020-12"
 title: LandingWindowValidation
 description: >
-  Önerilen iniş penceresi için çok-disiplinli doğrulama ürünü.
-  Güneş geometrisi, Dünya görünürlüğü, güç bütçesi, termal bütçe ve haberleşme koşulları kontrol edilir.
-  Bu şema operatör onayı girişi için girdi sağlar — nihai iniş zamanı YER (B1-EK ile hizalı).
+  Multi-disciplinary validation product for the proposed landing window.
+  Solar geometry, Earth visibility, power budget, thermal budget and communication conditions are checked.
+  This schema provides input for operator approval — final landing time is GCA (aligned with B1-EK).
 
 type: object
 required:
@@ -32,68 +32,68 @@ required:
 properties:
   window_id:
     type: string
-    description: Pencere tanımlayıcısı
+    description: Window identifier
 
   window_start_utc:
     type: string
     format: date-time
-    description: Önerilen iniş penceresi başlangıcı (ISO 8601)
+    description: Proposed landing window start (ISO 8601)
 
   window_end_utc:
     type: string
     format: date-time
-    description: Önerilen iniş penceresi sonu (ISO 8601)
+    description: Proposed landing window end (ISO 8601)
 
   sun_coverage_ok:
     type: boolean
-    description: İniş ve iniş sonrası başlangıç için yeterli güneş aydınlanması mevcut mu?
+    description: Is sufficient solar illumination available for landing and initial post-landing operations?
 
   earth_visibility_ok:
     type: boolean
     description: >
-      İniş penceresinde geometrik Dünya görünürlüğü yeterli mi?
-      NOT: Yalnızca geometrik görünürlük — link budget (comm_window_ok) ayrı değerlendirilir.
+      Is geometric Earth visibility adequate during the landing window?
+      NOTE: Geometric visibility only — link budget (comm_window_ok) is evaluated separately.
 
   power_budget_ok:
     type: boolean
-    description: Tahmin edilen güç bütçesi HC-006 (dönüş rezervi) ve başlangıç operasyonu için yeterli mi?
+    description: Is the estimated power budget sufficient for HC-006 (return reserve) and initial operations?
 
   thermal_budget_ok:
     type: boolean
-    description: İniş sonrası termal koşullar HC-007 (karanlık toleransı) içinde mi?
+    description: Are post-landing thermal conditions within HC-007 (darkness tolerance)?
 
   comm_window_ok:
     type: boolean
     description: >
-      İniş penceresinde haberleşme link budget yeterli mi?
-      Bu alan geometrik görünürlükten bağımsız olarak link planlaması katmanından gelir (DR-INT-003).
+      Is communication link budget adequate during the landing window?
+      This field comes from the link planning layer independently of geometric visibility (DR-INT-003).
 
   overall_valid:
     type: boolean
-    description: Tüm boolean kontroller true ise true. False ise operatör onayı için engel gerekçesi belirsizliği var demektir.
+    description: True if all boolean checks are true. If false, the operator approval input has a blocking reason ambiguity.
 
   confidence:
     type: number
     minimum: 0.0
     maximum: 1.0
     description: >
-      Hesap güven skoru (0.0–1.0). Marjinal Dünya görünürlük, düşük DEM çözünürlük
-      veya worst-case enerji belirsizliği skoru düşürür.
+      Calculation confidence score (0.0–1.0). Marginal Earth visibility, low DEM resolution
+      or worst-case energy uncertainty lowers the score.
 
   failure_reasons:
     type: array
     items:
       type: string
-    description: overall_valid=false ise başarısız kontrollerin listesi
+    description: List of failed checks if overall_valid=false
 
   temporal_class:
     type: string
     enum: [historical, predicted]
-    description: B5-EK §7.2 politikası
+    description: B5-EK §7.2 policy
 
   ephemeris_validity_range:
     type: object
-    description: Hesabın geçerli zaman aralığı. ZORUNLU alan (DR-INT-004).
+    description: Time range for which the calculation is valid. MANDATORY field (DR-INT-004).
     required: [start_utc, end_utc]
     properties:
       start_utc:
@@ -105,7 +105,7 @@ properties:
 
   source:
     type: string
-    description: Hesaplama kaynağı
+    description: Calculation source
     example: "repo:when-to-land"
 
 additionalProperties: false

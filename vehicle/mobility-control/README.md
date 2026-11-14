@@ -1,16 +1,16 @@
 # Vehicle Mobility Control
 
-**v1.0 Referans:** §4.6 Navigation & Mobility
+**v1.0 Reference:** §4.6 Navigation & Mobility
 
-Diferansiyel sürüş komutu üretimi, tekerlek tork kontrolü ve motor sürücü arayüzü.
+Differential drive command generation, wheel torque control, and motor driver interface.
 
-## Bağımlılıklar
+## Dependencies
 
-- `vehicle/localization/` — mevcut konum ve heading (ICD-003)
-- `safety/` — hareket komutları emniyet monitörü tarafından denetlenir
+- `vehicle/localization/` — current position and heading (ICD-003)
+- `safety/` — motion commands are supervised by the safety monitor
 
 ## Motor Stall FDIR
 
-Motor stall tespitinde FI-004 referanslı arıza enjeksiyonu uygulanır.
-FDIR tepkisi: motor durdur → FDIR'a hata bildir → NOMINAL→CAUTION geçişi bekle.
-Bkz. `docs/adr/FMEA_KRITIK_MODULLER.md` (FI-004) ve `safety/README.md`
+On motor stall detection, FI-004-referenced fault injection is applied.
+FDIR response: stop motor → report fault to FDIR → wait for NOMINAL→CAUTION transition.
+See `docs/adr/FMEA_KRITIK_MODULLER.md` (FI-004) and `safety/README.md`

@@ -1,301 +1,301 @@
 # status: draft
 # owner: Agent C
 # depends_on: [docs/qar/QAR_TABLE.md, tests/acceptance_criteria.md, simulation/simulator_design.md, simulation/scenarios/example_scenario.yaml, docs/adr/FMEA_KRITIK_MODULLER.md, infrastructure/risk_register.md]
-# open_items: [TBD değerler §10 araç verisi bekleniyor; HIL test setüpü P2 kapısına bağlı; FI referansları simulation/simulator_design.md §5 ile tutarlı tutulacak]
+# open_items: [TBD values awaiting §10 vehicle data; HIL test setup tied to P2 gate; FI references to remain consistent with simulation/simulator_design.md §5]
 
-# Doğrulama ve Test Stratejisi — LUNA-AI v1.0
+# Verification and Test Strategy — LUNA-AI v1.0
 
-**Belge ID:** LUNA-AI-TEST-001  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Bağlı Belgeler:** LUNA-AI-QAR-001, tests/acceptance_criteria.md, LUNA-AI-FMEA-001, LUNA-AI-SIM-001
+**Document ID:** LUNA-AI-TEST-001  
+**Version:** 0.1-draft  
+**Date:** 2026-11-14  
+**Related Documents:** LUNA-AI-QAR-001, tests/acceptance_criteria.md, LUNA-AI-FMEA-001, LUNA-AI-SIM-001
 
 ---
 
-## Doğrulama Yöntemi Tanımları
+## Verification Method Definitions
 
-| Kod | Yöntem | Açıklama |
+| Code | Method | Description |
 |-----|--------|----------|
-| **A** | Analysis | Analitik veya matematiksel doğrulama; referans hesap veya model karşılaştırması |
-| **T** | Test | Çalışma zamanı ölçümü; gerçek veya simüle sistem üzerinde sayısal hedef ölçümü |
-| **I** | Inspection | Kod/tasarım gözden geçirmesi; mimari inceleme veya bağımlılık analizi |
-| **D** | Demonstration | Sistematik gösterim; end-to-end senaryo çalıştırma |
+| **A** | Analysis | Analytical or mathematical verification; reference calculation or model comparison |
+| **T** | Test | Runtime measurement; numerical target measurement on real or simulated system |
+| **I** | Inspection | Code/design review; architectural inspection or dependency analysis |
+| **D** | Demonstration | Systematic demonstration; end-to-end scenario execution |
 
-## Test Ortamı Tanımları
+## Test Environment Definitions
 
-| Kod | Ortam | Açıklama |
+| Code | Environment | Description |
 |-----|-------|----------|
-| **UT** | Unit Test (pytest) | Modül izole; bağımlılıklar mock/stub |
-| **IT** | Integration Test | İki veya daha fazla modül birlikte; FreeRTOS gerektirmez |
-| **SIL** | Software-in-the-Loop | Tüm yazılım konak bilgisayarda; ortam + araç modeli simüle |
-| **HIL** | Hardware-in-the-Loop | Gerçek OBC + sensörler; simülatör çevre sağlar |
-| **FT** | Field Test | Gerçek araç + gerçek ay yüzeyi (P3+ sonrası) |
-| **TVAC** | Termal Vakum Testi | Gerçek sıcaklık/vakum ortamı |
+| **UT** | Unit Test (pytest) | Module isolated; dependencies mocked/stubbed |
+| **IT** | Integration Test | Two or more modules together; does not require FreeRTOS |
+| **SIL** | Software-in-the-Loop | All software on host computer; environment + vehicle model simulated |
+| **HIL** | Hardware-in-the-Loop | Real OBC + sensors; simulator provides environment |
+| **FT** | Field Test | Real vehicle + real lunar surface (post-P3+) |
+| **TVAC** | Thermal Vacuum Test | Real temperature/vacuum environment |
 
 ---
 
-## QAR Doğrulama Tablosu
+## QAR Verification Table
 
-### FDIR — Arıza Tespit, İzolasyon ve Kurtarma
+### FDIR — Fault Detection, Isolation and Recovery
 
-| Gereksinim ID | Modül | Nitelik | Sayısal Hedef | Doğrulama Yöntemi | Test Ortamı | Kabul Kriteri | Sorumlu |
+| Requirement ID | Module | Attribute | Numerical Target | Verification Method | Test Environment | Acceptance Criterion | Owner |
 |--------------|-------|---------|---------------|-------------------|-------------|---------------|---------|
-| FDIR-001 | FDIR | Anomali Tespit Süresi | < 50 ms (P95) | T — FI-001..010 anomali enjeksiyonu; zaman damgası farkı ölçümü | SIL (RT-002..006), HIL (P3) | 95. yüzdelik ≤ 50 ms; sıfır tespit atlaması kritik hatalar için (FDIR-004 ile çapraz) | safety/fdir |
-| FDIR-002 | FDIR | Recovery Karar Süresi | < 500 ms anomali tespitinden itibaren | T — anomali tespit zaman damgası → `abort_signal=true` [ICD-004] zaman damgası farkı | SIL (RT-002..006), HIL (P3) | %95 oranında ≤ 500 ms; `fdir_confidence` ≥ 80 | safety/fdir |
-| FDIR-003 | FDIR | Yanlış Pozitif Oranı | < %1 nominal operasyon saati başına | T — 100 saatlik nominal SIL koşusu; false alarm sayımı | SIL (RT-001 extended) | Toplam false alarm / toplam nominal saat < 0.01 | safety/fdir |
-| FDIR-004 | FDIR | Yanlış Negatif Oranı | < %0.1 kritik hatalar için sıfır hedef | T — Her FMEA-top-10 hata modu için 50 tekrar; FDIR tespit oranı | SIL (RT-002..006 + ek), HIL (P3-AC-02) | Her kritik hata modunda tespit oranı = %100 | safety/fdir |
-| FDIR-005 | FDIR | Durum Makinesi Geçiş Tutarlılığı | %100 deterministik | A + T — TLA+ formal doğrulama + 1000 tekrarlı SIL testi aynı girdi = aynı geçiş | UT (P0-AC-03), SIL | Formal doğrulama: invariant ihlali yok; 1000 test: sıfır tutarsız geçiş | safety/fdir |
+| FDIR-001 | FDIR | Anomaly Detection Time | < 50 ms (P95) | T — FI-001..010 anomaly injection; timestamp delta measurement | SIL (RT-002..006), HIL (P3) | 95th percentile ≤ 50 ms; zero missed detections for critical faults (cross-check with FDIR-004) | safety/fdir |
+| FDIR-002 | FDIR | Recovery Decision Time | < 500 ms from anomaly detection | T — anomaly detection timestamp → `abort_signal=true` [ICD-004] timestamp delta | SIL (RT-002..006), HIL (P3) | 95% of cases ≤ 500 ms; `fdir_confidence` ≥ 80 | safety/fdir |
+| FDIR-003 | FDIR | False Positive Rate | < 1% per nominal operation hour | T — 100-hour nominal SIL run; false alarm count | SIL (RT-001 extended) | Total false alarms / total nominal hours < 0.01 | safety/fdir |
+| FDIR-004 | FDIR | False Negative Rate | < 0.1% (zero target for critical faults) | T — 50 repetitions per each FMEA-top-10 fault mode; FDIR detection rate | SIL (RT-002..006 + additional), HIL (P3-AC-02) | Detection rate = 100% for each critical fault mode | safety/fdir |
+| FDIR-005 | FDIR | State Machine Transition Consistency | 100% deterministic | A + T — TLA+ formal verification + 1000-repetition SIL test: same input = same transition | UT (P0-AC-03), SIL | Formal verification: no invariant violations; 1000 tests: zero inconsistent transitions | safety/fdir |
 
-### NAV — Navigasyon
+### NAV — Navigation
 
-| Gereksinim ID | Modül | Nitelik | Sayısal Hedef | Doğrulama Yöntemi | Test Ortamı | Kabul Kriteri | Sorumlu |
+| Requirement ID | Module | Attribute | Numerical Target | Verification Method | Test Environment | Acceptance Criterion | Owner |
 |--------------|-------|---------|---------------|-------------------|-------------|---------------|---------|
-| NAV-001 | Navigasyon | Konum Doğruluğu (düz arazi) | < 0.5 m RMS | T — bilinen DEM referans noktaları üzerinde 50 ölçüm; EKF çıktısı vs referans | SIL (P1-AC-04), HIL (P3-AC-01) | σ_pos < 0.5 m RMS, %95 güven aralığında | vehicle/localization |
-| NAV-002 | Navigasyon | Yönelim Doğruluğu | < 0.5° RMS (yaw/pitch/roll) | T — referans yönelim karşılaştırması; 100 örnek | SIL, HIL | σ_yaw, σ_pitch, σ_roll < 0.5° RMS | vehicle/localization |
-| NAV-003 | Navigasyon | Konum Güncelleme Frekansı | ≥ 10 Hz hareket, ≥ 1 Hz dur-bekle | T — ICD-003 `vehicle_pose` mesaj zaman damgası analizi | UT, SIL | Hareket halinde: mesajlar arası dt ≤ 100 ms; dur-bekle: dt ≤ 1 s | vehicle/localization |
-| NAV-004 | Navigasyon | Lokalizasyon Kayıp Tespiti | < 2 s (EKF ıraksama → alarm) | T — FI-001/FI-009 enjeksiyonu; tespit zaman damgası ölçümü | SIL (RT-003/CT-005), HIL | 20 ıraksama senaryosunun tümünde ≤ 2 s; sıfır tespit atlaması | vehicle/localization |
-| NAV-005 | Navigasyon | Dead-Reckoning Kayması | < 2 m/dak (IMU-only) | T — FI-001 (IMU gürültü artışı) ile bilinen yol üzerinde kapalı döngü ölçüm | SIL | 1 dakika dead-reckoning sonrası kümülatif hata < 2 m | vehicle/localization |
-| NAV-006 | Navigasyon | PSR İçi Navigasyon Doğruluğu | < 1.0 m RMS (görsel landmark azaldığında) | T — 20 PSR traversi senaryosu; LiDAR-only veya IMU+odometry modu | SIL (CT-005, PSR senaryoları) | σ_pos < 1.0 m RMS, PSR içinde landmark eşleşmesi olmaksızın | vehicle/localization |
+| NAV-001 | Navigation | Position Accuracy (flat terrain) | < 0.5 m RMS | T — 50 measurements over known DEM reference points; EKF output vs reference | SIL (P1-AC-04), HIL (P3-AC-01) | σ_pos < 0.5 m RMS, within 95% confidence interval | vehicle/localization |
+| NAV-002 | Navigation | Orientation Accuracy | < 0.5° RMS (yaw/pitch/roll) | T — reference orientation comparison; 100 samples | SIL, HIL | σ_yaw, σ_pitch, σ_roll < 0.5° RMS | vehicle/localization |
+| NAV-003 | Navigation | Position Update Frequency | ≥ 10 Hz while moving, ≥ 1 Hz stop-wait | T — ICD-003 `vehicle_pose` message timestamp analysis | UT, SIL | While moving: dt between messages ≤ 100 ms; stop-wait: dt ≤ 1 s | vehicle/localization |
+| NAV-004 | Navigation | Localisation Loss Detection | < 2 s (EKF divergence → alarm) | T — FI-001/FI-009 injection; detection timestamp measurement | SIL (RT-003/CT-005), HIL | ≤ 2 s in all 20 divergence scenarios; zero missed detections | vehicle/localization |
+| NAV-005 | Navigation | Dead-Reckoning Drift | < 2 m/min (IMU-only) | T — closed-loop measurement over known path with FI-001 (IMU noise increase) | SIL | Cumulative error < 2 m after 1 minute of dead-reckoning | vehicle/localization |
+| NAV-006 | Navigation | In-PSR Navigation Accuracy | < 1.0 m RMS (when visual landmarks reduced) | T — 20 PSR traversal scenarios; LiDAR-only or IMU+odometry mode | SIL (CT-005, PSR scenarios) | σ_pos < 1.0 m RMS, without landmark matching inside PSR | vehicle/localization |
 
-### PLAN — Görev Planlayıcı
+### PLAN — Mission Planner
 
-| Gereksinim ID | Modül | Nitelik | Sayısal Hedef | Doğrulama Yöntemi | Test Ortamı | Kabul Kriteri | Sorumlu |
+| Requirement ID | Module | Attribute | Numerical Target | Verification Method | Test Environment | Acceptance Criterion | Owner |
 |--------------|-------|---------|---------------|-------------------|-------------|---------------|---------|
-| PLAN-001 | Görev Planlayıcı | Global Rota Hesaplama Süresi | < 60 s (500m yol, A*) | T — 10 farklı arazi profili; ortalama ve P99 hesaplama süresi | SIL (P2-AC-01) | %95 oranında < 60 s; P99 < 90 s | autonomy/global-planner |
-| PLAN-002 | Görev Planlayıcı | Replanning Süresi | < 30 s (anlık engel sonrası) | T — SIL engel enjeksiyonu → replanning tamamlanma süresi; 50 senaryo | SIL (P2-AC-02, CT-003) | %95 oranında < 30 s | autonomy/replanner |
-| PLAN-003 | Görev Planlayıcı | Enerji Bütçe Tahmin Hatası | < %10 (planlanan vs gerçekleşen) | T — 20 nominal görev koşusu; plan_energy vs sim_energy karşılaştırması | SIL (CT-002), Dijital İkiz | |plan_energy - actual_energy| / plan_energy × 100 < %10 | power + autonomy |
-| PLAN-004 | Görev Planlayıcı | PSR Giriş Koşulu Değerlendirme Süresi | < 10 s | T — 50 PSR giriş senaryosu; karar üretme süresi ölçümü | SIL | %100 senaryoda < 10 s | autonomy/global-planner |
-| PLAN-005 | Görev Planlayıcı | Dönüş Tetikleyici Hesaplama Frekansı | ≥ 1 Hz (sürekli dönüş marjı izleme) | T — `estimated_return_soc_pct` güncelleme zaman damgası analizi [ICD-001] | UT, SIL | Güncelleme aralığı ≤ 1 s her zaman | power |
+| PLAN-001 | Mission Planner | Global Route Computation Time | < 60 s (500m path, A*) | T — 10 different terrain profiles; mean and P99 computation time | SIL (P2-AC-01) | 95% of cases < 60 s; P99 < 90 s | autonomy/global-planner |
+| PLAN-002 | Mission Planner | Replanning Time | < 30 s (after instantaneous obstacle) | T — SIL obstacle injection → replanning completion time; 50 scenarios | SIL (P2-AC-02, CT-003) | 95% of cases < 30 s | autonomy/replanner |
+| PLAN-003 | Mission Planner | Energy Budget Estimation Error | < 10% (planned vs actual) | T — 20 nominal mission runs; plan_energy vs sim_energy comparison | SIL (CT-002), Digital Twin | |plan_energy - actual_energy| / plan_energy × 100 < 10% | power + autonomy |
+| PLAN-004 | Mission Planner | PSR Entry Condition Evaluation Time | < 10 s | T — 50 PSR entry scenarios; decision generation time measurement | SIL | 100% of scenarios < 10 s | autonomy/global-planner |
+| PLAN-005 | Mission Planner | Return Trigger Computation Frequency | ≥ 1 Hz (continuous return margin monitoring) | T — `estimated_return_soc_pct` update timestamp analysis [ICD-001] | UT, SIL | Update interval ≤ 1 s at all times | power |
 
-### PWR — Güç Yönetimi
+### PWR — Power Management
 
-| Gereksinim ID | Modül | Nitelik | Sayısal Hedef | Doğrulama Yöntemi | Test Ortamı | Kabul Kriteri | Sorumlu |
+| Requirement ID | Module | Attribute | Numerical Target | Verification Method | Test Environment | Acceptance Criterion | Owner |
 |--------------|-------|---------|---------------|-------------------|-------------|---------------|---------|
-| PWR-001 | Güç Yönetimi | Min. Dönüş SoC Rezervi | ≥ %15 (safe haven kapısında) | T — Her görev koşusunda safe haven ulaşımında SoC kaydı | SIL (P2-AC-04, CT-002), HIL | SoC ≥ %15 safe haven kapısında; tek ihlal = başarısız | power |
-| PWR-002 | Güç Yönetimi | Enerji Tahmin Hatası | < %10 (kalan süre/mesafe için) | T + A — Dijital ikiz: 50 görev senaryosu; tahmin vs gerçek kıyaslaması | SIL (CT-002), Dijital İkiz | Ortalama hata < %5; maks hata < %10 | power |
-| PWR-003 | Güç Yönetimi | Yük Kesme Tepki Süresi (Kritik) | < 100 ms (komut → fiili kesim) | T — HIL: komut zaman damgası vs akım sensörü ölçümü; FI-010 (PDU testi) | HIL (P3) | %100 kritik kesim komutu ≤ 100 ms | power |
-| PWR-004 | Güç Yönetimi | Yük Kesme Tepki Süresi (SURVIVAL) | < 10 ms (SURVIVAL modu opsiyonel yükler) | T — HIL: SURVIVAL geçişi → tüm opsiyonel yük kesim süresi | HIL (P3) | %100 SURVIVAL kesim ≤ 10 ms | power |
-| PWR-005 | Güç Yönetimi | SoC Ölçüm Doğruluğu | ±TBD% (hedef: ±%2; kimyaya bağlı) | T — Kalibrasyon testi: bilinen kapasite Wh karşılaştırması; voltaj + Coulomb çift ölçüm | HIL, TVAC (P3) | |SoC_measured - SoC_true| ≤ TBD-BAT-002 bağımlı eşik | power |
-| PWR-006 | Güç Yönetimi | Panel Verimliliği İzleme Periyodu | ≤ 10 s günceleme | T — `panel_power_w` mesaj zaman damgası analizi [ICD-001] | UT, SIL | Güncelleme aralığı ≤ 10 s her zaman | power |
+| PWR-001 | Power Management | Min. Return SoC Reserve | ≥ 15% SoC (at safe haven gate) | T — SoC recorded at safe haven arrival for each mission run | SIL (P2-AC-04, CT-002), HIL | SoC ≥ 15% at safe haven gate; single violation = failed | power |
+| PWR-002 | Power Management | Energy Estimation Error | < 10% (for remaining time/distance) | T + A — Digital twin: 50 mission scenarios; estimate vs actual comparison | SIL (CT-002), Digital Twin | Mean error < 5%; max error < 10% | power |
+| PWR-003 | Power Management | Load Shedding Response Time (Critical) | < 100 ms (command → actual cut) | T — HIL: command timestamp vs current sensor measurement; FI-010 (PDU test) | HIL (P3) | 100% of critical shedding commands ≤ 100 ms | power |
+| PWR-004 | Power Management | Load Shedding Response Time (SURVIVAL) | < 10 ms (SURVIVAL mode optional loads) | T — HIL: SURVIVAL transition → all optional load shedding time | HIL (P3) | 100% SURVIVAL shedding ≤ 10 ms | power |
+| PWR-005 | Power Management | SoC Measurement Accuracy | ±TBD% (target: ±2%; chemistry-dependent) | T — Calibration test: known capacity Wh comparison; voltage + Coulomb dual measurement | HIL, TVAC (P3) | |SoC_measured - SoC_true| ≤ TBD-BAT-002 dependent threshold | power |
+| PWR-006 | Power Management | Panel Efficiency Monitoring Period | ≤ 10 s update | T — `panel_power_w` message timestamp analysis [ICD-001] | UT, SIL | Update interval ≤ 10 s at all times | power |
 
-### THM — Termal Yönetimi
+### THM — Thermal Management
 
-| Gereksinim ID | Modül | Nitelik | Sayısal Hedef | Doğrulama Yöntemi | Test Ortamı | Kabul Kriteri | Sorumlu |
+| Requirement ID | Module | Attribute | Numerical Target | Verification Method | Test Environment | Acceptance Criterion | Owner |
 |--------------|-------|---------|---------------|-------------------|-------------|---------------|---------|
-| THM-001 | Termal Yönetim | Sıcaklık İzleme Periyodu | ≤ 1 s (tüm kritik sensörler) | T — `thermal_state` güncelleme zaman damgası analizi [ICD-002]; tüm sensor_ids için | UT, SIL | Her kritik sensör: güncelleme aralığı ≤ 1 s | thermal |
-| THM-002 | Termal Yönetim | Isıtıcı Aktivasyon Gecikmesi | < 5 s (komut → ısıtma başlangıcı) | T — HIL: sıcaklık eşik geçişi → ısıtıcı aktivasyon; FI-007 ile test | SIL (CT-006), HIL (P3) | %100 aktivasyon komutu ≤ 5 s | thermal |
-| THM-003 | Termal Yönetim | Termal Kritik Tespit Süresi | < 2 s (eşik ihlali → FDIR alarmı) | T — FI-007 enjeksiyonu; tespit zaman damgası ölçümü | SIL (RT-005, CT-006), HIL | %100 kritik termal olay ≤ 2 s FDIR'a iletildi | thermal |
-| THM-004 | Termal Yönetim | Min. Operasyon Sıcaklığı (Elektronik) | TBD-THM-001/003 — parça seçimine bağlı | T — TVAC: soğuk kalifikasyon testi | TVAC (P3) | Tüm bileşenler min sıcaklıkta nominal çalışıyor (TBD-THM-003 eşiği) | thermal |
-| THM-005 | Termal Yönetim | Maks. Operasyon Sıcaklığı (Elektronik) | TBD-THM-001/003 — parça seçimine bağlı | T — TVAC: sıcak kalifikasyon testi | TVAC (P3) | Tüm bileşenler maks sıcaklıkta nominal çalışıyor (TBD-THM-003 eşiği) | thermal |
+| THM-001 | Thermal Management | Temperature Monitoring Period | ≤ 1 s (all critical sensors) | T — `thermal_state` update timestamp analysis [ICD-002]; for all sensor_ids | UT, SIL | Each critical sensor: update interval ≤ 1 s | thermal |
+| THM-002 | Thermal Management | Heater Activation Delay | < 5 s (command → heating start) | T — HIL: temperature threshold crossing → heater activation; test with FI-007 | SIL (CT-006), HIL (P3) | 100% of activation commands ≤ 5 s | thermal |
+| THM-003 | Thermal Management | Thermal Critical Detection Time | < 2 s (threshold violation → FDIR alarm) | T — FI-007 injection; detection timestamp measurement | SIL (RT-005, CT-006), HIL | 100% of critical thermal events ≤ 2 s forwarded to FDIR | thermal |
+| THM-004 | Thermal Management | Min. Operating Temperature (Electronics) | TBD-THM-001/003 — dependent on component selection | T — TVAC: cold qualification test | TVAC (P3) | All components operating nominally at min temperature (TBD-THM-003 threshold) | thermal |
+| THM-005 | Thermal Management | Max. Operating Temperature (Electronics) | TBD-THM-001/003 — dependent on component selection | T — TVAC: hot qualification test | TVAC (P3) | All components operating nominally at max temperature (TBD-THM-003 threshold) | thermal |
 
-### COM — Haberleşme
+### COM — Communication
 
-| Gereksinim ID | Modül | Nitelik | Sayısal Hedef | Doğrulama Yöntemi | Test Ortamı | Kabul Kriteri | Sorumlu |
+| Requirement ID | Module | Attribute | Numerical Target | Verification Method | Test Environment | Acceptance Criterion | Owner |
 |--------------|-------|---------|---------------|-------------------|-------------|---------------|---------|
-| COM-001 | Haberleşme | Komut İşleme Gecikmesi | < 500 ms (komut alındı → icra) | T — End-to-end gecikme ölçümü; 100 TC_IMMEDIATE + 100 TC_PLAN_UPLOAD | SIL (CT-004), HIL (P3) | %95 oranında ≤ 500 ms; TC_IMMEDIATE komutlar %100 ≤ 500 ms | communication |
-| COM-002 | Haberleşme | Telemetri Güncelleme Periyodu (Nominal) | ≤ 10 s | T — ICD-006 downlink zaman damgası analizi; nominal güvenlik durumunda | SIL, HIL | Güncelleme aralığı ≤ 10 s, nominal koşullar | communication |
-| COM-003 | Haberleşme | Telemetri Güncelleme Periyodu (Kritik Durum) | ≤ 1 s (CAUTION veya üstü) | T — Durum geçişi tetiklenince güncelleme frekansı kontrolü | SIL (CT-004), HIL | CAUTION+ durumda: güncelleme aralığı ≤ 1 s | communication |
-| COM-004 | Haberleşme | Otonom Çalışma Süresi (Link Yok) | ≥ TBD-COM-002 saat | D — FI-006 link kaybı; SC-002/SC-007 senaryoları; araç pre-planned protokol | SIL (CT-004), HIL | Araç güvenlik sınırları içinde kaldı; pre-planned abort trigger'lar doğru tetiklendi | communication |
-| COM-005 | Haberleşme | Komut Bütünlüğü (CRC) | %100 tek bit flip tespiti | T — 10.000 bozulmuş paket senaryosu; CRC hata tespiti oranı | UT, SIL | %100 hatalı paket reddedildi; sıfır hatalı paket kabul | communication |
-| COM-006 | Haberleşme | Link Yeniden Bağlantı Süresi | < TBD-COM-003 dakika | T — SIL link simülasyonu: link penceresi tekrar açılınca bağlantı kurma süresi | SIL (CT-004) | %95 yeniden bağlantı ≤ TBD-COM-003; yer telemetrisi güncellendi | communication |
+| COM-001 | Communication | Command Processing Delay | < 500 ms (command received → executed) | T — End-to-end delay measurement; 100 TC_IMMEDIATE + 100 TC_PLAN_UPLOAD | SIL (CT-004), HIL (P3) | 95% of cases ≤ 500 ms; TC_IMMEDIATE commands 100% ≤ 500 ms | communication |
+| COM-002 | Communication | Telemetry Update Period (Nominal) | ≤ 10 s | T — ICD-006 downlink timestamp analysis; under nominal safety state | SIL, HIL | Update interval ≤ 10 s, nominal conditions | communication |
+| COM-003 | Communication | Telemetry Update Period (Critical State) | ≤ 1 s (CAUTION or above) | T — Update frequency check after state transition triggered | SIL (CT-004), HIL | In CAUTION+ state: update interval ≤ 1 s | communication |
+| COM-004 | Communication | Autonomous Operation Duration (No Link) | ≥ TBD-COM-002 hours | D — FI-006 link loss; SC-002/SC-007 scenarios; vehicle pre-planned protocol | SIL (CT-004), HIL | Vehicle stayed within safety boundaries; pre-planned abort triggers correctly fired | communication |
+| COM-005 | Communication | Command Integrity (CRC) | 100% single bit flip detection | T — 10,000 corrupted packet scenarios; CRC error detection rate | UT, SIL | 100% of corrupted packets rejected; zero corrupted packets accepted | communication |
+| COM-006 | Communication | Link Reconnection Time | < TBD-COM-003 minutes | T — SIL link simulation: connection time when link window reopens | SIL (CT-004) | 95% reconnection ≤ TBD-COM-003; ground telemetry updated | communication |
 
 ### SHV — Safe Haven
 
-| Gereksinim ID | Modül | Nitelik | Sayısal Hedef | Doğrulama Yöntemi | Test Ortamı | Kabul Kriteri | Sorumlu |
+| Requirement ID | Module | Attribute | Numerical Target | Verification Method | Test Environment | Acceptance Criterion | Owner |
 |--------------|-------|---------|---------------|-------------------|-------------|---------------|---------|
-| SHV-001 | Safe Haven | Min. Aydınlanma Süresi | ≥ TBD saat/gün (enerji yeterliliği) | A — SPICE orbital simülasyonu; seçili bölge aydınlanma analizi (AC-VAL-001..004) | Analysis + SIL | Seçili safe haven konumunda günlük aydınlanma ≥ enerji bütçesi gereksinimi | mission_intelligence |
-| SHV-002 | Safe Haven | Min. Dönüş Enerjisi Rezervi | ≥ %15 SoC (safe haven kapısında) | T — Her görev koşusunda safe haven ulaşımında SoC kaydı (PWR-001 ile çakışır) | SIL, HIL | SoC ≥ %15; HC-006 ihlali = başarısız | power |
-| SHV-003 | Safe Haven | Ulaşım Süresi (Nominal) | ≤ TBD dakika (maks uzaklık) | T — Navigasyon simülasyonu: en uzak görev noktasından nominal hız ile dönüş | SIL (CT-003) | %95 senaryoda ≤ TBD-TRV-001/TBD-TRV-002 bağımlı eşik | autonomy/global-planner |
-| SHV-004 | Safe Haven | Ulaşım Süresi (SURVIVAL modu) | ≤ TBD dakika (minimum enerji rotası) | T — SURVIVAL modu simülasyonu; FI-005+FI-003 kombinasyonu | SIL (CT-007) | SURVIVAL modda araç safe haven'a ulaştı; SoC > 0% | autonomy/global-planner |
-| SHV-005 | Safe Haven | Zemin Eğim Toleransı | ≤ TBD° (güvenli park) | A + T — Arazi haritası eğim analizi + araç kararlılık analizi | Analysis, SIL | Seçili safe haven konumlarında eğim ≤ HC-001 eğim limiti (TBD-TRV-002) | mission_intelligence |
+| SHV-001 | Safe Haven | Min. Illumination Duration | ≥ TBD hours/day (energy sufficiency) | A — SPICE orbital simulation; illumination analysis for selected region (AC-VAL-001..004) | Analysis + SIL | Daily illumination at selected safe haven ≥ energy budget requirement | mission_intelligence |
+| SHV-002 | Safe Haven | Min. Return Energy Reserve | ≥ 15% SoC (at safe haven gate) | T — SoC recorded at safe haven arrival for each mission run (overlaps PWR-001) | SIL, HIL | SoC ≥ 15%; HC-006 violation = failed | power |
+| SHV-003 | Safe Haven | Arrival Time (Nominal) | ≤ TBD minutes (max distance) | T — Navigation simulation: return from furthest mission point at nominal speed | SIL (CT-003) | 95% of scenarios ≤ TBD-TRV-001/TBD-TRV-002 dependent threshold | autonomy/global-planner |
+| SHV-004 | Safe Haven | Arrival Time (SURVIVAL mode) | ≤ TBD minutes (minimum energy route) | T — SURVIVAL mode simulation; FI-005+FI-003 combination | SIL (CT-007) | Vehicle reached safe haven in SURVIVAL mode; SoC > 0% | autonomy/global-planner |
+| SHV-005 | Safe Haven | Ground Slope Tolerance | ≤ TBD° (safe parking) | A + T — Terrain map slope analysis + vehicle stability analysis | Analysis, SIL | Slope at selected safe haven locations ≤ HC-001 slope limit (TBD-TRV-002) | mission_intelligence |
 
 ---
 
-## Kritik Test Senaryoları
+## Critical Test Scenarios
 
-Aşağıdaki 7 kritik test senaryosu QAR doğrulamasında önceliklidir. Her senaryo `simulation/simulator_design.md` §5'teki FI-* referansları ile bağlıdır.
+The following 7 critical test scenarios have priority in QAR verification. Each scenario is linked to FI-* references in `simulation/simulator_design.md` §5.
 
-### CT-001: FDIR Tepki Süresi — Anomali Enjeksiyonu
+### CT-001: FDIR Response Time — Anomaly Injection
 
-**Hedef QAR:** FDIR-001, FDIR-002, FDIR-004  
-**Bağlı FI:** FI-001 (IMU gürültü), FI-005 (ani SoC düşüşü), FI-007 (ısıtıcı açık devre), FI-008 (FDIR task freeze)  
-**Test Ortamı:** SIL (P1/P2), HIL (P3)
-
-```
-Prosedür:
-1. Nominal SCN-001 baseline koşusunu çalıştır (RT-001).
-2. Zaman t0'da FI-XXX enjekte et.
-3. FDIR anomali tespit zaman damgasını (t1) kaydet.
-4. FDIR abort_signal=true zaman damgasını (t2) kaydet [ICD-004].
-5. Hesapla: detection_latency = t1 - t0; decision_latency = t2 - t1.
-Kabul: detection_latency ≤ 50 ms (P95), decision_latency ≤ 500 ms (P95).
-Tekrar: Her FI tipi için 50 bağımsız koşu.
-Referans regresyon: RT-002, RT-005, RT-006.
-```
-
-### CT-002: Enerji Bütçesi Tahmin Doğruluğu — Simüle PSR Traversi
-
-**Hedef QAR:** PLAN-003, PWR-001, PWR-002  
-**Bağlı FI:** FI-005 (ani SoC düşüşü — worst-case)  
-**Test Ortamı:** SIL (Dijital İkiz), SC-003
+**Target QAR:** FDIR-001, FDIR-002, FDIR-004  
+**Linked FI:** FI-001 (IMU noise), FI-005 (sudden SoC drop), FI-007 (heater open circuit), FI-008 (FDIR task freeze)  
+**Test Environment:** SIL (P1/P2), HIL (P3)
 
 ```
-Prosedür:
-1. PSR traversi senaryosu: giriş SoC %85, TBD mesafe PSR içi.
-2. Planner'ın başlangıçta tahmin ettiği return_reserve_wh ve actual SoC safe haven kapısında kaydet.
-3. Hesapla: tahmin_hatası = |tahmin - gerçek| / tahmin × 100%.
-4. 20 bağımsız koşu (farklı arazi ve enerji tüketim varyasyonu).
-Kabul: Ortalama tahmin hatası < %5; maks < %10.
-         SoC safe haven kapısında ≥ %15 (PWR-001).
-Referans regresyon: RT-002.
+Procedure:
+1. Run nominal SCN-001 baseline run (RT-001).
+2. Inject FI-XXX at time t0.
+3. Record FDIR anomaly detection timestamp (t1).
+4. Record FDIR abort_signal=true timestamp (t2) [ICD-004].
+5. Calculate: detection_latency = t1 - t0; decision_latency = t2 - t1.
+Acceptance: detection_latency ≤ 50 ms (P95), decision_latency ≤ 500 ms (P95).
+Repetitions: 50 independent runs per FI type.
+Reference regression: RT-002, RT-005, RT-006.
 ```
 
-### CT-003: Safe Haven Seçimi Doğruluğu — Bilinen Optimum Karşılaştırma
+### CT-002: Energy Budget Estimation Accuracy — Simulated PSR Traversal
 
-**Hedef QAR:** SHV-001..005, PLAN-002  
-**Bağlı FI:** Yok (arazi enjeksiyonu var)  
-**Test Ortamı:** SIL (SC-005)
-
-```
-Prosedür:
-1. Test senaryosu: Birincil safe haven rotası tıkandı (SC-005 — rota enjeksiyonu).
-2. 7 kriter üzerinden aday safe haven'lar değerlendirilir.
-3. Referans çözüm: Uzman elle hesaplanmış optimum safe haven koordinatı.
-4. Sistem kararını referans çözümle karşılaştır.
-5. 10 farklı engelleme konfigürasyonu + 7 kriterden 1 kriterin farklı ağırlıklı olduğu edge case'ler.
-Kabul: Sistem seçimi referans ile %80+ örtüşüyor; HC ihlali içeren aday hiçbir zaman seçilmiyor.
-Referans: operational_scenarios.md SC-005 §3 7-kriter listesi.
-```
-
-### CT-004: Haberleşme Kesikliğinde Otonom Davranış — Link Drop Simülasyonu
-
-**Hedef QAR:** COM-001, COM-003, COM-004, COM-006  
-**Bağlı FI:** FI-006 (link kaybı)  
-**Test Ortamı:** SIL (SC-002, SC-007)
+**Target QAR:** PLAN-003, PWR-001, PWR-002  
+**Linked FI:** FI-005 (sudden SoC drop — worst-case)  
+**Test Environment:** SIL (Digital Twin), SC-003
 
 ```
-Prosedür — SURFACE_EXPLORATION senaryosu:
-1. FI-006: Link t0'da kesildi. Süre: TBD-COM-002 uyarı eşiği / 2× uyarı eşiği / kritik eşik.
-2. FDIR CAUTION tetikleyicisi tespit süresi kaydedilir.
-3. Pre-planned abort trigger listesi (ABT-001..006) kontrol edilir.
-4. Link geri gelince CAUTION → NOMINAL geçiş süresi kaydedilir.
-Prosedür — PSR_OPS senaryosu:
-5. PSR içinde FI-006 enjeksiyonu → RETURN_REQUIRED tetiklenmeli.
-6. ACL dönüş rotası başlamalı; yer onayı beklenmemeli.
-Kabul: Durum geçişleri SC-002 protokolüne uygun; araç pre-planned sınırlar dışına çıkmadı.
-        Link geri gelince yer telemetrisi ≤ 1 s güncellendi (COM-003).
-Referans regresyon: RT-004.
+Procedure:
+1. PSR traversal scenario: entry SoC 85%, TBD distance inside PSR.
+2. Record planner's initial estimated return_reserve_wh and actual SoC at safe haven gate.
+3. Calculate: estimation_error = |estimate - actual| / estimate × 100%.
+4. 20 independent runs (different terrain and energy consumption variation).
+Acceptance: Mean estimation error < 5%; max < 10%.
+             SoC at safe haven gate ≥ 15% (PWR-001).
+Reference regression: RT-002.
 ```
 
-### CT-005: Lokalizasyon Kaybı Recovery — IMU Drift Enjeksiyonu
+### CT-003: Safe Haven Selection Accuracy — Known Optimum Comparison
 
-**Hedef QAR:** NAV-001, NAV-004, NAV-005, NAV-006  
-**Bağlı FI:** FI-001 (IMU gürültü artışı), FI-002 (IMU bias kayması), FI-009 (EKF yanlış başlatma)  
-**Test Ortamı:** SIL (SC-004), HIL (P3)
-
-```
-Prosedür:
-1. Nominal gezinti sırasında FI-001 veya FI-002 enjekte et.
-2. EKF kovaryans izle: uncertainty_m eşiği aştığında (> 1.0 m) FDIR bildirim süresi.
-3. FDIR Detection → Isolation → Recovery adımlarını gözlemle.
-4. Recovery başarılı: landmark arama → σ_pos < 0.5 m → NOMINAL dönüş.
-5. Recovery başarısız: RETURN_REQUIRED tetiklenmeli; IMU-only navigasyon ile dönüş.
-Kabul: Tespit ≤ 2 s (NAV-004); dead-reckoning kayması < 2 m/dak (NAV-005).
-         CAUTION → RETURN_REQUIRED geçişi doğru tetiklendi (SC-004 adım 8).
-Referans regresyon: RT-003.
-```
-
-### CT-006: PSR Traversi Termal Bütçe — Uzun Süreli Karanlık Simülasyonu
-
-**Hedef QAR:** THM-001, THM-002, THM-003, SHV-001  
-**Bağlı FI:** FI-007 (ısıtıcı açık devre — worst-case)  
-**Test Ortamı:** SIL (SC-006, PSR termal senaryosu)
+**Target QAR:** SHV-001..005, PLAN-002  
+**Linked FI:** None (terrain injection present)  
+**Test Environment:** SIL (SC-005)
 
 ```
-Prosedür:
-1. PSR içinde araç TBD saat boyunca kalır (en uzun lunar gece simülasyonu).
-2. Isıtıcılar nominal çalışıyor: sıcaklık profili izle.
-3. t_mid: FI-007 enjeksiyonu (bir ısıtıcı arızası) → FDIR termal kritik tespit süresi.
-4. Fallback ısıtıcı aktivasyonu → sıcaklık stabilizasyonu izle.
-5. SoC en düşük noktası kaydedilir.
-Kabul: Hiçbir kritik bileşen minimum çalışma sıcaklığının altına düşmedi.
-         THM-003: Kritik tespit ≤ 2 s.
-         THM-002: Fallback ısıtıcı aktivasyonu ≤ 5 s.
-         SoC dönüş rezervi ≥ %15 korundu.
+Procedure:
+1. Test scenario: Primary safe haven route blocked (SC-005 — route injection).
+2. Candidate safe havens evaluated across 7 criteria.
+3. Reference solution: Expert manually computed optimum safe haven coordinates.
+4. Compare system decision against reference solution.
+5. 10 different blocking configurations + edge cases with 1 of 7 criteria at different weight.
+Acceptance: System selection matches reference with 80%+ overlap; candidate containing HC violation never selected.
+Reference: operational_scenarios.md SC-005 §3 7-criteria list.
 ```
 
-### CT-007: Çoklu Eş Zamanlı Hata — Combined Failure
+### CT-004: Autonomous Behaviour Under Communication Disruption — Link Drop Simulation
 
-**Hedef QAR:** FDIR-001..004, PWR-001, NAV-001, THM-003  
-**Bağlı FI:** FI-005 + FI-001 + FI-006 kombinasyonu  
-**Bağlı RPN:** FMEA-RPN-PWR-001 (30) + FMEA-RPN-NAV-001 (24) kombinasyon  
-**Test Ortamı:** SIL (RT-002 + RT-003 + RT-004 kombinasyonu)
+**Target QAR:** COM-001, COM-003, COM-004, COM-006  
+**Linked FI:** FI-006 (link loss)  
+**Test Environment:** SIL (SC-002, SC-007)
 
 ```
-Prosedür:
-1. Nominal PSR operasyonu.
-2. t=0: FI-001 (IMU gürültü artışı 3×)
-   t=30s: FI-006 (link kaybı)
-   t=60s: FI-005 (ani SoC %20 düşüşü)
-3. FDIR en yüksek öncelikli tetikleyiciyi doğru seçmeli:
-   SoC düşüşü (HC-006) → RETURN_REQUIRED (en kritik).
-4. Çoklu hata altında FDIR tek tutarlı karar vermeli.
-5. Araç abort başlatmalı ve safe haven'a dönmeli.
-Kabul: FDIR çoklu tetikleyici altında deterministik davranıyor (FDIR-005).
-         En yüksek öncelikli tetikleyici seçildi (SoC > link > nav, bağlama göre).
-         Araç safe haven'a SoC ≥ %15 ile ulaştı.
-Referans regresyon: RT-002, RT-003, RT-004 (ayrı ayrı); bu senaryo ek CT.
+Procedure — SURFACE_EXPLORATION scenario:
+1. FI-006: Link cut at t0. Duration: TBD-COM-002 warning threshold / 2× warning threshold / critical threshold.
+2. FDIR CAUTION trigger detection time recorded.
+3. Pre-planned abort trigger list (ABT-001..006) checked.
+4. CAUTION → NOMINAL transition time recorded when link returns.
+Procedure — PSR_OPS scenario:
+5. FI-006 injection inside PSR → RETURN_REQUIRED must trigger.
+6. ACL return route must start; no ground approval awaited.
+Acceptance: State transitions comply with SC-002 protocol; vehicle did not leave pre-planned boundaries.
+            Ground telemetry updated ≤ 1 s when link returns (COM-003).
+Reference regression: RT-004.
+```
+
+### CT-005: Localisation Loss Recovery — IMU Drift Injection
+
+**Target QAR:** NAV-001, NAV-004, NAV-005, NAV-006  
+**Linked FI:** FI-001 (IMU noise increase), FI-002 (IMU bias shift), FI-009 (EKF init error)  
+**Test Environment:** SIL (SC-004), HIL (P3)
+
+```
+Procedure:
+1. Inject FI-001 or FI-002 during nominal traversal.
+2. Monitor EKF covariance: FDIR notification time when uncertainty_m exceeds threshold (> 1.0 m).
+3. Observe FDIR Detection → Isolation → Recovery steps.
+4. Recovery successful: landmark search → σ_pos < 0.5 m → return to NOMINAL.
+5. Recovery unsuccessful: RETURN_REQUIRED must trigger; return with IMU-only navigation.
+Acceptance: Detection ≤ 2 s (NAV-004); dead-reckoning drift < 2 m/min (NAV-005).
+             CAUTION → RETURN_REQUIRED transition correctly triggered (SC-004 step 8).
+Reference regression: RT-003.
+```
+
+### CT-006: PSR Traversal Thermal Budget — Extended Darkness Simulation
+
+**Target QAR:** THM-001, THM-002, THM-003, SHV-001  
+**Linked FI:** FI-007 (heater open circuit — worst-case)  
+**Test Environment:** SIL (SC-006, PSR thermal scenario)
+
+```
+Procedure:
+1. Vehicle stays inside PSR for TBD hours (longest lunar night simulation).
+2. Heaters operating nominally: monitor temperature profile.
+3. t_mid: Inject FI-007 (one heater failure) → FDIR thermal critical detection time.
+4. Fallback heater activation → monitor temperature stabilisation.
+5. Lowest SoC point recorded.
+Acceptance: No critical component dropped below minimum operating temperature.
+             THM-003: Critical detection ≤ 2 s.
+             THM-002: Fallback heater activation ≤ 5 s.
+             SoC return reserve ≥ 15% maintained.
+```
+
+### CT-007: Multiple Simultaneous Faults — Combined Failure
+
+**Target QAR:** FDIR-001..004, PWR-001, NAV-001, THM-003  
+**Linked FI:** FI-005 + FI-001 + FI-006 combination  
+**Linked RPN:** FMEA-RPN-PWR-001 (30) + FMEA-RPN-NAV-001 (24) combination  
+**Test Environment:** SIL (RT-002 + RT-003 + RT-004 combination)
+
+```
+Procedure:
+1. Nominal PSR operation.
+2. t=0: FI-001 (IMU noise increase 3×)
+   t=30s: FI-006 (link loss)
+   t=60s: FI-005 (sudden SoC drop 20%)
+3. FDIR must correctly select highest-priority trigger:
+   SoC drop (HC-006) → RETURN_REQUIRED (most critical).
+4. FDIR must make one consistent decision under multiple faults.
+5. Vehicle must initiate abort and return to safe haven.
+Acceptance: FDIR behaving deterministically under multiple triggers (FDIR-005).
+             Highest-priority trigger selected (SoC > link > nav, context-dependent).
+             Vehicle reached safe haven with SoC ≥ 15%.
+Reference regression: RT-002, RT-003, RT-004 (separately); this scenario is additional CT.
 ```
 
 ---
 
-## Regresyon Test Suite
+## Regression Test Suite
 
-Her PR'da otomatik çalışan minimum test seti.
+Minimum test set to run automatically on each PR.
 
-### Mevcut Unit Test Referansı
+### Current Unit Test Reference
 
-`tests/unit/test_models.py` — 29 unit test, aşağıdaki alanları kapsar:
+`tests/unit/test_models.py` — 29 unit tests covering the following areas:
 
-| Test Grubu | Kapsam | QAR İlişkisi |
+| Test Group | Coverage | QAR Relation |
 |------------|--------|--------------|
-| `ScoringWeights` toplamı 1.0 | Hedef puanlama tutarlılığı | PLAN doğrulama tabanı |
-| `HardConstraintEvaluator` pass/fail | HC-001..015 motoru | P0-AC-02 (30 HC testi) |
-| `DataProductMetadata` zorunlu alanlar | temporal_class, resolution_m | P0-AC-06, P0-AC-07 |
-| `LandingSiteCandidate` yapısı | Alan kısıtları | SHV doğrulama tabanı |
-| `BoundingBox` oluşturma | Koordinat tutarlılığı | NAV doğrulama tabanı |
-| `CraterRecord` oluşturma | Veri modeli bütünlüğü | Bilimsel veri platform |
+| `ScoringWeights` sum 1.0 | Target scoring consistency | PLAN verification base |
+| `HardConstraintEvaluator` pass/fail | HC-001..015 engine | P0-AC-02 (30 HC tests) |
+| `DataProductMetadata` mandatory fields | temporal_class, resolution_m | P0-AC-06, P0-AC-07 |
+| `LandingSiteCandidate` structure | Area constraints | SHV verification base |
+| `BoundingBox` construction | Coordinate consistency | NAV verification base |
+| `CraterRecord` construction | Data model integrity | Scientific data platform |
 
-**Hedef:** Mevcut 29 test %100 geçiyor; her PR sonrası bu sayı azalmaz.
+**Target:** Current 29 tests 100% passing; this count does not decrease after each PR.
 
-### PR Regresyon Suite Tanımı
+### PR Regression Suite Definition
 
-| Seviye | Test | Ortam | Süre (tahmini) | Tetikleyici |
+| Level | Test | Environment | Duration (estimated) | Trigger |
 |--------|------|-------|----------------|-------------|
-| L1 — Her PR | 29 mevcut unit test | UT (pytest) | < 2 dak | Her commit |
-| L1 — Her PR | P0-AC-01..07 (ICD şema, HC motoru, durum makinesi) | UT | < 5 dak | Her commit |
-| L2 — Merge önce | RT-001 (nominal SCN-001 koşusu) | SIL | < 15 dak | PR merge onayı |
-| L2 — Merge önce | RT-002 (PSR enerji düşüşü, FI-005) | SIL | < 10 dak | PR merge onayı |
-| L2 — Merge önce | RT-003 (lokalizasyon kaybı, FI-001) | SIL | < 10 dak | PR merge onayı |
-| L2 — Merge önce | RT-004 (link kaybı PSR, FI-006) | SIL | < 10 dak | PR merge onayı |
-| L2 — Merge önce | RT-005 (termal kritik, FI-007) | SIL | < 10 dak | PR merge onayı |
-| L2 — Merge önce | RT-006 (FDIR watchdog freeze, FI-008) | SIL | < 5 dak | PR merge onayı |
-| L3 — Haftalık | CT-001..007 tam senaryo seti | SIL | < 2 saat | Haftalık CI |
-| L4 — Faz kapısı | P0-AC..P2-AC tam set | SIL + IT | < 4 saat | Faz geçiş kapısı |
+| L1 — Every PR | 29 current unit tests | UT (pytest) | < 2 min | Every commit |
+| L1 — Every PR | P0-AC-01..07 (ICD schema, HC engine, state machine) | UT | < 5 min | Every commit |
+| L2 — Before merge | RT-001 (nominal SCN-001 run) | SIL | < 15 min | PR merge approval |
+| L2 — Before merge | RT-002 (PSR energy drop, FI-005) | SIL | < 10 min | PR merge approval |
+| L2 — Before merge | RT-003 (localisation loss, FI-001) | SIL | < 10 min | PR merge approval |
+| L2 — Before merge | RT-004 (link loss PSR, FI-006) | SIL | < 10 min | PR merge approval |
+| L2 — Before merge | RT-005 (thermal critical, FI-007) | SIL | < 10 min | PR merge approval |
+| L2 — Before merge | RT-006 (FDIR watchdog freeze, FI-008) | SIL | < 5 min | PR merge approval |
+| L3 — Weekly | CT-001..007 full scenario set | SIL | < 2 hours | Weekly CI |
+| L4 — Phase gate | P0-AC..P2-AC full set | SIL + IT | < 4 hours | Phase transition gate |
 
-### Kabul / Red Kriterleri
+### Pass / Fail Criteria
 
-| Durum | Kriter | Sonuç |
+| Status | Criterion | Outcome |
 |-------|--------|-------|
-| **Geçer** | L1 + L2 testlerin tümü yeşil | PR merge onayı verilebilir |
-| **Kırmızı bayrak** | Herhangi bir L1 testi başarısız | PR merge yapılamaz; hata düzeltilmeli |
-| **Kırmızı bayrak** | Herhangi bir L2 FDIR/güvenlik testi başarısız | PR merge yapılamaz |
-| **Sarı bayrak** | L2 performans testi (PLAN-001/002) eşiği aştı | Kabul edilebilir; risk kaydına eklenir |
-| **Faz kapı engeli** | L4 herhangi AC başarısız | Faz geçişi yapılamaz |
+| **Pass** | All L1 + L2 tests green | PR merge approval may be given |
+| **Red flag** | Any L1 test failed | PR merge blocked; bug must be fixed |
+| **Red flag** | Any L2 FDIR/safety test failed | PR merge blocked |
+| **Yellow flag** | L2 performance test (PLAN-001/002) threshold exceeded | Acceptable; added to risk register |
+| **Phase gate block** | Any L4 AC failed | Phase transition blocked |
 
-### Metrik Toplama
+### Metric Collection
 
-Her CI koşusunda şu metrikler loglanır:
+The following metrics are logged on each CI run:
 
 ```yaml
 regression_metrics:
@@ -312,37 +312,37 @@ regression_metrics:
 
 ---
 
-## Repo Doğrulama Kabul Kriterleri (AC-VAL-001..005)
+## Repository Validation Acceptance Criteria (AC-VAL-001..005)
 
-Kaynak: `tests/acceptance_criteria.md` §Repo Doğrulama Kabul Kriterleri (B4-EK).
+Source: `tests/acceptance_criteria.md` §Repository Validation Acceptance Criteria (B4-EK).
 
-| Kriter ID | Kriter | Kaynak | Hedef | Test Ortamı | QAR İlişkisi |
+| Criterion ID | Criterion | Source | Target | Test Environment | QAR Relation |
 |-----------|--------|--------|-------|-------------|--------------|
-| AC-VAL-001 | Güneş/Dünya açıları JPL Horizons ile uyumlu | JPL Horizons | ±0.001° içinde | Analysis | SHV-001, COM-004 (link penceresi) |
-| AC-VAL-002 | Aydınlanma oranı NASA GSFC ile korelasyon | NASA GSFC | r ≥ 0.988, RMS ≤ 2.7 puan | Analysis + SIL | SHV-001, P1-AC-01 |
-| AC-VAL-003 | Dünya görünürlüğü NASA GSFC ile korelasyon | NASA GSFC | r ≥ 0.993 | Analysis | COM-004, RR-014 |
-| AC-VAL-004 | Shackleton ridge aydınlanma: 2m gözlem %92.29, 10m %95.69 | Gläser et al. (2014) | ±0.05 puan | Analysis | P1-AC-01, SHV-001 |
-| AC-VAL-005 | Çözünürlük doğrulama raporu: 80m vs 20m vs 300m fark analizi | B3-EK RR-011/015 | Rapor teslim + onay | Analysis | NAV-006, PLAN-001 |
+| AC-VAL-001 | Sun/Earth angles consistent with JPL Horizons | JPL Horizons | Within ±0.001° | Analysis | SHV-001, COM-004 (link window) |
+| AC-VAL-002 | Illumination fraction correlation with NASA GSFC | NASA GSFC | r ≥ 0.988, RMS ≤ 2.7 points | Analysis + SIL | SHV-001, P1-AC-01 |
+| AC-VAL-003 | Earth visibility correlation with NASA GSFC | NASA GSFC | r ≥ 0.993 | Analysis | COM-004, RR-014 |
+| AC-VAL-004 | Shackleton ridge illumination: 2m observer 92.29%, 10m observer 95.69% | Gläser et al. (2014) | Within ±0.05 points | Analysis | P1-AC-01, SHV-001 |
+| AC-VAL-005 | Resolution validation report: 80m vs 20m vs 300m difference analysis | B3-EK RR-011/015 | Report delivered + approved | Analysis | NAV-006, PLAN-001 |
 
-**Faz uygulaması:** AC-VAL-001..004 P1 kapısı koşuludur. AC-VAL-005 P1 çıkış raporu kapsamındadır.
+**Phase application:** AC-VAL-001..004 is a P1 gate condition. AC-VAL-005 is within the P1 exit report scope.
 
 ---
 
-## Doğrulama Traceability Matrisi (Özet)
+## Verification Traceability Matrix (Summary)
 
-| Doğrulama Yöntemi | Kapsanan QAR Sayısı | Test Ortamı | Faz |
+| Verification Method | QAR Count Covered | Test Environment | Phase |
 |-------------------|--------------------|-----------|----|
 | Analysis (A) | SHV-001, SHV-005, AC-VAL-001..005 | — | P1 |
 | Unit Test (T/UT) | FDIR-005, NAV-003, PWR-005/006, THM-001, COM-002/005 | pytest | P0 |
-| Integration Test (IT) | P0-AC-01..07 kombinasyon | IT | P0 |
+| Integration Test (IT) | P0-AC-01..07 combination | IT | P0 |
 | SIL (T/D/SIL) | FDIR-001..004, NAV-001/004..006, PLAN-001..005, PWR-001..003, THM-002/003, COM-001/003/004/006, SHV-002..004 | SIL | P1/P2 |
 | HIL (T/HIL) | FDIR-001/002, NAV-001, PWR-003/004, THM-004/005, COM-001 | HIL | P3 |
 | TVAC (T) | THM-004, THM-005, PWR-005 | TVAC | P3 |
 
 ---
 
-## Revizyon Geçmişi
+## Revision History
 
-| Versiyon | Tarih | Değişiklik |
+| Version | Date | Change |
 |----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — Agent C, C4 görevi; 30 QAR maddesi, 7 kritik senaryo, regresyon suite |
+| 0.1 | 2026-11-14 | First draft — Agent C, C4 task; 30 QAR items, 7 critical scenarios, regression suite |

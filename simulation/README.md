@@ -1,13 +1,13 @@
 # simulation/
 
-Simülasyon altyapısı: ortam modeli, araç modeli, dijital ikiz, test senaryoları, hata enjeksiyonu. Bkz. v1.0 §7.
+Simulation infrastructure: environment model, vehicle model, digital twin, test scenarios, fault injection. See v1.0 §7.
 
-## Alt Dizinler
+## Subdirectories
 
-- `environment-model/` — Lunar DEM, aydınlanma, termal ortam simülasyonu.
-- `vehicle-model/` — Araç dinamik ve enerji modeli simülasyonu.
-- `digital-twin/` — Gerçek zamanlı dijital ikiz; SIL/HIL köprüsü.
-- `scenarios/` — Operasyonel test senaryoları (SC-001..SC-009).
-- `fault-injection/` — FMEA tabanlı hata enjeksiyon çerçevesi; B4 kapsam matrisi.
+- `environment-model/` — Lunar DEM, illumination, thermal environment simulation.
+- `vehicle-model/` — Vehicle dynamics and energy model simulation.
+- `digital-twin/` — Real-time digital twin; SIL/HIL bridge.
+- `scenarios/` — Operational test scenarios (SC-001..SC-009).
+- `fault-injection/` — FMEA-based fault injection framework; B4 coverage matrix.
 
-Lunar-Navigator entegrasyonu: SPICE pipeline (`data-platform/processing/ephemeris/`), 720-ışınlı yerel ufuk hesabı (`data-platform/processing/horizon/`) ve Dünya disk görünürlüğü (`data-platform/processing/visibility/`) bu simülasyon ortamına referans implementasyon olarak beslenecektir. Bkz. `infrastructure/repo_integration_map.md`.
+Lunar-Navigator integration: the SPICE pipeline (`data-platform/processing/ephemeris/`), 720-ray local horizon calculation (`data-platform/processing/horizon/`), and Earth disk visibility (`data-platform/processing/visibility/`) will be fed into this simulation environment as the reference implementation. See `infrastructure/repo_integration_map.md`.

@@ -4,16 +4,16 @@
 #   - domain/mission/constraints/hard_constraints_catalog.yaml  (HC-006, HC-007, HC-008)
 #   - safety/safety_budget.md
 # open_items:
-#   - return_reserve_wh hesaplama modeli TBD(source: §10 Power Mgmt araç parametreleri)
-#   - thermal_margin_c kritik bileşen listesi TBD(source: §10)
+#   - return_reserve_wh calculation model TBD(source: §10 Power Mgmt vehicle parameters)
+#   - thermal_margin_c critical component list TBD(source: §10)
 
 schema_version: "1.0.0"
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: "ResourceState"
 description: >
-  Araç enerji ve termal durum sözleşmesi.
-  Power Management modülü bu mesajı üretir; planlayıcı hard constraint olarak tüketir.
-  Uyum Notu 3: Planlayıcı return_reserve_wh değerini bağımsız hesaplamaz.
+  Vehicle energy and thermal state contract.
+  Power Management module produces this message; planner consumes it as hard constraints.
+  Compliance Note 3: Planner never calculates return_reserve_wh independently.
 
 type: object
 
@@ -31,56 +31,56 @@ properties:
 
   schema_version:
     type: string
-    description: "Bu şemanın versiyonu."
+    description: "Version of this schema."
     pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
 
   timestamp_sclk:
     type: number
-    description: "Spacecraft Clock (SCLK) zaman damgası — saniye cinsinden."
+    description: "Spacecraft Clock (SCLK) timestamp — in seconds."
     minimum: 0
 
   timestamp_utc:
     type: string
     format: date-time
-    description: "UTC eşdeğeri (opsiyonel; loglama kolaylığı)."
+    description: "UTC equivalent (optional; logging convenience)."
 
   state_of_charge_pct:
     type: number
-    description: "Batarya doluluk oranı (%). HC-008 ile karşılaştırılır."
+    description: "Battery state of charge (%). Compared against HC-008."
     minimum: 0.0
     maximum: 100.0
 
   available_energy_wh:
     type: number
-    description: "Anlık kullanılabilir enerji (Wh). Toplam kapasite eksi rezerv."
+    description: "Instantaneous available energy (Wh). Total capacity minus reserve."
     minimum: 0.0
 
   return_reserve_wh:
     type: number
     description: >
-      Dönüş için ayrılmış enerji rezervi (Wh).
-      Power Management modülü hesaplar ve bu alanda bildirir.
-      Planlayıcı bu değeri HC-006 hard constraint olarak uygular.
-      Planlayıcı bütçeyi asla bağımsız hesaplamaz. Uyum Notu 3.
+      Energy reserve allocated for return (Wh).
+      Power Management module calculates and reports this field.
+      Planner applies this value as HC-006 hard constraint.
+      Planner never calculates the budget independently. Compliance Note 3.
     minimum: 0.0
 
   uncertainty_available_wh:
     type: number
     description: >
-      Kullanılabilir enerji tahmin belirsizliği (1σ, Wh).
-      Planlayıcı konservatif marj hesabında kullanır.
-      Null kabul edilmez; bilinmiyorsa -1 ile işaretlenir.
+      Available energy estimate uncertainty (1σ, Wh).
+      Used by planner in conservative margin calculation.
+      Null not accepted; if unknown, marked as -1.
     not:
       type: "null"
 
   power_mode:
     type: string
     description: >
-      Aktif güç modu. Planlayıcı ve FDIR bu moda göre davranır.
-      full_operation: tüm sistemler aktif.
-      science_restricted: bilim araçları kısıtlı.
-      traverse_only: sadece seyir, bilim devre dışı.
-      survival: minimum güç, sadece kritik sistem.
+      Active power mode. Planner and FDIR behave according to this mode.
+      full_operation: all systems active.
+      science_restricted: science instruments restricted.
+      traverse_only: traversal only, science disabled.
+      survival: minimum power, critical systems only.
     enum:
       - full_operation
       - science_restricted
@@ -90,23 +90,23 @@ properties:
   thermal_margin_c:
     type: number
     description: >
-      Kritik bileşenlerde en düşük termal marj (°C).
-      thermal_margin_c = min(T_limit_c[i] - T_current_c[i]) for i in {batarya, ana_bilgisayar, motor_suruculeri}.
-      HC-007 ile karşılaştırılır.
+      Lowest thermal margin across critical components (°C).
+      thermal_margin_c = min(T_limit_c[i] - T_current_c[i]) for i in {battery, main_computer, motor_drivers}.
+      Compared against HC-007.
 
   heater_power_w:
     type: number
-    description: "Aktif ısıtıcı toplam gücü (W). Dönüş rezervi hesabına dahil edilir."
+    description: "Total active heater power (W). Included in return reserve calculation."
     minimum: 0.0
 
   solar_panel_output_w:
     type: number
-    description: "Anlık güneş paneli çıktısı (W). safe_state şarj hesabında kullanılır."
+    description: "Instantaneous solar panel output (W). Used in safe_state charge calculation."
     minimum: 0.0
 
   estimated_range_reserve_m:
     type: number
-    description: "return_reserve_wh'e karşılık gelen tahmini menzil (m). Navigation sağlar."
+    description: "Estimated range corresponding to return_reserve_wh (m). Provided by Navigation."
     minimum: 0.0
 
 additionalProperties: false

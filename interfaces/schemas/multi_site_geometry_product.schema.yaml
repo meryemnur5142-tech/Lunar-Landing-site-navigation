@@ -4,17 +4,17 @@
 #   - interfaces/schemas/environment_product.schema.yaml  (terrain_resolution, ephemeris_validity_range)
 #   - domain/mission/constraints/hard_constraints_catalog.yaml  (HC-016, HC-017)
 # open_items:
-#   - max_regions sayısı 5 (repo 2-3'ten genişletildi; üst limit TBD)
-#   - eşik değerleri HC-016/HC-017'den alınır, TBD(source: §10)
+#   - max_regions count 5 (expanded from repo 2-3; upper limit TBD)
+#   - threshold values taken from HC-016/HC-017, TBD(source: §10)
 
 schema_version: "1.0.0"
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: "MultiSiteGeometryProduct"
 description: >
-  Birden fazla bölgenin güneş/Dünya/gece/kesinti metriklerini karşılaştıran ürün.
-  Kaynak: daniel27-space/lunar-navigator çoklu bölge karşılaştırma modülü (repo: 2-3 bölge → LUNA-AI: 5 bölge).
-  Bu ürün HC-016/HC-017 hard constraint eleme sonrası sıralama girdisi olarak kullanılır.
-  Uyum Notu 5: Bu ürünün metrikleri doğrudan güvenlik kararı vermez.
+  Product comparing sun/Earth/night/outage metrics for multiple regions.
+  Source: daniel27-space/lunar-navigator multi-region comparison module (repo: 2-3 regions → LUNA-AI: 5 regions).
+  This product is used as a ranking input after HC-016/HC-017 hard constraint elimination.
+  Compliance Note 5: Metrics in this product do not make safety decisions on their own.
 
 type: object
 
@@ -31,32 +31,32 @@ properties:
 
   schema_version:
     type: string
-    description: "Bu şemanın versiyonu."
+    description: "Version of this schema."
     pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
 
   analysis_epoch_start_utc:
     type: string
     format: date-time
-    description: "Analiz başlangıç zamanı (UTC)."
+    description: "Analysis start time (UTC)."
 
   analysis_epoch_end_utc:
     type: string
     format: date-time
-    description: "Analiz bitiş zamanı (UTC)."
+    description: "Analysis end time (UTC)."
 
   analysis_duration_days:
     type: integer
-    description: "Analiz süresi (gün). Repo referans: 60 gün."
+    description: "Analysis duration (days). Repo reference: 60 days."
     minimum: 1
 
   terrain_resolution:
     type: string
-    description: "Arazi çözünürlüğü. Repo site finder: 300m."
+    description: "Terrain resolution. Repo site finder: 300m."
     enum: ["80m", "300m", "2700m"]
 
   ephemeris_validity_range:
     type: object
-    description: "Bu analizin geçerli efemeris aralığı."
+    description: "Ephemeris range for which this analysis is valid."
     properties:
       start: { type: string, format: date }
       end:   { type: string, format: date }
@@ -64,8 +64,8 @@ properties:
   regions:
     type: array
     description: >
-      Karşılaştırılan bölgeler. Repo: 2-3; LUNA-AI: 5 bölgeye genişletildi.
-      Her bölge için güneş oranı, Dünya oranı, en uzun gece, en uzun kesinti hesaplandı.
+      Compared regions. Repo: 2-3; LUNA-AI: expanded to 5 regions.
+      Sun fraction, Earth fraction, longest night, longest outage calculated for each region.
     minItems: 1
     maxItems: 5
     items:
@@ -83,7 +83,7 @@ properties:
       properties:
         region_id:
           type: string
-          description: "Bölge tanımlayıcısı."
+          description: "Region identifier."
 
         lat_deg:
           type: number
@@ -97,39 +97,39 @@ properties:
 
         sun_fraction:
           type: number
-          description: "Analiz periyodunda güneş görünürlük oranı [0,1]."
+          description: "Solar visibility fraction during analysis period [0,1]."
           minimum: 0.0
           maximum: 1.0
 
         earth_fraction:
           type: number
-          description: "Analiz periyodunda Dünya görünürlük oranı [0,1]."
+          description: "Earth visibility fraction during analysis period [0,1]."
           minimum: 0.0
           maximum: 1.0
 
         longest_night_hours:
           type: number
-          description: "Analiz periyodundaki en uzun gece süresi (saat). HC-010 ile ilişkili."
+          description: "Longest night duration during analysis period (hours). Related to HC-010."
           minimum: 0.0
 
         longest_outage_hours:
           type: number
-          description: "Analiz periyodundaki en uzun haberleşme kesintisi (saat). HC-014 ile ilişkili."
+          description: "Longest communication outage during analysis period (hours). Related to HC-014."
           minimum: 0.0
 
         hc016_pass:
           type: boolean
-          description: "HC-016 (min güneş oranı) eleme sonucu. false → bölge elenmiş."
+          description: "HC-016 (min sun fraction) elimination result. false → region eliminated."
 
         hc017_pass:
           type: boolean
-          description: "HC-017 (min Dünya görünürlük oranı) eleme sonucu. false → bölge elenmiş."
+          description: "HC-017 (min Earth visibility fraction) elimination result. false → region eliminated."
 
         ranking_score:
           type: number
           description: >
-            Çok kriterli sıralama skoru (opsiyonel). Yalnızca HC geçen bölgelere uygulanır.
-            Uyum Notu 5: Bu skor tek başına güvenlik kararı vermez.
+            Multi-criteria ranking score (optional). Applied only to regions that pass HC.
+            Compliance Note 5: This score does not make safety decisions on its own.
           minimum: 0.0
           maximum: 1.0
 
@@ -138,7 +138,7 @@ properties:
 
   source:
     type: string
-    description: "Veri kaynağı."
+    description: "Data source."
     minLength: 1
 
 additionalProperties: false
@@ -173,4 +173,4 @@ example:
       longest_outage_hours: 42.0
       hc016_pass: false
       hc017_pass: false
-      notes: "HC-016 ve HC-017 başarısız; bölge elendi"
+      notes: "HC-016 and HC-017 failed; region eliminated"

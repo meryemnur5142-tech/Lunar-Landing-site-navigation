@@ -1,90 +1,90 @@
-# ADR-005: Güvenlik Durum Makinesi Mimarisi
+# ADR-005: Safety State Machine Architecture
 
-**Durum:** Kabul Edildi  
-**Tarih:** 2026-11-14  
-**İlgili QAR:** FDIR-001, FDIR-002, FDIR-004, FDIR-005  
-**İlgili Belge:** docs/architecture/SAFETY_STATE_MACHINE.md
-
----
-
-## Bağlam
-
-LUNA-AI, birden fazla risk katmanını eş zamanlı olarak yönetmek zorundadır:
-
-- **Dört güvenlik durumu:** NOMINAL, CAUTION, RETURN_REQUIRED, SURVIVAL
-- **Çoklu tetikleyici:** Enerji, termal, navigasyon, haberleşme, iç yazılım arızası
-- **Öncelik hiyerarşisi:** Birden fazla tetikleyici aynı anda aktif olduğunda hangi durum üstün gelir?
-- **Dışa bağımsızlık:** FDIR durum makinesi Mission Planner'dan bağımsız çalışmalı; planlayıcı donsa bile güvenlik kararları çalışmaya devam etmeli
-- **Deterministik davranış:** Aynı girdi seti aynı durum geçişini üretmeli (FDIR-005 analog: formal doğrulama gerektiriyor)
-- **İzlenebilirlik:** Her geçiş log'lanabilir, test edilebilir ve bağımsız denetlenebilir olmalı
+**Status:** Accepted
+**Date:** 2026-11-14
+**Related QAR:** FDIR-001, FDIR-002, FDIR-004, FDIR-005
+**Related Document:** docs/architecture/SAFETY_STATE_MACHINE.md
 
 ---
 
-## Değerlendirilen Alternatifler
+## Context
 
-### Alternatif 1: Hiyerarşik Durum Makinesi (HSM)
+LUNA-AI must manage multiple risk layers simultaneously:
 
-**Artılar:**
-- Durumlar arasında hiyerarşi (üst durum ortak davranışı miras alır); CAUTION → NOMINAL dönüşünde ortak temizleme mantığı paylaşılır
-- 4 durum az; HSM karmaşıklığı bu ölçekte yönetilebilir
-- UML durum diyagramı ile tam ifade edilebilir; formal analiz ve test kolaylaşır
-- C++ şablon tabanlı HSM kütüphaneleri (Boost.Statechart, QP/C++) ile olgun implementasyon mümkün
-- Deterministik: her event → tek geçiş; FDIR-005 gereksinimini doğal karşılar
-- Watchdog entegrasyonu doğrudan: her state'in giriş/çıkış eylemlerine heartbeat reset eklenebilir
-
-**Eksiler:**
-- Yeni durum ekleme ileride şema değişikliği gerektiriyor; esneklik kısıtlı
-- Paralel bölgeler (enerji + termal aynı anda bağımsız davransın) modellemek karmaşıklaşabilir
+- **Four safety states:** NOMINAL, CAUTION, RETURN_REQUIRED, SURVIVAL
+- **Multiple triggers:** Energy, thermal, navigation, communication, internal software failure
+- **Priority hierarchy:** When multiple triggers are active simultaneously, which state takes precedence?
+- **External independence:** The FDIR state machine must operate independently of Mission Planner; safety decisions must continue to work even if the planner freezes
+- **Deterministic behaviour:** The same set of inputs must produce the same state transition (FDIR-005 analogue: requires formal verification)
+- **Traceability:** Every transition must be loggable, testable, and independently auditable
 
 ---
 
-### Alternatif 2: Davranış Ağacı (Behavior Tree)
+## Alternatives Evaluated
 
-**Artılar:**
-- Modüler: yeni koşul/eylem düğümleri hiyerarşiyi bozmadan eklenebilir
-- Oyun/robotik AI alanında kanıtlanmış; görsel araçlar (Groot) ile izlenebilir
-- Paralel dallar doğal: enerji kontrolü ve termal kontrol eş zamanlı çalışabilir
+### Alternative 1: Hierarchical State Machine (HSM)
 
-**Eksiler:**
-- **Güvenlik kritik uyum zorluğu:** Davranış ağacının her tick döngüsünde tüm ağacı gezen yapısı WCET analizini zorlaştırır; < 50 ms garanti vermek için ek kısıtlama gerekir
-- Durum makinesinin açık geçiş tablosuna kıyasla "mevcut durum" sorgulamak daha dolaylı; loging/audit zorlaşır
-- Uzay FDIR bağlamında referans sertifikasyon geçmişi yok
+**Pros:**
+- Hierarchy between states (parent state shares common behaviour); common cleanup logic shared on CAUTION → NOMINAL return
+- 4 states is few; HSM complexity is manageable at this scale
+- Fully expressible with UML state diagrams; formal analysis and testing simplified
+- Mature implementation possible with C++ template-based HSM libraries (Boost.Statechart, QP/C++)
+- Deterministic: every event → single transition; naturally meets FDIR-005 requirement
+- Direct watchdog integration: heartbeat reset can be added to entry/exit actions of each state
 
----
-
-### Alternatif 3: Kural Tabanlı Sistem
-
-**Artılar:**
-- IF-THEN kuralları anlaşılması en kolay yaklaşım; operatörler kural tablosunu okuyabilir
-- Yeni kural ekleme görece basit
-
-**Eksiler:**
-- **Çakışma sorunu:** Birden fazla kuralın aynı anda tetiklenmesi (enerji kritik + lokalizasyon kaybı) tutarsız davranışa yol açabilir; öncelik belirsizliği güvenlik açığı
-- Durum kalıcılığı (state persistence) yok; hangi durumda olduğunu hatırlamak için ek yapı gerekir → fiilen durum makinesi olur
-- Formal doğrulama zordur; kural kombinasyonları üstel büyür
+**Cons:**
+- Adding new states in the future requires a schema change; flexibility limited
+- Modelling parallel regions (energy + thermal operating independently at the same time) can become complex
 
 ---
 
-## Karar
+### Alternative 2: Behaviour Tree
 
-**Hiyerarşik Durum Makinesi (HSM)** seçilmiştir; implementasyon için **QP/C++ (Quantum Platform) veya eşdeğer MISRA uyumlu HSM kütüphanesi** kullanılacaktır.
+**Pros:**
+- Modular: new condition/action nodes can be added without breaking the hierarchy
+- Proven in game/robotics AI; observable with visual tools (Groot)
+- Parallel branches natural: energy monitoring and thermal monitoring can run simultaneously
 
-**Gerekçe:**
-- 4 durum az; HSM yönetilebilir karmaşıklıkta kalır.
-- Deterministik geçiş garantisi FDIR-005 gereksinimini karşılar.
-- Formal doğrulama (TLA+ veya durum makinesi model checker) HSM üzerinde doğrudan uygulanabilir.
-- UML durum diyagramı (PlantUML) standart dokümantasyon formatı; operatör ve mühendis anlaşmasını kolaylaştırır.
-- QP/C++ MISRA-C++ uyumlu, uçuş kodu kısıtlarıyla uyumlu; DO-178C referans uygulaması mevcuttur.
-
-**Paralel bölge gereksinimi:**
-Enerji ve termal izleme, navigasyon ve haberleşme izlemeleri farklı modüllerde bağımsız çalışır; bunlar HSM'e event gönderir. HSM bu event'leri tek bir geçiş tablosunda birleştirir. Bu yaklaşım Davranış Ağacının paralel avantajını kapsar, deterministik geçiş garantisini korur.
+**Cons:**
+- **Safety-critical compliance difficulty:** The behaviour tree's structure that traverses the entire tree on every tick cycle makes WCET analysis harder; additional constraints needed to guarantee < 50 ms
+- Querying "current state" is more indirect compared to a state machine's explicit transition table; logging/audit is harder
+- No reference certification history in the space FDIR context
 
 ---
 
-## Sonuçlar ve Kısıtlar
+### Alternative 3: Rule-Based System
 
-1. **Mission Planner bağımsızlığı:** HSM, Mission Planner sürecinden farklı bir FreeRTOS görevinde çalışır; aralarındaki mesaj kuyruğu tek yönlüdür (Planner → HSM event gönderir; HSM → Planner kararını bildirir). HSM'in Planner'a bağımlılığı yoktur.
-2. **Formal doğrulama:** HSM durum geçiş tablosu TLA+ ile model check edilecektir; verifikasyon tamamlanmadan araç sahnaya alınamaz.
-3. **Genişletme kısıtı:** Yeni durum ekleme yalnızca mimari gözden geçirme (Architecture Review Board eşdeğeri) onayı ile yapılabilir; anlık hotfix yasak.
-4. **Test kapsamı:** Her durum geçişi için en az 3 test senaryosu (normal yol, sınır değeri, hata enjeksiyonu) zorunludur.
-5. **Detaylı tasarım:** SAFETY_STATE_MACHINE.md dosyasında PlantUML diyagramı, watchdog tasarımı ve durum tanımları yer almaktadır.
+**Pros:**
+- IF-THEN rules are the easiest to understand; operators can read the rule table
+- Adding new rules is relatively simple
+
+**Cons:**
+- **Conflict problem:** Multiple rules triggering at the same time (energy critical + localisation loss) can produce inconsistent behaviour; priority ambiguity is a safety vulnerability
+- No state persistence; additional structure needed to remember the current state → effectively becomes a state machine
+- Formal verification is difficult; rule combinations grow exponentially
+
+---
+
+## Decision
+
+**Hierarchical State Machine (HSM)** has been selected; **QP/C++ (Quantum Platform) or an equivalent MISRA-compliant HSM library** will be used for implementation.
+
+**Rationale:**
+- 4 states is few; HSM remains at manageable complexity.
+- Deterministic transition guarantee meets FDIR-005 requirement.
+- Formal verification (TLA+ or state machine model checker) can be directly applied to HSM.
+- UML state diagram (PlantUML) is the standard documentation format; facilitates operator and engineer agreement.
+- QP/C++ is MISRA-C++ compliant, compatible with flight code constraints; DO-178C reference implementation is available.
+
+**Parallel region requirement:**
+Energy and thermal monitoring, navigation and communication monitoring operate independently in separate modules; they send events to the HSM. The HSM merges these events in a single transition table. This approach captures the parallel advantage of Behaviour Trees while preserving the deterministic transition guarantee.
+
+---
+
+## Consequences and Constraints
+
+1. **Mission Planner independence:** The HSM runs in a different FreeRTOS task from the Mission Planner process; the message queue between them is one-directional (Planner sends events to HSM; HSM notifies Planner of its decision). HSM has no dependency on the Planner.
+2. **Formal verification:** The HSM state transition table will be model-checked with TLA+; the vehicle cannot be fielded until verification is complete.
+3. **Extension constraint:** Adding a new state can only be done with approval of an Architecture Review Board equivalent; instant hotfixes are forbidden.
+4. **Test coverage:** A minimum of 3 test scenarios per state transition (normal path, boundary value, fault injection) is mandatory.
+5. **Detailed design:** PlantUML diagram, watchdog design, and state definitions are in SAFETY_STATE_MACHINE.md.

@@ -1,32 +1,32 @@
-# LUNA-AI — Ay Krateri Keşif ve Otonom Görev Sistemi
+# LUNA-AI — Lunar Crater Exploration and Autonomous Mission System
 
-Ay kraterlerini bilimsel ve operasyonel verilerle değerlendiren, PSR erişimi sağlayan
-ve enerji-termal kısıtlar altında güvenli dönüşü yöneten otonom görev sistemi.
+An autonomous mission system that evaluates lunar craters with scientific and operational data,
+provides access to PSRs, and manages safe return under energy-thermal constraints.
 
-## Mimari Segmentler
+## Architecture Segments
 
-| Segment | Sorumluluk |
+| Segment | Responsibility |
 |---|---|
-| **Ground Segment** | Bilimsel analiz, görev tasarımı, operatör arayüzü |
-| **Flight Segment** | Gerçek zamanlı navigasyon, güvenlik, hareket kontrolü |
-| **Simulation & Validation** | Dijital ikiz, senaryo testleri, hata enjeksiyonu |
+| **Ground Segment** | Scientific analysis, mission design, operator interface |
+| **Flight Segment** | Real-time navigation, safety, motion control |
+| **Simulation & Validation** | Digital twin, scenario tests, fault injection |
 
-## Klasör Yapısı
+## Folder Structure
 
 ```
-docs/           — Mimari dokümanlar (ConOps, QAR, FMEA, ADR)
-domain/         — Alan modelleri (crater, environment, mission, resources)
-data-platform/  — Planetary veri alım ve işleme hattı
-mission-intelligence/ — Aday filtreleme, sıralama, bilimsel hedefler
-interfaces/     — Sürümlenmiş veri sözleşmeleri (ICD)
-tests/          — Unit, integration, system testleri
+docs/           — Architecture documents (ConOps, QAR, FMEA, ADR)
+domain/         — Domain models (crater, environment, mission, resources)
+data-platform/  — Planetary data ingestion and processing pipeline
+mission-intelligence/ — Candidate filtering, ranking, scientific objectives
+interfaces/     — Versioned data contracts (ICD)
+tests/          — Unit, integration, system tests
 ```
 
-## Geliştirme Durumu
+## Development Status
 
-Havacılık donanım verileri bekleniyor (batarya, panel, termal parametreler).
-Bu veriler gelene kadar: mimari dokümanlar + bilimsel veri platformu geliştiriliyor.
+Aerospace hardware data pending (battery, panel, thermal parameters).
+Until that data arrives: architecture documents + scientific data platform are under development.
 
-## Referans
+## Reference
 
-Mimari prompt dosyası: `LUNA-AI_Mimari_Prompt_Dosyasi.md`
+Architecture prompt file: `LUNA-AI_Mimari_Prompt_Dosyasi.md`

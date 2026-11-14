@@ -1,14 +1,14 @@
 # Ground Control UI
 
-**v1.0 Referans:** §4.9 Ground Control & Digital Twin
+**v1.0 Reference:** §4.9 Ground Control & Digital Twin
 
-Operatör arayüzü ve dijital ikiz görselleştirmesi.
+Operator interface and digital twin visualisation.
 
-## UI Gereksinimleri
+## UI Requirements
 
-- 5 bölge karşılaştırması (güneş oranı, Dünya görünürlük oranı, en uzun gece, en uzun iletişim kesintisi)
-- Güneş/Dünya polar ufuk grafiği
-- Zaman kaydırıcısı (canlı güncelleme)
-- Earth visibility katmanı (geometrik görünürlük ≠ link planlaması — Uyum Notu 6)
+- 5-site comparison (sun fraction, Earth visibility fraction, longest night, longest communication outage)
+- Sun/Earth polar horizon chart
+- Time slider (live update)
+- Earth visibility layer (geometric visibility ≠ link planning — Compliance Note 6)
 
-Bkz. `UI_INTEGRATION.md` ve `interfaces/multi_site_comparison.schema.yaml`
+See `UI_INTEGRATION.md` and `interfaces/multi_site_comparison.schema.yaml`

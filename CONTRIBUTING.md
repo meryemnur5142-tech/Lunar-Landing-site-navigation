@@ -1,8 +1,8 @@
-# LUNA-AI Katkı Kılavuzu
+# LUNA-AI Contribution Guide
 
-## Geliştirme Ortamı Kurulumu
+## Development Environment Setup
 
-Python 3.11 veya üzeri gereklidir.
+Python 3.11 or later is required.
 
 ```bash
 python -m venv .venv
@@ -12,22 +12,22 @@ source .venv/bin/activate        # Linux/macOS
 pip install -r requirements.txt
 ```
 
-## Testleri Çalıştırma
+## Running Tests
 
 ```bash
-# Tüm testler
+# All tests
 make test
-# veya
+# or
 PYTHONPATH=. python -m pytest tests/ -v --tb=short
 
-# Sadece birim testleri
+# Unit tests only
 make test-unit
 
-# Sadece entegrasyon testleri
+# Integration tests only
 make test-integration
 ```
 
-CI'da her PR için tüm testler otomatik çalışır. PR açmadan önce `make test` ile yerel doğrulama yapın.
+CI runs all tests automatically on every PR. Run `make test` locally before opening a PR.
 
 ## Lint
 
@@ -35,46 +35,46 @@ CI'da her PR için tüm testler otomatik çalışır. PR açmadan önce `make te
 make lint
 ```
 
-## Branch Stratejisi
+## Branch Strategy
 
-- `main` — kararlı, korumalı dal; doğrudan push yapılmaz.
-- `feature/<kısa-açıklama>` — yeni özellikler ve iyileştirmeler.
-- `fix/<kısa-açıklama>` — hata düzeltmeleri.
-- `docs/<kısa-açıklama>` — yalnızca belgeleme değişiklikleri.
+- `main` — stable, protected branch; no direct pushes.
+- `feature/<short-description>` — new features and improvements.
+- `fix/<short-description>` — bug fixes.
+- `docs/<short-description>` — documentation-only changes.
 
-Her değişiklik için `main`'den yeni bir branch açın ve PR ile birleştirin. Self-merge yapılmaz; CI yeşil olduktan sonra melek ya da sorumlu mühendis birleştirir.
+Open a new branch from `main` for every change and merge via PR. No self-merges; melek or the responsible engineer merges after CI is green.
 
-## Commit Mesajı Formatı
+## Commit Message Format
 
 ```
-<tür>: kısa açıklama (≤72 karakter)
+<type>: short description (≤72 characters)
 
-İsteğe bağlı gövde: neyi neden değiştirdin.
+Optional body: what you changed and why.
 ```
 
-Türler: `feat` / `fix` / `docs` / `chore` / `test` / `refactor`
+Types: `feat` / `fix` / `docs` / `chore` / `test` / `refactor`
 
-Örnek:
+Example:
 ```
-feat: HC-004 iniş elipsi boyut kısıtı ekle
+feat: add HC-004 landing ellipse size constraint
 
-ICD-003 parametreleri onaylandı; HC-004 semi_major_m <= 750 m eşiğiyle
-default_constraints() listesine eklendi.
+ICD-003 parameters confirmed; HC-004 added to default_constraints()
+with semi_major_m <= 750 m threshold.
 ```
 
-## Uyum Notları Kontrol Listesi
+## Compliance Notes Checklist
 
-Her PR'ı açmadan önce v1.1 uyum notlarını (1–8) gözden geçir:
+Review v1.1 compliance notes (1–8) before opening each PR:
 
-| # | Konu | Kontrol |
-|---|------|---------|
-| 1 | Emniyet bütçesi sahipliği `power/` modülünde | [ ] |
-| 2 | Planner tüketici, güvenlik kararı vermez | [ ] |
-| 3 | Emniyet bütçesi sahibi `power/`; planner tüketici | [ ] |
-| 4 | İniş GNC ve yüzey nav ayrımı korunuyor | [ ] |
-| 5 | Ağırlıklı toplam tek başına güvenlik kararı vermiyor | [ ] |
-| 6 | Geometrik görünürlük ≠ link planlaması ayrımı | [ ] |
-| 7 | HC eleme, sıralamadan önce uygulanıyor | [ ] |
-| 8 | FDIR tepki süreleri QAR eşiklerini karşılıyor | [ ] |
+| # | Topic | Check |
+|---|-------|-------|
+| 1 | Safety budget ownership in `power/` module | [ ] |
+| 2 | Planner is consumer; makes no safety decisions | [ ] |
+| 3 | Safety budget owned by `power/`; planner is consumer | [ ] |
+| 4 | Landing GNC and surface nav separation maintained | [ ] |
+| 5 | Weighted total alone does not make a safety decision | [ ] |
+| 6 | Geometric visibility ≠ link planning separation | [ ] |
+| 7 | HC elimination applied before ranking | [ ] |
+| 8 | FDIR response times meet QAR thresholds | [ ] |
 
-Uygulanmayan notlar için PR açıklamasında gerekçe belirt.
+Provide justification in the PR description for any notes that do not apply.

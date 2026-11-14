@@ -1,92 +1,92 @@
-# ADR-004: Coğrafi Veritabanı Seçimi
+# ADR-004: Geographic Database Selection
 
-**Durum:** Kabul Edildi  
-**Tarih:** 2026-11-14  
-**İlgili Bileşenler:** Ground Segment — Bilimsel Analiz, Görev Tasarımı, DEM İşleme
-
----
-
-## Bağlam
-
-Ground Segment, aşağıdaki uzamsal veri gereksinimlerini karşılamalıdır:
-
-- **DEM (Digital Elevation Model):** Ay LOLA (Lunar Orbiter Laser Altimeter) ve Kaguya/SELENE verileri; güney kutup için 5–60 m/piksel çözünürlük; dosya boyutları GB mertebesinde
-- **PSR haritalama:** Kalıcı gölge bölgeleri polygon olarak saklanır; ışın izleme simülasyonu sonuçları
-- **Uzamsal sorgular:** "Belirli koordinat etrafında X km yarıçaplı alanda güvenli arazi var mı?", "Bu rotada eğim > Y° olan segmentler hangileri?" gibi sorguların hızlı yanıtlanması gerekir
-- **Raster + vektör:** DEM raster (grid), PSR ve hedef bölgeler vektör (polygon); ikisi birlikte sorgulanmalı
-- **Versiyon ve provenance:** Farklı DEM kaynaklarının (LOLA v1, LOLA v2, Kaguya) sürüm yönetimi; hangi verinin hangi kararı etkilediği izlenebilmeli
+**Status:** Accepted
+**Date:** 2026-11-14
+**Related Components:** Ground Segment — Scientific Analysis, Mission Design, DEM Processing
 
 ---
 
-## Değerlendirilen Alternatifler
+## Context
 
-### Alternatif 1: PostgreSQL + PostGIS
+The Ground Segment must meet the following spatial data requirements:
 
-**Artılar:**
-- PostGIS: endüstri standardı açık kaynak uzamsal veritabanı eklentisi; GDAL ile tam entegrasyon
-- OGC standardı uzamsal sorgular (ST_Within, ST_Distance, ST_Slope, raster analiz) eksiksiz destekli
-- Raster ve vektör aynı motorda; karışık sorgular mümkün
-- Python eklentisi (psycopg2, SQLAlchemy+GeoAlchemy2): doğrudan entegrasyon
-- ACID uyumlu; veri tutarlılığı garantili
-- Versiyon yönetimi ve provenance için tablo şeması esnekliği yüksek
-- Uzay/coğrafya sektöründe (EO veri katalogları, USGS, NASA) geniş kullanım geçmişi
-
-**Eksiler:**
-- Ek servis gerektiriyor (PostgreSQL sunucusu); altyapı karmaşıklığı artar
-- Büyük DEM raster verilerini veritabanına yüklemek (pg_raster_loader) zaman alabilir
-- Uzak sahada offline kullanım için taşınabilirlik zorlukları (çözüm: SQLite/SpatiaLite yedek)
+- **DEM (Digital Elevation Model):** Lunar LOLA (Lunar Orbiter Laser Altimeter) and Kaguya/SELENE data; 5–60 m/pixel resolution for the south pole; file sizes in the GB range
+- **PSR mapping:** Permanently shadowed regions stored as polygons; ray-tracing simulation results
+- **Spatial queries:** Fast answering of queries such as "is there safe terrain within X km radius around a given coordinate?" and "which segments of this route have slope > Y°?"
+- **Raster + vector:** DEM raster (grid), PSR and target regions as vectors (polygons); both must be queried together
+- **Versioning and provenance:** Version management of different DEM sources (LOLA v1, LOLA v2, Kaguya); which data influenced which decision must be traceable
 
 ---
 
-### Alternatif 2: MongoDB
+## Alternatives Evaluated
 
-**Artılar:**
-- Esnek şema: gelişen veri modeli için düşük maliyet
-- Coğrafi sorgular için 2dsphere indeksleme destekli (GeoJSON)
-- Yatay ölçekleme kolay
+### Alternative 1: PostgreSQL + PostGIS
 
-**Eksiler:**
-- **Kritik eksik:** Raster analiz (DEM işleme) yerel olarak desteklenmiyor; GDAL ile entegrasyon için ara katman yazılması gerekir
-- PostGIS'in uzamsal analiz fonksiyonlarının (ST_Slope, raster istatistik) MongoDB'de karşılığı yok
-- ACID garantisi daha kısıtlı; veri tutarlılığı için ekstra dikkat
-- Uzay bilimi topluluğunda MongoDB kullanım geçmişi PostGIS'e kıyasla çok sınırlı
+**Pros:**
+- PostGIS: industry-standard open-source spatial database extension; full integration with GDAL
+- OGC-standard spatial queries (ST_Within, ST_Distance, ST_Slope, raster analysis) fully supported
+- Raster and vector in the same engine; mixed queries possible
+- Python extension (psycopg2, SQLAlchemy+GeoAlchemy2): direct integration
+- ACID compliant; data consistency guaranteed
+- High schema flexibility for versioning and provenance
+- Wide usage history in space/geography sector (EO data catalogues, USGS, NASA)
 
----
-
-### Alternatif 3: Flat-file + GDAL
-
-**Artılar:**
-- Altyapı bağımlılığı yok; saf dosya sistemi
-- GDAL: endüstri standardı coğrafi veri formatları (GeoTIFF, Shapefile, GeoPackage, HDF5)
-- Çok büyük DEM dosyaları için streaming/windowed okuma verimliliği yüksek
-- Araştırma ortamında hızlı prototipleme
-
-**Eksiler:**
-- Uzamsal sorgular için tüm filtreleme Python kodu gerektirir; PostGIS optimizasyonları (R-tree indeksleme) yok
-- Birden fazla veri kaynağı ve sürüm yönetimi için ad-hoc çözümler gerekir
-- Eşzamanlı erişim (birden fazla kullanıcı aynı anda sorgu çalıştırması) yönetimsiz
-- Veri bütünlüğü garantisi yok; risk proje büyüdükçe artar
+**Cons:**
+- Requires an additional service (PostgreSQL server); increases infrastructure complexity
+- Loading large DEM raster data into the database (pg_raster_loader) can be time-consuming
+- Portability challenges for offline use in remote environments (solution: SQLite/SpatiaLite fallback)
 
 ---
 
-## Karar
+### Alternative 2: MongoDB
 
-**PostgreSQL 15+ + PostGIS 3.4+** seçilmiştir; büyük DEM raster dosyaları için GDAL flat-file katmanı **yardımcı araç** olarak korunur.
+**Pros:**
+- Flexible schema: low cost for evolving data model
+- 2dsphere indexing supported for geographic queries (GeoJSON)
+- Easy horizontal scaling
 
-**Mimarisi:**
-- Vektör verisi (PSR polygonları, hedef noktalar, güzergah segmentleri, waypoint'ler): PostGIS geometri tablolarında
-- Raster metadata ve örneklenmiş DEM verisi (ör. analiz sonucu ızgara): PostGIS raster tablolarında
-- Ham DEM dosyaları (büyük boyutlu orijinaller): GeoTIFF flat-file deposunda; PostGIS'e yalnızca gerekli kesitler yüklenir
-- Versiyon ve provenance: `data_source`, `loaded_at`, `version_tag` sütunları; tam değişim geçmişi event tablosunda
-
-**Gerekçe:** MongoDB raster analizi için yetersizdir. Flat-file indeks ve eşzamanlılık eksikliği nedeniyle operasyonel kullanım için uygun değildir. PostGIS+GDAL kombinasyonu hem uzamsal analiz gücü hem de Python ekosistemi entegrasyonu açısından en güçlü seçenektir.
+**Cons:**
+- **Critical gap:** Raster analysis (DEM processing) not natively supported; writing an intermediate layer with GDAL is required
+- No counterpart in MongoDB for PostGIS spatial analysis functions (ST_Slope, raster statistics)
+- More limited ACID guarantees; extra care needed for data consistency
+- MongoDB usage history in the space science community is very limited compared to PostGIS
 
 ---
 
-## Sonuçlar ve Kısıtlar
+### Alternative 3: Flat-file + GDAL
 
-1. **Offline/Uzak kullanım:** İnternet bağlantısız yerde (saha operasyonu veya entegrasyon testi) `SpatiaLite` (SQLite üzerine PostGIS benzeri eklenti) yedek olarak sağlanacaktır; otomatik sync mekanizması tasarlanacaktır.
-2. **Büyük DEM performansı:** Boyutu > **TBD** GB olan DEM dosyaları raster tabloya doğrudan yüklenmeyecek; GDAL windowed okuma ile analiz yapılacaktır. Eşik belirleme için benchmark testi gereklidir.
-3. **Şema sürüm yönetimi:** Alembic (migration aracı) zorunlu; şema değişiklikleri migration dosyası olmadan uygulanamaz.
-4. **Yedekleme:** PostGIS verisi günlük pg_dump ile yedeklenir; DEM flat-file deposu checksumlu arşivleme ile korunur.
-5. **Lisans:** PostgreSQL ve PostGIS açık kaynak (PostgreSQL License / GPL); maliyet yok.
+**Pros:**
+- No infrastructure dependency; pure file system
+- GDAL: industry-standard geographic data formats (GeoTIFF, Shapefile, GeoPackage, HDF5)
+- High efficiency for streaming/windowed reading of very large DEM files
+- Fast prototyping in a research environment
+
+**Cons:**
+- All filtering for spatial queries requires Python code; PostGIS optimisations (R-tree indexing) absent
+- Ad-hoc solutions needed for multiple data sources and version management
+- Concurrent access (multiple users running queries simultaneously) unmanaged
+- No data integrity guarantee; risk grows as the project scales
+
+---
+
+## Decision
+
+**PostgreSQL 15+ + PostGIS 3.4+** has been selected; the GDAL flat-file layer is retained as a **supporting tool** for large DEM raster files.
+
+**Architecture:**
+- Vector data (PSR polygons, target points, route segments, waypoints): in PostGIS geometry tables
+- Raster metadata and sampled DEM data (e.g. analysis result grid): in PostGIS raster tables
+- Raw DEM files (large-size originals): in GeoTIFF flat-file storage; only required sections are loaded into PostGIS
+- Versioning and provenance: `data_source`, `loaded_at`, `version_tag` columns; full change history in an event table
+
+**Rationale:** MongoDB is insufficient for raster analysis. Flat-file is not suitable for operational use due to lack of indexing and concurrency. The PostGIS+GDAL combination is the strongest option in terms of both spatial analysis power and Python ecosystem integration.
+
+---
+
+## Consequences and Constraints
+
+1. **Offline/remote use:** `SpatiaLite` (PostGIS-equivalent extension on SQLite) will be provided as a fallback for offline (field operation or integration testing without internet) use; an automatic sync mechanism will be designed.
+2. **Large DEM performance:** DEM files larger than **TBD** GB will not be loaded directly into raster tables; analysis will be done with GDAL windowed reading. A benchmark test is needed to determine the threshold.
+3. **Schema version management:** Alembic (migration tool) is mandatory; schema changes cannot be applied without a migration file.
+4. **Backup:** PostGIS data backed up daily with pg_dump; DEM flat-file storage protected with checksummed archiving.
+5. **Licence:** PostgreSQL and PostGIS are open source (PostgreSQL License / GPL); no cost.

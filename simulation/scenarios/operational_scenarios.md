@@ -1,363 +1,363 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on: [autonomy/autonomy_matrix.md, mission-intelligence/constraints/hard_constraints.py, docs/conops/, docs/qar/]
-# open_items: [link_timeout değerleri TBD(source: §10), thermal_margin kritik eşiği TBD(source: §10 araç termal modeli), return_reserve_wh eşiği HC-006'da tanımlı]
+# open_items: [link_timeout values TBD(source: §10), thermal_margin critical threshold TBD(source: §10 vehicle thermal model), return_reserve_wh threshold defined in HC-006]
 
-# Operasyonel Senaryolar — LUNA-AI v1.1
+# Operational Scenarios — LUNA-AI v1.1
 
-## Amaç
+## Purpose
 
-Bu belge LUNA-AI aracının karşılaşabileceği tipik ve kritik durumlar için standart operasyon ve yanıt senaryolarını tanımlar. Her senaryo SIL/HIL kabul testlerinde doğrulama referansı olarak kullanılır.
+This document defines standard operation and response scenarios for typical and critical situations the LUNA-AI vehicle may encounter. Each scenario is used as a validation reference in SIL/HIL acceptance tests.
 
-**Önemli:** Güvenlik durumları (NORMAL/CAUTION/RETURN_REQUIRED/SURVIVAL) görev fazlarından (CRUISE/LANDING/SURFACE_EXPLORATION/PSR_OPS/RETURN/SAFE_STATE) bağımsız eksenlerdir. Geçişler her iki eksende ayrı takip edilir.
-
----
-
-## SC-001: Normal Yüzey Keşfi
-
-| Alan | İçerik |
-|------|--------|
-| **Senaryo ID** | SC-001 |
-| **Ad** | Normal Yüzey Keşfi — Nominal Path |
-| **Tetikleyici koşul** | Görev fazı SURFACE_EXPLORATION, güvenlik durumu NORMAL, enerji bütçesi nominal |
-| **Başlangıç fazı** | SURFACE_EXPLORATION |
-| **Sorumlu modüller** | vehicle/localization, autonomy/global-planner, autonomy/local-planner, power, communication |
-
-**Beklenen araç yanıtı (adım adım):**
-
-1. **Lokalizasyon:** Önceki orbital harita ve iniş verisini kullanarak başlangıç konum kestirimi. `position_uncertainty_m < 0.5m` doğrulandı.
-2. **Lokal plan:** Local planner, global rotadan sonraki N waypoint'i hesaplar. Engellerden kaçınma değerlendirilir.
-3. **Hareket:** Araç nominal hızda (`TBD(source: §10)` m/s) waypoint'e doğru ilerler. IMU + odometry füzyonu aktif.
-4. **Lokalizasyon güncelleme:** Her `TBD(source: §10)` metrede landmark eşleştirme girişimi. Eşleşme başarılıysa σ_pos sıfırlanır.
-5. **Telemetri:** Her `TBD(source: §10)` saniyede yer kontrolüne konum, enerji, termal durum raporu.
-6. **Waypoint onay:** Hedef waypoint'e ±1m içinde ulaşıldı → hedef başarılı olarak işaretlendi.
-7. **Bilimsel veri toplama:** Hedefte araç durur, bilim yükü açılır (OTN — otonom karar). Ölçüm döngüsü tamamlanır.
-8. **Sonraki waypoint:** Global planner sonraki hedefi seçer; enerji bütçesi kontrol edilir.
-
-| Alan | İçerik |
-|------|--------|
-| **Güvenlik durumu geçişi** | NORMAL → NORMAL (nominal koşulda geçiş yok) |
-| **Yer kontrolüne bildirim koşulu** | Waypoint ulaşım onayı; bilimsel veri özeti; enerji tüketimi raporu |
-| **Kabul kriteri** | Hedef noktaya ulaşıldı (±1m), enerji bütçe içinde (nominal ±10%), lokalizasyon σ < 0.5m korundu |
-| **Test yöntemi** | SIL (simüle DEM + sensör gürültüsü), HIL (P3 aşamasında gerçek sensör) |
+**Important:** Safety states (NOMINAL/CAUTION/RETURN_REQUIRED/SURVIVAL) and mission phases (CRUISE/LANDING/SURFACE_EXPLORATION/PSR_OPS/RETURN/SAFE_STATE) are independent axes. Transitions are tracked separately on each axis.
 
 ---
 
-## SC-002: İletişim Kaybı
+## SC-001: Nominal Surface Exploration
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Senaryo ID** | SC-002 |
-| **Ad** | İletişim Kaybı — Link Timeout (v1.0 §4.7) |
-| **Tetikleyici koşul** | Telemetri linki `link_timeout_s > TBD(source: §10)` süre kesildi |
-| **Başlangıç fazı** | SURFACE_EXPLORATION veya PSR_OPS (iki ayrı yanıt — aşağıda) |
-| **Sorumlu modüller** | communication, autonomy/mission-executive, safety/fdir, autonomy/global-planner |
+| **Scenario ID** | SC-001 |
+| **Name** | Nominal Surface Exploration — Nominal Path |
+| **Trigger condition** | Mission phase SURFACE_EXPLORATION, safety state NOMINAL, energy budget nominal |
+| **Starting phase** | SURFACE_EXPLORATION |
+| **Responsible modules** | vehicle/localization, autonomy/global-planner, autonomy/local-planner, power, communication |
 
-**Beklenen araç yanıtı — SURFACE_EXPLORATION'da link kaybı (adım adım):**
+**Expected vehicle response (step by step):**
 
-1. Communication modülü link_timeout'u algılar → FDIR'a bildirir.
-2. Güvenlik durumu NORMAL → CAUTION geçişi.
-3. Araç mevcut waypoint'e doğru harekete devam eder (OTN — pre-planned trigger yoksa).
-4. Pre-planned abort trigger listesi (ABT-001..006) kontrol edilir. Hiçbiri tetiklenmediyse devam.
-5. `link_wait_timeout = TBD(source: §10)` süre bekleme sayacı başlar.
-6. Bekleme süresi aşılmadan link geri gelirse: CAUTION → NORMAL, operasyon devam.
-7. Bekleme süresi aşılırsa: Pre-planned safe haven listesine yönel (OTN). Enerji bütçesi kontrol.
-8. Safe haven'a ulaşıldığında bekle, periyodik haberleşme girişimi devam eder.
+1. **Localisation:** Initial position estimate using previous orbital map and landing data. `position_uncertainty_m < 0.5m` confirmed.
+2. **Local plan:** Local planner calculates next N waypoints from global route. Obstacle avoidance evaluated.
+3. **Motion:** Vehicle advances toward waypoint at nominal speed (`TBD(source: §10)` m/s). IMU + odometry fusion active.
+4. **Localisation update:** Landmark matching attempted every `TBD(source: §10)` metres. If successful, σ_pos is reset.
+5. **Telemetry:** Position, energy, thermal status report sent to ground control every `TBD(source: §10)` seconds.
+6. **Waypoint confirmation:** Target waypoint reached within ±1m → target marked as successful.
+7. **Scientific data collection:** Vehicle stops at target, science payload powered on (OTN — autonomous decision). Measurement cycle completed.
+8. **Next waypoint:** Global planner selects next target; energy budget checked.
 
-**Beklenen araç yanıtı — PSR_OPS'ta link kaybı (adım adım):**
+| Field | Content |
+|------|--------|
+| **Safety state transition** | NOMINAL → NOMINAL (no transition under nominal conditions) |
+| **Ground control notification condition** | Waypoint arrival confirmation; scientific data summary; energy consumption report |
+| **Acceptance criterion** | Target reached (±1m), energy within budget (nominal ±10%), localisation σ < 0.5m maintained |
+| **Test method** | SIL (simulated DEM + sensor noise), HIL (Phase P3 — real sensor) |
 
-1. Communication modülü link_timeout'u algılar → FDIR'a bildirir.
-2. Güvenlik durumu NORMAL → RETURN_REQUIRED geçişi (PSR'de link kaybı = dönüş tetikleyici).
-3. FDIR: Enerji durumunu kontrol et. `return_reserve_wh` yeterli mi?
-   - **Evet:** ACL dönüş rotası başlat. Bilimsel operasyon durdurulur.
-   - **Hayır:** ACL acil dönüş + enerji koruma modu. Power Mgmt önceliklendirme yapar.
-4. Planner, mevcut konumdan safe haven'a en kısa enerji-verimli rota üretir.
-5. Araç dönüş rotasında ilerlerken periyodik link girişimi yapar.
-6. PSR çıkışında anten açısı toparlanabilirse link geri gelebilir.
+---
 
-**Pre-planned abort trigger listesi (SC-002 kapsamında):**
+## SC-002: Communication Loss
 
-| Trigger | Koşul | Eylem |
+| Field | Content |
+|------|--------|
+| **Scenario ID** | SC-002 |
+| **Name** | Communication Loss — Link Timeout (v1.0 §4.7) |
+| **Trigger condition** | Telemetry link interrupted for `link_timeout_s > TBD(source: §10)` |
+| **Starting phase** | SURFACE_EXPLORATION or PSR_OPS (two separate responses — see below) |
+| **Responsible modules** | communication, autonomy/mission-executive, safety/fdir, autonomy/global-planner |
+
+**Expected vehicle response — link loss in SURFACE_EXPLORATION (step by step):**
+
+1. Communication module detects link_timeout → notifies FDIR.
+2. Safety state NOMINAL → CAUTION transition.
+3. Vehicle continues moving toward current waypoint (OTN — if no pre-planned trigger active).
+4. Pre-planned abort trigger list (ABT-001..006) checked. If none triggered, continue.
+5. Wait counter `link_wait_timeout = TBD(source: §10)` starts.
+6. If link returns before wait period expires: CAUTION → NOMINAL, operation continues.
+7. If wait period exceeded: Move toward pre-planned safe haven list (OTN). Energy budget checked.
+8. On reaching safe haven: Wait, periodic communication attempts continue.
+
+**Expected vehicle response — link loss in PSR_OPS (step by step):**
+
+1. Communication module detects link_timeout → notifies FDIR.
+2. Safety state NOMINAL → RETURN_REQUIRED transition (link loss in PSR = return trigger).
+3. FDIR: Check energy status. Is `return_reserve_wh` sufficient?
+   - **Yes:** Start ACL return route. Scientific operation stopped.
+   - **No:** ACL emergency return + energy conservation mode. Power Mgmt performs prioritisation.
+4. Planner generates shortest energy-efficient route from current position to safe haven.
+5. Vehicle makes periodic link attempts while progressing on return route.
+6. Link may return if antenna angle recovers after PSR exit.
+
+**Pre-planned abort trigger list (within SC-002 scope):**
+
+| Trigger | Condition | Action |
 |---------|-------|-------|
-| ABT-001 | `return_reserve_wh < HC-006_threshold` AND faz=PSR_OPS | ACL acil dönüş |
-| ABT-004 | `link_timeout > TBD(source: §10)` AND faz=PSR_OPS AND `energy_critical=true` | ACL acil dönüş |
-| ABT-006 | `fdir_abort_flag=true` | ACL göreve göre eylem |
+| ABT-001 | `return_reserve_wh < HC-006_threshold` AND phase=PSR_OPS | ACL emergency return |
+| ABT-004 | `link_timeout > TBD(source: §10)` AND phase=PSR_OPS AND `energy_critical=true` | ACL emergency return |
+| ABT-006 | `fdir_abort_flag=true` | ACL action per mission |
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Güvenlik durumu geçişi** | SURFACE_EXPLORATION: NORMAL→CAUTION→(link gelirse NORMAL) veya →RETURN_REQUIRED; PSR_OPS: NORMAL→RETURN_REQUIRED |
-| **Yer kontrolüne bildirim koşulu** | Link geri geldiğinde: link kaybı başlangıç/bitiş zamanı, yapılan eylemler, mevcut konum ve enerji durumu |
-| **Kabul kriteri** | Link kaybı sırasında araç pre-planned sınırlar dışına çıkmadı; enerji kritik eşiğin altına düşmedi; link dönüşünde koordinasyon başarıyla sağlandı |
-| **Test yöntemi** | SIL (link simülasyonu ile), HIL (P3) |
+| **Safety state transition** | SURFACE_EXPLORATION: NOMINAL→CAUTION→(if link returns, NOMINAL) or →RETURN_REQUIRED; PSR_OPS: NOMINAL→RETURN_REQUIRED |
+| **Ground control notification condition** | When link returns: link loss start/end time, actions taken, current position and energy status |
+| **Acceptance criterion** | Vehicle did not go outside pre-planned limits during link loss; energy did not fall below critical threshold; coordination successfully established on link return |
+| **Test method** | SIL (with link simulation), HIL (P3) |
 
 ---
 
-## SC-003: PSR'de Ani Enerji Düşüşü
+## SC-003: Sudden Energy Drop in PSR
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Senaryo ID** | SC-003 |
-| **Ad** | PSR'de Ani Enerji Düşüşü (v1.0 §5.D) |
-| **Tetikleyici koşul** | `return_reserve_wh < HC-006_threshold` — PSR içindeyken dönüş rezervi kritik eşiğin altına indi |
-| **Başlangıç fazı** | PSR_OPS |
-| **Sorumlu modüller** | power, safety/fdir, autonomy/global-planner, thermal |
+| **Scenario ID** | SC-003 |
+| **Name** | Sudden Energy Drop in PSR (v1.0 §5.D) |
+| **Trigger condition** | `return_reserve_wh < HC-006_threshold` — return reserve fell below critical threshold while inside PSR |
+| **Starting phase** | PSR_OPS |
+| **Responsible modules** | power, safety/fdir, autonomy/global-planner, thermal |
 
-**Beklenen araç yanıtı (adım adım):**
+**Expected vehicle response (step by step):**
 
-1. **Power Mgmt algılar:** `return_reserve_wh` HC-006 eşiğinin altına düştü → FDIR'a anomali bildirimi.
-2. **FDIR kararı:** HC-006 ihlali → güvenlik durumu geçişi NORMAL → RETURN_REQUIRED.
-   - FDIR bağımsız çalışır (planner'dan izole bellek).
-3. **Power Mgmt enerji bütçesi günceller:** Bilimsel yük kapatılır (enerji tüketimini azalt). Isıtıcılar minimum zorunlu düzeye indirilir. Bu karar Power Mgmt'e aittir; Planner tüketicidir.
-4. **FDIR → Planner'a dönüş komutu:** `abort_to_safe_haven = true`, `reason = HC006_violation`.
-5. **Planner rota üretir:** Mevcut PSR konumundan safe haven'a minimum enerji rotası. Rota üretim hedefi < 30s.
-6. **Araç dönüş rotasına girer:** Faz PSR_OPS → RETURN geçişi.
-7. **Telemetri:** Yer kontrolüne HC-006 ihlali, dönüş başlangıcı, beklenen varış zamanı iletilir.
-8. **Dönüş izleme:** Her adımda `return_reserve_wh` yeniden hesaplanır. Yeterli kalıyorsa devam; kritikleşirse enerji koruma modu artırılır.
-9. **Safe haven ulaşım:** Şarj başlar. Güvenlik durumu RETURN_REQUIRED → NORMAL (şarj tamamlanınca).
+1. **Power Mgmt detects:** `return_reserve_wh` dropped below HC-006 threshold → anomaly notification to FDIR.
+2. **FDIR decision:** HC-006 violation → safety state transition NOMINAL → RETURN_REQUIRED.
+   - FDIR operates independently (memory isolated from planner).
+3. **Power Mgmt updates energy budget:** Science payload shut down (reduce energy consumption). Heaters reduced to minimum mandatory level. This decision belongs to Power Mgmt; Planner is a consumer.
+4. **FDIR → return command to Planner:** `abort_to_safe_haven = true`, `reason = HC006_violation`.
+5. **Planner generates route:** Minimum energy route from current PSR position to safe haven. Route generation target < 30s.
+6. **Vehicle enters return route:** Phase PSR_OPS → RETURN transition.
+7. **Telemetry:** HC-006 violation, return start, expected arrival time transmitted to ground control.
+8. **Return monitoring:** `return_reserve_wh` recalculated at each step. If sufficient, continue; if critical, increase energy conservation mode.
+9. **Safe haven arrival:** Charging starts. Safety state RETURN_REQUIRED → NOMINAL (after charge complete).
 
-**Akış yönü notu (Uyum Notu 3):** Power Mgmt enerji bütçesi sahibidir; bütçe hesapları ve kısıtları Power Mgmt'ten gelir. Planner bu bilgiyi tüketir, kendi başına enerji politikası belirleyemez.
+**Flow direction note (Compliance Note 3):** Power Mgmt owns the energy budget; budget calculations and limits come from Power Mgmt. Planner consumes this information and cannot determine its own energy policy.
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Güvenlik durumu geçişi** | NORMAL → RETURN_REQUIRED (HC-006 ihlali anında), RETURN_REQUIRED → NORMAL (safe haven şarj sonrası) |
-| **Yer kontrolüne bildirim koşulu** | HC-006 ihlali anında (enerji değeri, konum, beklenen dönüş süresi); safe haven ulaşımında |
-| **Kabul kriteri** | FDIR HC-006 ihlalini algıladı ve 5s içinde RETURN_REQUIRED geçişini tetikledi; planner 30s içinde dönüş rotası üretti; araç safe haven'a HC-006 eşiği üzerinde enerji ile ulaştı |
-| **Test yöntemi** | SIL (enerji tüketim simülasyonu), HIL (P3) |
+| **Safety state transition** | NOMINAL → RETURN_REQUIRED (at HC-006 violation), RETURN_REQUIRED → NOMINAL (after safe haven charge) |
+| **Ground control notification condition** | At HC-006 violation (energy value, position, expected return time); on safe haven arrival |
+| **Acceptance criterion** | FDIR detected HC-006 violation and triggered RETURN_REQUIRED within 5s; planner generated return route within 30s; vehicle arrived at safe haven with energy above HC-006 threshold |
+| **Test method** | SIL (energy consumption simulation), HIL (P3) |
 
 ---
 
-## SC-004: Lokalizasyon Kaybı / Sensör Arızası
+## SC-004: Localisation Loss / Sensor Failure
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Senaryo ID** | SC-004 |
-| **Ad** | Lokalizasyon Kaybı / Sensör Arızası (v1.0 §4.8) |
-| **Tetikleyici koşul** | `position_uncertainty_m > QAR-NAV-002_threshold` — konum belirsizliği kabul eşiğini aştı |
-| **Başlangıç fazı** | SURFACE_EXPLORATION veya PSR_OPS |
-| **Sorumlu modüller** | vehicle/localization, safety/fdir, autonomy/global-planner, autonomy/local-planner |
+| **Scenario ID** | SC-004 |
+| **Name** | Localisation Loss / Sensor Failure (v1.0 §4.8) |
+| **Trigger condition** | `position_uncertainty_m > QAR-NAV-002_threshold` — position uncertainty exceeded acceptance threshold |
+| **Starting phase** | SURFACE_EXPLORATION or PSR_OPS |
+| **Responsible modules** | vehicle/localization, safety/fdir, autonomy/global-planner, autonomy/local-planner |
 
-**FDIR Adımları — Detection → Isolation → Recovery:**
+**FDIR Steps — Detection → Isolation → Recovery:**
 
 **Detection:**
-1. Lokalizasyon modülü sürekli σ_pos izler.
-2. `position_uncertainty_m > QAR-NAV-002_threshold` → FDIR anomali bayrağı set edilir.
-3. Güvenlik durumu NORMAL → CAUTION.
-4. Araç DUR komutunu alır (hareket durdurulur).
+1. Localisation module continuously monitors σ_pos.
+2. `position_uncertainty_m > QAR-NAV-002_threshold` → FDIR anomaly flag set.
+3. Safety state NOMINAL → CAUTION.
+4. Vehicle receives STOP command (motion halted).
 
 **Isolation:**
-5. Hangi sensörün arızalı olduğu tespit edilmeye çalışılır:
-   - IMU tutarsızlık testi
-   - Odometry/IMU karşılaştırması
-   - Son landmark eşleşme kalitesi kontrolü
-6. Arızalı sensör izole edilir (degraded mode).
+5. Attempt to identify which sensor is faulty:
+   - IMU inconsistency test
+   - Odometry/IMU comparison
+   - Last landmark match quality check
+6. Faulty sensor isolated (degraded mode).
 
 **Recovery:**
-7. **Landmark arama:** Araç yerinde dönerek orbital haritadaki landmark eşleşmesini dener.
-   - Eşleşme başarılı: σ_pos < eşiğe düşer → CAUTION → NORMAL. Hareket devam.
-   - Eşleşme başarısız (N deneme, TBD(source: §10)): Recovery başarısız.
-8. **Recovery başarısız:** Güvenlik durumu CAUTION → RETURN_REQUIRED.
-   - Faz PSR_OPS ise: ACL acil dönüş (konum belirsizliğiyle degraded navigation).
-   - Faz SURFACE_EXPLORATION ise: Pre-planned safe haven koordinatlarına IMU-only navigasyon.
-9. **Degraded navigation modu:** Yalnızca IMU + odometry, landmark olmadan. Hata birikimi kabul edilen maksimum mesafeyle sınırlandırılır.
-10. Yer kontrolüne bildirim: Sensör arızası tipi, mevcut σ_pos, planlanan eylem.
+7. **Landmark search:** Vehicle rotates in place attempting landmark match against orbital map.
+   - Match successful: σ_pos drops below threshold → CAUTION → NOMINAL. Motion resumes.
+   - Match unsuccessful (N attempts, TBD(source: §10)): Recovery fails.
+8. **Recovery fails:** Safety state CAUTION → RETURN_REQUIRED.
+   - If phase PSR_OPS: ACL emergency return (degraded navigation with position uncertainty).
+   - If phase SURFACE_EXPLORATION: IMU-only navigation toward pre-planned safe haven coordinates.
+9. **Degraded navigation mode:** IMU + odometry only, without landmarks. Error accumulation bounded by accepted maximum distance.
+10. Ground control notification: Sensor failure type, current σ_pos, planned action.
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Güvenlik durumu geçişi** | NORMAL→CAUTION (algılama), CAUTION→NORMAL (recovery başarılı) veya CAUTION→RETURN_REQUIRED (recovery başarısız) |
-| **Yer kontrolüne bildirim koşulu** | QAR-NAV-002 ihlali anında; recovery kararında (başarılı/başarısız) |
-| **Kabul kriteri** | FDIR lokalizasyon kaybını 5s içinde algıladı; landmark arama girişimi yapıldı; recovery başarısızsa RETURN_REQUIRED geçişi tetiklendi ve araç safe haven'a ulaştı |
-| **Test yöntemi** | SIL (sensör gürültüsü enjeksiyonu), HIL (P3 — gerçek sensör arıza simülasyonu) |
+| **Safety state transition** | NOMINAL→CAUTION (detection), CAUTION→NOMINAL (recovery successful) or CAUTION→RETURN_REQUIRED (recovery fails) |
+| **Ground control notification condition** | At QAR-NAV-002 violation; on recovery decision (success/failure) |
+| **Acceptance criterion** | FDIR detected localisation loss within 5s; landmark search attempt made; if recovery fails, RETURN_REQUIRED triggered and vehicle reached safe haven |
+| **Test method** | SIL (sensor noise injection), HIL (P3 — real sensor failure simulation) |
 
 ---
 
-## SC-005: Safe Haven'a Erişilemiyor
+## SC-005: Safe Haven Unreachable
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Senaryo ID** | SC-005 |
-| **Ad** | Safe Haven'a Erişilemiyor — Birincil Rota Tıkandı |
-| **Tetikleyici koşul** | `primary_safe_haven_route_blocked = true` — engel veya arazi koşulu birincil safe haven rotasını kapattı |
-| **Başlangıç fazı** | SURFACE_EXPLORATION, PSR_OPS veya RETURN |
-| **Sorumlu modüller** | autonomy/global-planner, autonomy/replanner, safety/fdir, power |
+| **Scenario ID** | SC-005 |
+| **Name** | Safe Haven Unreachable — Primary Route Blocked |
+| **Trigger condition** | `primary_safe_haven_route_blocked = true` — obstacle or terrain condition blocked primary safe haven route |
+| **Starting phase** | SURFACE_EXPLORATION, PSR_OPS or RETURN |
+| **Responsible modules** | autonomy/global-planner, autonomy/replanner, safety/fdir, power |
 
-**Beklenen araç yanıtı (adım adım):**
+**Expected vehicle response (step by step):**
 
-1. Local planner birincil safe haven rotasında geçilemez engel algılar → FDIR'a bildirir.
-2. Araç DUR. FDIR yedek safe haven değerlendirmesini başlatır.
-3. **Yedek safe haven seçimi — 7 kriter (Uyum Notu 2):**
-   - Kriter 1: Kesintisiz aydınlanma (enerji şarjı için)
-   - Kriter 2: Karanlık aralığı toleransı (termal dayanım)
-   - Kriter 3: Yeniden şarj kapasitesi (panel açısı, beklenen güç)
-   - Kriter 4: Dönüş enerjisi yeterliliği (oradan iniş noktasına)
-   - Kriter 5: Termal güvenlik (sıcaklık aralığı)
-   - Kriter 6: Haberleşme (yer antenine görüş hattı)
-   - Kriter 7: Acil erişim (gelecek görev veya kurtarma için)
-4. Tüm 7 kriteri karşılayan yedek safe haven var → replanner yeni rota üretir. YER onayı (normal operasyonda) veya ACL (PSR içinde veya enerji kritikse).
-5. Yer kontrolüne bildirim: Birincil safe haven tıkandı, yedek seçildi, 7 kriter sonuçları.
-6. **Yedek safe haven yok:** Hiçbir alternatif 7 kriterin tamamını karşılamıyorsa:
-   - Güvenlik durumu RETURN_REQUIRED → SURVIVAL geçişi.
-   - SURVIVAL modu hazırlığı: bilim yükü kapat, ısıtıcıları minimum zorunlu düzeyde tut, enerji koruma maks.
-   - Araç konumunda bekler. Periyodik haberleşme girişimi.
-   - Yer kontrolüne kritik durum bildirimi: konum, enerji, termal durum, beklenen hayatta kalma süresi.
+1. Local planner detects impassable obstacle on primary safe haven route → notifies FDIR.
+2. Vehicle STOPS. FDIR initiates backup safe haven evaluation.
+3. **Backup safe haven selection — 7 criteria (Compliance Note 2):**
+   - Criterion 1: Continuous illumination (for energy charging)
+   - Criterion 2: Darkness interval tolerance (thermal endurance)
+   - Criterion 3: Recharge capacity (panel angle, expected power)
+   - Criterion 4: Return energy sufficiency (from there to landing site)
+   - Criterion 5: Thermal safety (temperature range)
+   - Criterion 6: Communication (line of sight to ground antenna)
+   - Criterion 7: Emergency access (for future mission or rescue)
+4. Backup safe haven meeting all 7 criteria found → replanner generates new route. Ground control approval (in normal operations) or ACL (inside PSR or if energy critical).
+5. Ground control notification: Primary safe haven blocked, backup selected, 7 criteria results.
+6. **No backup safe haven:** If no alternative meets all 7 criteria:
+   - Safety state RETURN_REQUIRED → SURVIVAL transition.
+   - SURVIVAL mode preparation: shut down science payload, maintain heaters at minimum mandatory level, max energy conservation.
+   - Vehicle waits at current position. Periodic communication attempts.
+   - Critical status notification to ground control: position, energy, thermal status, expected survival time.
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Güvenlik durumu geçişi** | (mevcut)→RETURN_REQUIRED (yedek bulunursa dönüş planı); RETURN_REQUIRED→SURVIVAL (yedek yoksa) |
-| **Yer kontrolüne bildirim koşulu** | Birincil rota tıkanması anında; yedek seçim kararında; SURVIVAL girişinde (kritik) |
-| **Kabul kriteri** | 7 kriter doğru uygulandı; yedek bulunursa rota üretildi; SURVIVAL'da enerji koruma aktif ve bildirim gönderildi |
-| **Test yöntemi** | SIL (rota engelleme enjeksiyonu, 7 kriter senaryoları), HIL (P3) |
+| **Safety state transition** | (current)→RETURN_REQUIRED (if backup found, return plan); RETURN_REQUIRED→SURVIVAL (if no backup) |
+| **Ground control notification condition** | At primary route blockage; on backup selection decision; on SURVIVAL entry (critical) |
+| **Acceptance criterion** | 7 criteria correctly applied; route generated if backup found; in SURVIVAL, energy conservation active and notification sent |
+| **Test method** | SIL (route blocking injection, 7-criteria scenarios), HIL (P3) |
 
 ---
 
-## SC-006: Termal Limit İhlali
+## SC-006: Thermal Limit Violation
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Senaryo ID** | SC-006 |
-| **Ad** | Termal Limit İhlali (v1.0 §4.5) |
-| **Tetikleyici koşul** | `thermal_margin_c < 5°C` (uyarı) veya `thermal_margin_c < 0°C` (kritik) |
-| **Başlangıç fazı** | SURFACE_EXPLORATION veya PSR_OPS |
-| **Sorumlu modüller** | thermal, power, safety/fdir, autonomy/global-planner |
+| **Scenario ID** | SC-006 |
+| **Name** | Thermal Limit Violation (v1.0 §4.5) |
+| **Trigger condition** | `thermal_margin_c < 5°C` (warning) or `thermal_margin_c < 0°C` (critical) |
+| **Starting phase** | SURFACE_EXPLORATION or PSR_OPS |
+| **Responsible modules** | thermal, power, safety/fdir, autonomy/global-planner |
 
-**Beklenen araç yanıtı — Uyarı seviyesi (< 5°C marj):**
+**Expected vehicle response — Warning level (< 5°C margin):**
 
-1. Thermal modül uyarı eşiğini algılar → FDIR'a bildirir. Güvenlik durumu NORMAL → CAUTION.
-2. Isıtıcı önceliklendirme: Kritik sistem ısıtıcıları (işlemci, batarya, sensörler) önce. Bilimsel yük ısıtıcıları askıya alınır.
-3. **Enerji bütçesine etki (Uyum Notu 3):** Power Mgmt ısıtıcı güç talebini alır, bütçeyi günceller. Toplam tüketim artıyorsa Planner'a yeni bütçe sınırı iletilir. Planner gezinti hızını/sıklığını azaltır.
-4. Yer kontrolüne bildirim: Termal uyarı, hangi ısıtıcıların açıldığı, enerji bütçesine etkisi.
-5. Durum izlenir; marj 5°C'nin üzerine çıkarsa CAUTION → NORMAL.
+1. Thermal module detects warning threshold → notifies FDIR. Safety state NOMINAL → CAUTION.
+2. Heater prioritisation: Critical system heaters (processor, battery, sensors) first. Science payload heaters suspended.
+3. **Impact on energy budget (Compliance Note 3):** Power Mgmt receives heater power demand, updates budget. If total consumption increases, new budget limit sent to Planner. Planner reduces traversal speed/frequency.
+4. Ground control notification: Thermal warning, which heaters activated, impact on energy budget.
+5. Status monitored; if margin rises above 5°C, CAUTION → NOMINAL.
 
-**Beklenen araç yanıtı — Kritik seviye (< 0°C marj):**
+**Expected vehicle response — Critical level (< 0°C margin):**
 
-1. Thermal modül kritik eşiği algılar → FDIR'a bildirir. Güvenlik durumu CAUTION/NORMAL → RETURN_REQUIRED.
-2. Tüm ısıtıcılar maksimum önceliğe alınır. Bilimsel yük acil kapatılır.
-3. **PSR içindeyse karar:**
-   - `ısınma_in_place_vs_return` değerlendirmesi: Mevcut termal model + enerji durumuna göre.
-   - Eğer PSR içinde güneş ışığı yoksa ve ısıtıcı güç yeterliyse: **yerinde ısınma** (< X dakika, TBD(source: §10 termal model)).
-   - Isınma yetmeyecekse veya enerji kritikse: **ACL acil dönüş** başlatılır.
-4. SURFACE_EXPLORATION'da: ACL en yakın aydınlık bölgeye yönel (termal kazanım).
-5. **Power Mgmt → Planner akış:** Power Mgmt ısıtıcı talebiyle güncellenmiş bütçe gönderir. Planner bu bütçe içinde rota üretir.
-6. Yer kontrolüne bildirim: Kritik termal durum, yapılan eylem, beklenen iyileşme süresi.
+1. Thermal module detects critical threshold → notifies FDIR. Safety state CAUTION/NOMINAL → RETURN_REQUIRED.
+2. All heaters set to maximum priority. Science payload emergency shutdown.
+3. **If inside PSR, decision:**
+   - `warm_in_place_vs_return` evaluation: based on current thermal model + energy status.
+   - If no sunlight inside PSR and heater power sufficient: **warm in place** (< X minutes, TBD(source: §10 thermal model)).
+   - If warming insufficient or energy critical: **ACL emergency return** initiated.
+4. In SURFACE_EXPLORATION: ACL move to nearest lit area (thermal gain).
+5. **Power Mgmt → Planner flow:** Power Mgmt sends updated budget with heater demand. Planner generates route within this budget.
+6. Ground control notification: Critical thermal status, action taken, expected recovery time.
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Güvenlik durumu geçişi** | NORMAL→CAUTION (uyarı), CAUTION→RETURN_REQUIRED (kritik) |
-| **Yer kontrolüne bildirim koşulu** | Uyarı eşiği geçildiğinde; kritik eşikte (acil); PSR dönüş/yerinde ısınma kararında |
-| **Kabul kriteri** | Uyarı: Isıtıcı önceliklendirme 2s içinde aktif; enerji bütçesi güncellendi. Kritik: RETURN_REQUIRED 5s içinde tetiklendi; PSR içinde doğru karar (ısınma/dönüş) verildi |
-| **Test yöntemi** | SIL (termal model ile hata enjeksiyonu), HIL (P3) |
+| **Safety state transition** | NOMINAL→CAUTION (warning), CAUTION→RETURN_REQUIRED (critical) |
+| **Ground control notification condition** | When warning threshold crossed; at critical threshold (emergency); on PSR return/warm-in-place decision |
+| **Acceptance criterion** | Warning: Heater prioritisation active within 2s; energy budget updated. Critical: RETURN_REQUIRED triggered within 5s; correct decision (warm/return) made inside PSR |
+| **Test method** | SIL (fault injection with thermal model), HIL (P3) |
 
 ---
 
 ---
 
-## SC-007: En Uzun İletişim Kesintisi (B2-EK)
+## SC-007: Longest Communication Outage (B2-EK)
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Senaryo ID** | SC-007 |
-| **Ad** | En Uzun İletişim Kesintisi — 60 Günlük Pencere Metrikleri |
-| **Tetikleyici koşul** | Güneş/Dünya geometrisi kaynaklı en uzun link kesintisi penceresine girildi (kaynak: repo 60-day sun/Earth window longest gap metric) |
-| **Başlangıç fazı** | SURFACE_EXPLORATION veya PSR_OPS |
-| **Sorumlu modüller** | communication, autonomy/mission-executive, safety/fdir, power |
+| **Scenario ID** | SC-007 |
+| **Name** | Longest Communication Outage — 60-Day Window Metrics |
+| **Trigger condition** | Entered the longest link outage window caused by sun/Earth geometry (source: repo 60-day sun/Earth window longest gap metric) |
+| **Starting phase** | SURFACE_EXPLORATION or PSR_OPS |
+| **Responsible modules** | communication, autonomy/mission-executive, safety/fdir, power |
 
-**Beklenen araç yanıtı (adım adım):**
+**Expected vehicle response (step by step):**
 
-1. Görev öncesi planlama: 60 günlük pencere analizi en uzun beklenen link kesintisini belirler. Bu değer pre-planned abort trigger listesine ve enerji bütçesine girer.
-2. Kesinti penceresine girmeden önce: Enerji dolumu, bilimsel veri tampon temizliği, safe haven konumlanması.
-3. Kesinti başladığında: SC-002 protokolü uygulanır (faza göre).
-4. Kesinti boyunca: OTN pre-planned operasyon — periyodik haberleşme girişimi, enerji koruma, termal izleme.
-5. Kesinti bitiş tahmini geçildiğinde: Link girişimi sıklaştırılır. Tahmin aşılırsa SC-002 kritik yolu devreye girer.
+1. Pre-mission planning: 60-day window analysis identifies longest expected link outage. This value enters the pre-planned abort trigger list and energy budget.
+2. Before entering outage window: Energy top-up, science data buffer flush, safe haven positioning.
+3. When outage begins: SC-002 protocol applied (depending on phase).
+4. During outage: OTN pre-planned operation — periodic communication attempts, energy conservation, thermal monitoring.
+5. When outage end estimate is passed: Link attempts intensified. If estimate exceeded, SC-002 critical path activates.
 
-**Parametreler:** `longest_outage_hours` = TBD (source: repo 60-day analysis, bölgeye göre değişir). `uncertainty_minutes` = TBD (source: §7.1 B5-EK — marjinal Dünya görünürlüğünde belirsizlik).
+**Parameters:** `longest_outage_hours` = TBD (source: repo 60-day analysis, varies by region). `uncertainty_minutes` = TBD (source: §7.1 B5-EK — uncertainty in marginal Earth visibility).
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Güvenlik durumu geçişi** | SC-002 ile aynı mantık; süre beklenden uzun olursa RETURN_REQUIRED |
-| **Yer kontrolüne bildirim koşulu** | Kesinti penceresine giriş öncesi; kesinti sona erdiğinde |
-| **Kabul kriteri** | En uzun beklenen kesinti için pre-planned plan hazır; araç kesinti boyunca enerji ve termal sınırlar içinde kaldı |
-| **Test yöntemi** | SIL (60-günlük pencere simülasyonu), Analysis |
+| **Safety state transition** | Same logic as SC-002; RETURN_REQUIRED if duration exceeds expectation |
+| **Ground control notification condition** | Before entering outage window; when outage ends |
+| **Acceptance criterion** | Pre-planned plan ready for longest expected outage; vehicle remained within energy and thermal limits throughout outage |
+| **Test method** | SIL (60-day window simulation), Analysis |
 
 ---
 
-## SC-008: Pencere Kaçırma / Geometri Güncellemesi (B2-EK)
+## SC-008: Window Miss / Geometry Update (B2-EK)
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Senaryo ID** | SC-008 |
-| **Ad** | Pencere Kaçırma / Geometri Güncellemesi — İniş Zamanı Revizyon |
-| **Tetikleyici koşul** | Yeni ephemeris verisi (JPL Horizons güncellemesi) geldi ve önceki iniş zamanı tahmini geçersiz hale geldi |
-| **Başlangıç fazı** | CRUISE (iniş öncesi planlama aşaması) |
-| **Sorumlu modüller** | apps/ground-control, autonomy/mission-executive, vehicle/landing-gnc |
+| **Scenario ID** | SC-008 |
+| **Name** | Window Miss / Geometry Update — Landing Time Revision |
+| **Trigger condition** | New ephemeris data (JPL Horizons update) arrived and previous landing time estimate became invalid |
+| **Starting phase** | CRUISE (pre-landing planning phase) |
+| **Responsible modules** | apps/ground-control, autonomy/mission-executive, vehicle/landing-gnc |
 
-**Beklenen araç yanıtı (adım adım):**
+**Expected vehicle response (step by step):**
 
-1. Yeni ephemeris verisi alındı → geometri hesabı OTN yeniden çalışır (B1-EK: geometri güncellemesi OTN).
-2. Yeni hesap: önceki iniş penceresi tavsiyesi değişti mi? 
-   - Hayır (pencere aynı kalıyor): Bilgi güncellendi, operasyon devam.
-   - Evet (pencere kaydı veya daralıyor): Yer kontrolüne bildirim. YER — iniş zamanı değişikliği.
-3. Yer kontrolü yeni pencereyi onaylar → `landing_window_validation.schema.yaml` güncellenir.
-4. Güncelleme: `sun_coverage_ok`, `earth_visibility_ok`, `comm_window_ok` yeniden doğrulanır.
-5. Araç yeni zamanlamaya göre iniş hazırlığını günceller.
+1. New ephemeris data received → geometry calculation re-runs OTN (B1-EK: geometry update is OTN).
+2. New calculation: has the previous landing window recommendation changed?
+   - No (window unchanged): Information updated, operation continues.
+   - Yes (window shifted or narrowing): Notification to ground control. Ground control approval — landing time change.
+3. Ground control approves new window → `landing_window_validation.schema.yaml` updated.
+4. Update: `sun_coverage_ok`, `earth_visibility_ok`, `comm_window_ok` re-validated.
+5. Vehicle updates landing preparation according to new timing.
 
-**Not:** Geometri iyileştirmesi (hesaplama güncelleme) OTN, ancak bu güncellemeden türetilen bölge veya zaman kararı değişiyorsa YER gerekir.
+**Note:** Geometry improvement (calculation update) is OTN, but if the region or time decision derived from this update changes, ground control approval is required.
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Güvenlik durumu geçişi** | CRUISE fazında güvenlik durumu geçişi yok; iniş penceresi doğrulaması başarısızsa görev durdurma |
-| **Yer kontrolüne bildirim koşulu** | Pencere değişikliği tespitinde; onay alındığında |
-| **Kabul kriteri** | Geometri güncellemesi doğru tespit edildi; pencere değişikliği YER ile onaylandı; `landing_window_validation` alanları tutarlı |
-| **Test yöntemi** | SIL (ephemeris simülasyonu), Analysis |
+| **Safety state transition** | No safety state transition in CRUISE phase; mission abort if landing window validation fails |
+| **Ground control notification condition** | On window change detection; on approval received |
+| **Acceptance criterion** | Geometry update correctly detected; window change approved by ground control; `landing_window_validation` fields consistent |
+| **Test method** | SIL (ephemeris simulation), Analysis |
 
 ---
 
-## SC-009: Observer Height Hassasiyeti (B2-EK)
+## SC-009: Observer Height Sensitivity (B2-EK)
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Senaryo ID** | SC-009 |
-| **Ad** | Observer Height Hassasiyeti — 1m Yükseklik Farkının Etkisi |
-| **Tetikleyici koşul** | Araç/anten gözlem yüksekliği tasarım değerinden farklı (repo notu: "a mast a metre taller can halve the longest night") |
-| **Başlangıç fazı** | Tasarım doğrulama (pre-launch) ve SURFACE_EXPLORATION |
-| **Sorumlu modüller** | vehicle/localization, thermal, power, communication |
+| **Scenario ID** | SC-009 |
+| **Name** | Observer Height Sensitivity — Effect of 1m Height Difference |
+| **Trigger condition** | Vehicle/antenna observation height differs from design value (repo note: "a mast a metre taller can halve the longest night") |
+| **Starting phase** | Design validation (pre-launch) and SURFACE_EXPLORATION |
+| **Responsible modules** | vehicle/localization, thermal, power, communication |
 
-**Beklenen araç yanıtı (adım adım):**
+**Expected vehicle response (step by step):**
 
-1. **Tasarım aşaması:** Anten/sensör yüksekliği `observer_height_m` = TBD(source: §10 araç yapısı). Bu değer horizon.py hesabına girer.
-2. **Duyarlılık analizi:** 1m yükseklik artışı en uzun gece süresini nasıl etkiler? (Repo: yarıya indirebilir.)
-3. **P1 doğrulama:** Simülatörde `observer_height_m` ±1m değiştirilerek en uzun gece ve Dünya görünürlük penceresi farkı hesaplanır.
-4. **Operasyonel etki:** Yükseklik TBD değerinden düşük gelirse → `longest_outage_hours` artar → SC-007 parametresi güncellenir → güvenlik bütçesi yeniden hesaplanır.
-5. **SURFACE_EXPLORATION:** Araç eğimli arazide en uzun gece tahmininin yeniden hesaplanması gerekip gerekmediğini değerlendirir (OTN — hesaplama güncellemesi).
+1. **Design phase:** Antenna/sensor height `observer_height_m` = TBD(source: §10 vehicle structure). This value feeds into horizon.py calculation.
+2. **Sensitivity analysis:** How does a 1m height increase affect the longest night duration? (Repo: can halve it.)
+3. **P1 validation:** `observer_height_m` varied by ±1m in simulator to calculate difference in longest night and Earth visibility window.
+4. **Operational impact:** If height comes in lower than TBD value → `longest_outage_hours` increases → SC-007 parameter updated → safety budget recalculated.
+5. **SURFACE_EXPLORATION:** Vehicle evaluates whether recalculation of longest night estimate is needed on sloped terrain (OTN — calculation update).
 
-**Test parametreleri:** `observer_height_m` = [0.5, 1.0, 1.5, 2.0] m için en uzun gece ve Dünya görünürlük penceresi karşılaştırması.
+**Test parameters:** Comparison of longest night and Earth visibility window for `observer_height_m` = [0.5, 1.0, 1.5, 2.0] m.
 
-| Alan | İçerik |
+| Field | Content |
 |------|--------|
-| **Güvenlik durumu geçişi** | Yükseklik sapması güvenlik parametrelerini etkiliyorsa yer bildirim |
-| **Yer kontrolüne bildirim koşulu** | Observer height tasarım değerinden sapıyorsa; en uzun gece tahmininde anlamlı değişim varsa |
-| **Kabul kriteri** | Duyarlılık analizi tamamlandı ve sonuçlar SC-007/termal/enerji bütçesine yansıtıldı; observer_height TBD'den §10 ile donduruldu |
-| **Test yöntemi** | Analysis (duyarlılık), SIL (P1 simülatör) |
+| **Safety state transition** | Ground notification if height deviation affects safety parameters |
+| **Ground control notification condition** | If observer height deviates from design value; if significant change in longest night estimate |
+| **Acceptance criterion** | Sensitivity analysis completed and results reflected in SC-007/thermal/energy budget; observer_height TBD frozen with §10 |
+| **Test method** | Analysis (sensitivity), SIL (P1 simulator) |
 
 ---
 
-## Senaryo Özet Tablosu
+## Scenario Summary Table
 
-| Senaryo | Faz | Güvenlik Geçişi | Otorite | Test |
+| Scenario | Phase | Safety Transition | Authority | Test |
 |---------|-----|-----------------|---------|------|
-| SC-001 | SURFACE_EXPLORATION | NORMAL kalır | OTN | SIL + HIL |
-| SC-002 | SURFACE / PSR | NORMAL→CAUTION veya RETURN_REQUIRED | OTN / ACL | SIL + HIL |
-| SC-003 | PSR_OPS | NORMAL→RETURN_REQUIRED | ACL | SIL + HIL |
-| SC-004 | SURFACE / PSR | NORMAL→CAUTION→NORMAL veya RETURN_REQUIRED | FDIR | SIL + HIL |
-| SC-005 | SURFACE / PSR / RETURN | →RETURN_REQUIRED veya SURVIVAL | ACL / YER | SIL + HIL |
-| SC-006 | SURFACE / PSR | NORMAL→CAUTION→RETURN_REQUIRED | ACL | SIL + HIL |
-| SC-007 | SURFACE / PSR | SC-002 mantığı; süre aşımında RETURN_REQUIRED | OTN / ACL | SIL + Analysis |
-| SC-008 | CRUISE | Geçiş yok; pencere değişirse YER | OTN / YER | SIL + Analysis |
-| SC-009 | Tasarım / SURFACE | Parametrik etki bildirim | OTN | Analysis + SIL |
+| SC-001 | SURFACE_EXPLORATION | NOMINAL stays | OTN | SIL + HIL |
+| SC-002 | SURFACE / PSR | NOMINAL→CAUTION or RETURN_REQUIRED | OTN / ACL | SIL + HIL |
+| SC-003 | PSR_OPS | NOMINAL→RETURN_REQUIRED | ACL | SIL + HIL |
+| SC-004 | SURFACE / PSR | NOMINAL→CAUTION→NOMINAL or RETURN_REQUIRED | FDIR | SIL + HIL |
+| SC-005 | SURFACE / PSR / RETURN | →RETURN_REQUIRED or SURVIVAL | ACL / GCA | SIL + HIL |
+| SC-006 | SURFACE / PSR | NOMINAL→CAUTION→RETURN_REQUIRED | ACL | SIL + HIL |
+| SC-007 | SURFACE / PSR | SC-002 logic; RETURN_REQUIRED if duration exceeded | OTN / ACL | SIL + Analysis |
+| SC-008 | CRUISE | No transition; GCA if window changes | OTN / GCA | SIL + Analysis |
+| SC-009 | Design / SURFACE | Parametric impact notification | OTN | Analysis + SIL |
 
 ---
 
-## Revizyon Geçmişi
+## Revision History
 
-| Versiyon | Tarih | Değişiklik |
+| Version | Date | Change |
 |----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — B2 görevi |
-| 0.2 | 2026-11-14 | B2-EK: SC-007 (en uzun iletişim kesintisi), SC-008 (pencere kaçırma), SC-009 (observer height hassasiyeti) eklendi |
+| 0.1 | 2026-11-14 | First draft — B2 task |
+| 0.2 | 2026-11-14 | B2-EK: SC-007 (longest communication outage), SC-008 (window miss), SC-009 (observer height sensitivity) added |

@@ -4,21 +4,20 @@
 #   - interfaces/schemas/earth_visibility_windows.schema.yaml
 #   - interfaces/schemas/resource_state.schema.yaml
 #   - domain/mission/constraints/hard_constraints_catalog.yaml  (HC-018)
-#   - domain/mission/phase_state_machine.md  (LANDING faz giriş koşulları)
+#   - domain/mission/phase_state_machine.md  (LANDING phase entry conditions)
 # open_items:
-#   - recommended_window hesaplama modeli TBD(source: §10 araç GNC kabiliyeti)
-#   - confidence eşiği TBD — hangi güven seviyesi altında iniş reddedilir
+#   - recommended_window calculation model TBD(source: §10 vehicle GNC capability)
+#   - confidence threshold TBD — below what confidence level is landing rejected
 
 schema_version: "1.0.0"
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: "LandingWindowProduct"
 description: >
-  İniş zamanı öneri ürünü.
-  Kaynak: daniel27-space/lunar-navigator "when-to-land" modülü (7/14/30 gün).
-  HC-018 iniş zamanı hard constraint doğrulamasının girdisidir.
-  Bu ürün phase_state_machine.md LANDING faz giriş koşulu
-  "landing_window_validated: true" ve "earth_visibility_confirmed: true"
-  için referans alınır.
+  Landing time recommendation product.
+  Source: daniel27-space/lunar-navigator "when-to-land" module (7/14/30 days).
+  This is an input for HC-018 landing time hard constraint validation.
+  This product is referenced for phase_state_machine.md LANDING phase entry conditions
+  "landing_window_validated: true" and "earth_visibility_confirmed: true".
 
 type: object
 
@@ -36,43 +35,43 @@ properties:
 
   schema_version:
     type: string
-    description: "Bu şemanın versiyonu."
+    description: "Version of this schema."
     pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
 
   product_id:
     type: string
-    description: "Ürün tanımlayıcısı."
+    description: "Product identifier."
     minLength: 1
 
   generated_utc:
     type: string
     format: date-time
-    description: "Bu öneri ürününün üretildiği zaman (UTC)."
+    description: "Time this recommendation product was generated (UTC)."
 
   recommended_window_start:
     type: string
     format: date-time
-    description: "Önerilen iniş penceresi başlangıcı (UTC)."
+    description: "Recommended landing window start (UTC)."
 
   recommended_window_end:
     type: string
     format: date-time
-    description: "Önerilen iniş penceresi sonu (UTC)."
+    description: "Recommended landing window end (UTC)."
 
   confidence:
     type: number
     description: >
-      Öneri güven skoru [0.0, 1.0].
-      1.0 = tüm kriterler tam karşılanıyor; 0.0 = hiçbir uygun pencere yok.
-      Planlayıcı confidence < eşik ise iniş reddeder (eşik TBD).
+      Recommendation confidence score [0.0, 1.0].
+      1.0 = all criteria fully met; 0.0 = no suitable window found.
+      Planner rejects landing if confidence < threshold (threshold TBD).
     minimum: 0.0
     maximum: 1.0
 
   basis:
     type: array
     description: >
-      Bu önerinin dayandığı kriterler.
-      Olası değerler: sun_coverage, earth_visibility, thermal, fuel_budget.
+      Criteria on which this recommendation is based.
+      Possible values: sun_coverage, earth_visibility, thermal, fuel_budget.
     items:
       type: string
       enum:
@@ -86,23 +85,23 @@ properties:
   earth_visibility_confirmed:
     type: boolean
     description: >
-      Önerilen pencerede Dünya görünürlüğü doğrulandı mı?
-      HC-018 hard constraint için zorunlu doğrulama alanı.
-      false ise LANDING faz geçişi reddedilir.
+      Is Earth visibility confirmed during the recommended window?
+      Mandatory validation field for HC-018 hard constraint.
+      If false, LANDING phase transition is rejected.
 
   source:
     type: string
-    description: "Veri kaynağı. Beklenen: 'lunar-navigator/when-to-land'"
+    description: "Data source. Expected: 'lunar-navigator/when-to-land'"
     minLength: 1
 
   analysis_horizon_days:
     type: integer
-    description: "Analizin baktığı ileriye dönük gün sayısı. Repo: 7, 14 veya 30 gün."
+    description: "Number of days ahead the analysis looks. Repo: 7, 14 or 30 days."
     enum: [7, 14, 30]
 
   alternative_windows:
     type: array
-    description: "Önerilen pencere dışında değerlendirilen alternatif pencereler (opsiyonel)."
+    description: "Alternative windows evaluated outside the recommended window (optional)."
     items:
       type: object
       required: [start_utc, end_utc, confidence, earth_visible]
@@ -115,7 +114,7 @@ properties:
 
   ephemeris_validity_range:
     type: object
-    description: "Bu tahminin dayandığı efemeris aralığı."
+    description: "Ephemeris range on which this estimate is based."
     properties:
       start: { type: string, format: date }
       end:   { type: string, format: date }
@@ -144,4 +143,4 @@ example:
       end_utc:   "2026-10-12T12:00:00Z"
       confidence: 0.74
       earth_visible: true
-      notes: "Daha düşük güneş açısı; termal marj azalmış"
+      notes: "Lower solar angle; reduced thermal margin"
