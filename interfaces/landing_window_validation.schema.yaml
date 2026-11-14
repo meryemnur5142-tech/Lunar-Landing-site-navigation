@@ -1,0 +1,111 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on: [interfaces/earth_visibility.schema.yaml, interfaces/multi_site_comparison.schema.yaml, power/, thermal/, communication/]
+# open_items: [confidence hesaplama metodolojisi TBD, link_budget_ok alanı communication/ şemasına bağlı]
+
+# Landing Window Validation Schema
+# İniş zamanı <-> GNC/güç/termal/haberleşme doğrulama sözleşmesi
+# Kaynak referans: lunar-navigator when-to-land analizi
+
+$schema: "https://json-schema.org/draft/2020-12"
+title: LandingWindowValidation
+description: >
+  Önerilen iniş penceresi için çok-disiplinli doğrulama ürünü.
+  Güneş geometrisi, Dünya görünürlüğü, güç bütçesi, termal bütçe ve haberleşme koşulları kontrol edilir.
+  Bu şema operatör onayı girişi için girdi sağlar — nihai iniş zamanı YER (B1-EK ile hizalı).
+
+type: object
+required:
+  - window_id
+  - window_start_utc
+  - window_end_utc
+  - sun_coverage_ok
+  - earth_visibility_ok
+  - power_budget_ok
+  - thermal_budget_ok
+  - comm_window_ok
+  - overall_valid
+  - confidence
+  - temporal_class
+  - source
+
+properties:
+  window_id:
+    type: string
+    description: Pencere tanımlayıcısı
+
+  window_start_utc:
+    type: string
+    format: date-time
+    description: Önerilen iniş penceresi başlangıcı (ISO 8601)
+
+  window_end_utc:
+    type: string
+    format: date-time
+    description: Önerilen iniş penceresi sonu (ISO 8601)
+
+  sun_coverage_ok:
+    type: boolean
+    description: İniş ve iniş sonrası başlangıç için yeterli güneş aydınlanması mevcut mu?
+
+  earth_visibility_ok:
+    type: boolean
+    description: >
+      İniş penceresinde geometrik Dünya görünürlüğü yeterli mi?
+      NOT: Yalnızca geometrik görünürlük — link budget (comm_window_ok) ayrı değerlendirilir.
+
+  power_budget_ok:
+    type: boolean
+    description: Tahmin edilen güç bütçesi HC-006 (dönüş rezervi) ve başlangıç operasyonu için yeterli mi?
+
+  thermal_budget_ok:
+    type: boolean
+    description: İniş sonrası termal koşullar HC-007 (karanlık toleransı) içinde mi?
+
+  comm_window_ok:
+    type: boolean
+    description: >
+      İniş penceresinde haberleşme link budget yeterli mi?
+      Bu alan geometrik görünürlükten bağımsız olarak link planlaması katmanından gelir (DR-INT-003).
+
+  overall_valid:
+    type: boolean
+    description: Tüm boolean kontroller true ise true. False ise operatör onayı için engel gerekçesi belirsizliği var demektir.
+
+  confidence:
+    type: number
+    minimum: 0.0
+    maximum: 1.0
+    description: >
+      Hesap güven skoru (0.0–1.0). Marjinal Dünya görünürlük, düşük DEM çözünürlük
+      veya worst-case enerji belirsizliği skoru düşürür.
+
+  failure_reasons:
+    type: array
+    items:
+      type: string
+    description: overall_valid=false ise başarısız kontrollerin listesi
+
+  temporal_class:
+    type: string
+    enum: [historical, predicted]
+    description: B5-EK §7.2 politikası
+
+  ephemeris_validity_range:
+    type: object
+    description: Hesabın geçerli zaman aralığı. ZORUNLU alan (DR-INT-004).
+    required: [start_utc, end_utc]
+    properties:
+      start_utc:
+        type: string
+        format: date-time
+      end_utc:
+        type: string
+        format: date-time
+
+  source:
+    type: string
+    description: Hesaplama kaynağı
+    example: "repo:when-to-land"
+
+additionalProperties: false

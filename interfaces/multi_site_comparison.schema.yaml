@@ -1,0 +1,111 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on: [interfaces/earth_visibility.schema.yaml, simulation/environment-model/]
+# open_items: [5-site max sınırı mimari kararla belirlendi — yer kontrolü UI kapasitesi, longest_outage_hours SC-007 ile hizalı]
+
+# Multi-Site Comparison Schema
+# Ground Control UI <-> Mission Intelligence <-> Environment Model sözleşmesi (5 bölgeye kadar)
+
+$schema: "https://json-schema.org/draft/2020-12"
+title: MultiSiteComparisonProduct
+description: >
+  Birden fazla iniş adayı bölge için güneş ve Dünya geometrisi karşılaştırma ürünü.
+  Maksimum 5 bölge (LUNA-AI genişlemesi — repo 2–3 bölge destekliyordu).
+  Site finder weighted score bu şemada yer almaz; sıralama mission intelligence sorumluluğundadır.
+  Nihai bölge seçimi YER (operatör onayı) gerektirir — B1-EK ile hizalı.
+
+type: object
+required:
+  - comparison_time_utc
+  - temporal_class
+  - terrain_resolution
+  - ephemeris_validity_range
+  - sites
+
+properties:
+  comparison_time_utc:
+    type: string
+    format: date-time
+    description: Karşılaştırma başlangıç zamanı (ISO 8601)
+
+  analysis_duration_days:
+    type: number
+    description: Analiz penceresi (gün); örn. 7, 14, 30
+
+  temporal_class:
+    type: string
+    enum: [historical, predicted]
+    description: B5-EK §7.2 politikası
+
+  terrain_resolution:
+    type: string
+    enum: ["80m", "300m", "2700m"]
+    description: >
+      Hesapta kullanılan DEM çözünürlüğü. ZORUNLU alan — gizlenmez (DR-INT-004).
+      Farklı bölgeler farklı çözünürlükte hesaplanmış olabilir; bölge düzeyinde `site_resolution` override ile.
+
+  ephemeris_validity_range:
+    type: object
+    description: Hesabın geçerli zaman aralığı. ZORUNLU alan (DR-INT-004, RR-012).
+    required: [start_utc, end_utc]
+    properties:
+      start_utc:
+        type: string
+        format: date-time
+      end_utc:
+        type: string
+        format: date-time
+
+  sites:
+    type: array
+    minItems: 1
+    maxItems: 5
+    description: Karşılaştırılan bölge listesi (maks 5)
+    items:
+      type: object
+      required:
+        - site_id
+        - sun_fraction
+        - earth_fraction
+        - longest_night_hours
+        - longest_outage_hours
+      properties:
+        site_id:
+          type: string
+
+        site_name:
+          type: string
+
+        sun_fraction:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Analiz penceresi boyunca güneş aydınlanma oranı
+
+        earth_fraction:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Analiz penceresi boyunca Dünya görünürlük oranı
+
+        longest_night_hours:
+          type: number
+          minimum: 0
+          description: En uzun kesintisiz karanlık dönemi (saat) — termal/enerji bütçesi girdi
+
+        longest_outage_hours:
+          type: number
+          minimum: 0
+          description: En uzun Dünya görünmezlik süresi (saat) — SC-007 parametresi
+
+        site_resolution:
+          type: string
+          enum: ["80m", "300m", "2700m"]
+          description: Bu bölgeye özgü DEM çözünürlüğü (global'den farklıysa)
+
+        observer_height_m:
+          type: number
+          minimum: 0
+          description: Hesapta kullanılan observer height — SC-009 ile hizalı
+
+additionalProperties: false
