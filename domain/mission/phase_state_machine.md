@@ -1,238 +1,237 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on:
-#   - docs/architecture/SAFETY_STATE_MACHINE.md  (çapraz referans; bu dosya güvenlik durumunu TANIMLAMAZ)
+#   - docs/architecture/SAFETY_STATE_MACHINE.md  (cross-reference; this file does NOT define safety state)
 #   - domain/mission/constraints/hard_constraints_catalog.yaml
 #   - docs/qar/QAR_TABLE.md  (QAR-NAV-002)
 #   - interfaces/schemas/resource_state.schema.yaml
 # open_items:
-#   - PSR_OPS entry checklist madde 4 eşiği QAR-NAV-002.target TBD
-#   - SURFACE_EXPLORATION→PSR_OPS otorite seviyesi B1 otonomi matrisine bağlı TBD
-#   - CRUISE→LANDING geçiş koşulları GNC arayüzüne bağlı TBD(source: §10)
+#   - PSR_OPS entry checklist item 4 threshold QAR-NAV-002.target TBD
+#   - SURFACE_EXPLORATION->PSR_OPS authority level tied to B1 autonomy matrix TBD
+#   - CRUISE->LANDING transition conditions tied to GNC interface TBD(source: §10)
 
-# Görev Fazı Durum Makinesi — LUNA-AI v1.1
+# Mission Phase State Machine — LUNA-AI v1.1
 
-## 1. Kapsam ve Ayırım
+## 1. Scope and Separation
 
-**ÖNEMLİ (Uyum Notu 1):** Bu dosya yalnızca **görev fazı eksenini** tanımlar.
+**IMPORTANT (Compliance Note 1):** This file defines only the **mission phase axis**.
 
-| Eksen | Tanımlandığı Yer | Bu Dosyadaki Rolü |
+| Axis | Defined In | Role in This File |
 |---|---|---|
-| Görev fazı | Bu dosya | Tam tanım |
-| Güvenlik durumu | `docs/architecture/SAFETY_STATE_MACHINE.md` | Yalnızca çapraz ilişki matrisinde referans verilir |
+| Mission phase | This file | Full definition |
+| Safety state | `docs/architecture/SAFETY_STATE_MACHINE.md` | Referenced only in the cross-reference matrix in §5 |
 
-İki eksen asla birleştirilmez. Faz makinesinin güvenlik durumu ile etkileşimi yalnızca
-§5 Çapraz İlişki Matrisinde gösterilir.
+The two axes are never merged. The phase machine's interaction with safety state is shown only in the §5 Cross-Reference Matrix.
 
 ---
 
-## 2. Faz Tanımları
+## 2. Phase Definitions
 
-| Faz | Tanım | Araç Konumu |
+| Phase | Definition | Vehicle Location |
 |---|---|---|
-| `CRUISE` | Yörüngede iniş öncesi; GNC Ay yörüngesinde | Uzay (yörünge) |
-| `LANDING` | İniş GNC aktif, yüzey teması öncesi; powered descent | Alçalma yolunda |
-| `SURFACE_EXPLORATION` | Nominal yüzey keşfi; PSR dışı bölge | Yüzey, aydınlanmış alan |
-| `PSR_OPS` | PSR (Kalıcı Gölge Bölgesi) içi operasyon | Kalıcı gölge |
-| `RETURN` | Safe haven'a aktif dönüş hareketi | Yüzey, dönüş güzergahı |
-| `SAFE_STATE` | Şarj/termal toparlanma; haberleşme penceresi bekleme | Safe haven konumu |
+| `CRUISE` | Pre-landing in orbit; GNC in lunar orbit | Space (orbit) |
+| `LANDING` | Landing GNC active, prior to surface contact; powered descent | Descent path |
+| `SURFACE_EXPLORATION` | Nominal surface exploration; non-PSR area | Surface, illuminated area |
+| `PSR_OPS` | Operation inside PSR (Permanently Shadowed Region) | Permanent shadow |
+| `RETURN` | Active return movement to safe haven | Surface, return route |
+| `SAFE_STATE` | Charge/thermal recovery; communication window wait | Safe haven location |
 
 ---
 
-## 3. Faz Geçiş Diyagramı
+## 3. Phase Transition Diagram
 
 ```
 CRUISE
-  │ iniş koridoru onayı + HC-001 adayı geçti
+  │ landing corridor approved + HC-001 candidate passed
   ▼
 LANDING
-  │ yüzey teması onaylandı + araç stabil
+  │ surface contact confirmed + vehicle stable
   ▼
 SURFACE_EXPLORATION ◄──────────────────────────────┐
-  │ PSR_OPS onayı + 6-madde checklist OK            │
+  │ PSR_OPS approval + 6-item checklist OK           │
   ▼                                                  │
-PSR_OPS ──► (dönüş koşulu) ──► RETURN ──► SAFE_STATE
+PSR_OPS ──► (return condition) ──► RETURN ──► SAFE_STATE
   │                                          │
-  │ (şarj + termal + hedef tamamlandı)       │
+  │ (charge + thermal + objectives complete)  │
   └──────────────────────────────────────────┘
-  (herhangi bir fazdan acil)
+  (emergency from any phase)
   RETURN ◄── (FDIR: emergency_autonomous)
-  SAFE_STATE ◄── (survival modu)
+  SAFE_STATE ◄── (survival mode)
 ```
 
 ---
 
-## 4. Faz Detayları
+## 4. Phase Details
 
 ### 4.1 CRUISE
 
-**İzin verilen geçişler:**
+**Permitted transitions:**
 - CRUISE → LANDING (nominal)
 
-**Geçiş koşulları (CRUISE → LANDING):**
-- Iniş koridoru hesaplandı ve onaylandı
-- İniş adayı HC-001, HC-002, HC-003 geçti (ön analiz)
-- Araç yakıt bütçesi yeterli TBD(source: §10)
-- Haberleşme HC-014 karşılanıyor
+**Transition conditions (CRUISE → LANDING):**
+- Landing corridor calculated and approved
+- Landing candidate passed HC-001, HC-002, HC-003 (pre-analysis)
+- Vehicle fuel budget sufficient TBD(source: §10)
+- Communication HC-014 satisfied
 
-**Girişte zorunlu kontrol:**
-- Navigasyon sistemi aktif
-- Telemetri nominal
+**Mandatory check on entry:**
+- Navigation system active
+- Telemetry nominal
 
-**Çıkış koşulu:**
-- Powered descent başladı; GNC iniş moduna geçti
+**Exit condition:**
+- Powered descent started; GNC switched to landing mode
 
 ---
 
 ### 4.2 LANDING
 
-**İzin verilen geçişler:**
-- LANDING → SURFACE_EXPLORATION (başarılı iniş)
-- LANDING → SAFE_STATE (iniş sonrası sistem kontrolü)
+**Permitted transitions:**
+- LANDING → SURFACE_EXPLORATION (successful landing)
+- LANDING → SAFE_STATE (post-landing system check)
 
-**Geçiş koşulları (LANDING → SURFACE_EXPLORATION):**
-- Yüzey teması ve stabilite onaylandı
-- Tüm HC-001..HC-005 iniş alanı kontrolü geçti
-- Sistem sağlık kontrolü nominal
-- `landing_window_validated: true` (kaynak: `interfaces/schemas/landing_window_product.schema.yaml` — lunar-navigator "when-to-land" çıktısı)
-- `earth_visibility_confirmed: true` (kaynak: `interfaces/schemas/earth_visibility_windows.schema.yaml`) — HC-018 gereksinimi
+**Transition conditions (LANDING → SURFACE_EXPLORATION):**
+- Surface contact and stability confirmed
+- All HC-001..HC-005 landing site checks passed
+- System health check nominal
+- `landing_window_validated: true` (source: `interfaces/schemas/landing_window_product.schema.yaml` — lunar-navigator "when-to-land" output)
+- `earth_visibility_confirmed: true` (source: `interfaces/schemas/earth_visibility_windows.schema.yaml`) — HC-018 requirement
 
-**Girişte zorunlu kontrol:**
-- GNC iniş algoritması aktif
-- İniş radar/lidar aktif
+**Mandatory check on entry:**
+- GNC landing algorithm active
+- Landing radar/lidar active
 
-**Çıkış koşulu:**
-- Araç yüzeyde kararlı durumda
-- Tüm iniş kısıtları karşılandı
+**Exit condition:**
+- Vehicle in stable state on surface
+- All landing constraints satisfied
 
 ---
 
 ### 4.3 SURFACE_EXPLORATION
 
-**İzin verilen geçişler:**
-- SURFACE_EXPLORATION → PSR_OPS (onaylı PSR girişi)
-- SURFACE_EXPLORATION → RETURN (dönüş koşulu karşılandı)
-- SURFACE_EXPLORATION → SAFE_STATE (şarj/termal gereksinimi)
+**Permitted transitions:**
+- SURFACE_EXPLORATION → PSR_OPS (approved PSR entry)
+- SURFACE_EXPLORATION → RETURN (return condition satisfied)
+- SURFACE_EXPLORATION → SAFE_STATE (charge/thermal requirement)
 
-**Geçiş koşulları (SURFACE_EXPLORATION → PSR_OPS):**
-Bkz. §4.3.1 PSR_OPS Giriş Öncesi Zorunlu Kontrol Listesi.
+**Transition conditions (SURFACE_EXPLORATION → PSR_OPS):**
+See §4.3.1 Pre-PSR_OPS Mandatory Checklist.
 
-**Geçiş koşulları (SURFACE_EXPLORATION → RETURN):**
-- `resource_state.return_reserve_wh <= HC-006.threshold * 1.1` (erken uyarı)
-- veya yer komutu (ground_approved)
-- veya FDIR tetiklemesi (emergency_autonomous)
+**Transition conditions (SURFACE_EXPLORATION → RETURN):**
+- `resource_state.return_reserve_wh <= HC-006.threshold * 1.1` (early warning)
+- or ground command (ground_approved)
+- or FDIR trigger (emergency_autonomous)
 
-**Girişte zorunlu kontrol:**
-- Safe haven koordinatı yüklenmiş
-- HC-014 haberleşme karşılanıyor
-- Navigasyon lokalizasyon sistemi aktif
+**Mandatory check on entry:**
+- Safe haven coordinate loaded
+- HC-014 communication satisfied
+- Navigation localisation system active
 
-**Çıkış koşulu:**
-- PSR girişi onaylandı (checklist) VEYA dönüş koşulu karşılandı
+**Exit condition:**
+- PSR entry approved (checklist) OR return condition satisfied
 
-#### 4.3.1 PSR_OPS Giriş Öncesi Zorunlu Kontrol Listesi
+#### 4.3.1 Pre-PSR_OPS Mandatory Checklist
 
-Aşağıdaki 6 maddenin **tamamı** karşılanmadan PSR_OPS fazına geçilemez:
+All **6** of the following items must be satisfied before transitioning to PSR_OPS phase:
 
-1. **Dönüş rezervi:** `resource_state.return_reserve_wh >= HC-006.threshold`
-   - Power Management onayı gerekir (Uyum Notu 3)
-2. **Termal marj:** `resource_state.thermal_margin_c >= HC-007.threshold`
-   - Thermal Management onayı gerekir
-3. **Haberleşme penceresi:** `comm_window >= HC-014.threshold`
-   - veya pre-planned abort trigger tanımlı (uplink kesildiğinde otomatik RETURN)
-4. **Lokalizasyon belirsizliği:** `vehicle_pose.position_uncertainty_m <= QAR-NAV-002.target`
-   - Navigasyon sistemi onayı gerekir
-5. **Bilimsel hedef onayı:** Yer segmenti onayı (ground_approved)
-   - veya otonom karar matrisi (B1 otonomi matrisine bağlı TBD)
-6. **Safe haven yedek koordinatı:** En az bir HC-009..HC-015 onaylı aday yüklenmiş
+1. **Return reserve:** `resource_state.return_reserve_wh >= HC-006.threshold`
+   - Power Management approval required (Compliance Note 3)
+2. **Thermal margin:** `resource_state.thermal_margin_c >= HC-007.threshold`
+   - Thermal Management approval required
+3. **Communication window:** `comm_window >= HC-014.threshold`
+   - or pre-planned abort trigger defined (automatic RETURN when uplink severed)
+4. **Localisation uncertainty:** `vehicle_pose.position_uncertainty_m <= QAR-NAV-002.target`
+   - Navigation system approval required
+5. **Scientific objective approval:** Ground segment approval (ground_approved)
+   - or autonomous decision matrix (tied to B1 autonomy matrix TBD)
+6. **Backup safe haven coordinate:** At least one HC-009..HC-015 approved candidate loaded
 
 ---
 
 ### 4.4 PSR_OPS
 
-**İzin verilen geçişler:**
-- PSR_OPS → RETURN (dönüş koşulu veya FDIR)
-- PSR_OPS → SAFE_STATE (acil survival — FDIR emergency_autonomous)
+**Permitted transitions:**
+- PSR_OPS → RETURN (return condition or FDIR)
+- PSR_OPS → SAFE_STATE (emergency survival — FDIR emergency_autonomous)
 
-**Geçiş koşulları (PSR_OPS → RETURN):**
-- `resource_state.return_reserve_wh <= HC-006.threshold * 1.1` (%10 erken uyarı eşiği)
-- veya bilimsel hedef tamamlandı
-- veya yer komutu (emergency_return)
-- veya FDIR tetiklemesi
+**Transition conditions (PSR_OPS → RETURN):**
+- `resource_state.return_reserve_wh <= HC-006.threshold * 1.1` (10% early warning threshold)
+- or scientific objective complete
+- or ground command (emergency_return)
+- or FDIR trigger
 
-**Geçiş koşulları (PSR_OPS → SAFE_STATE — acil):**
-- Yalnızca FDIR: `resource_state.power_mode == survival` ve dönüş enerjisi yetersiz
-- Güvenlik durumu SURVIVAL iken (çapraz ilişki matrisine bkz. §5)
+**Transition conditions (PSR_OPS → SAFE_STATE — emergency):**
+- FDIR only: `resource_state.power_mode == survival` and return energy insufficient
+- When safety state is SURVIVAL (see cross-reference matrix §5)
 
-**Girişte zorunlu kontrol:**
-- §4.3.1 checklist tamamlandı ve onaylandı (vehicle_command.psr_entry_checklist_complete: true)
+**Mandatory check on entry:**
+- §4.3.1 checklist completed and approved (vehicle_command.psr_entry_checklist_complete: true)
 
-**Çıkış koşulu:**
-- Dönüş rezervi %110 eşiğine ulaştı VEYA hedefler tamamlandı VEYA FDIR tetikledi
+**Exit condition:**
+- Return reserve reached 110% threshold OR objectives complete OR FDIR triggered
 
 ---
 
 ### 4.5 RETURN
 
-**İzin verilen geçişler:**
-- RETURN → SAFE_STATE (safe haven'a ulaşıldı)
-- RETURN → SURFACE_EXPLORATION (dönüş iptal + yeterli enerji; yer onayı gerekir)
+**Permitted transitions:**
+- RETURN → SAFE_STATE (safe haven reached)
+- RETURN → SURFACE_EXPLORATION (return cancelled + sufficient energy; ground approval required)
 
-**Geçiş koşulları (RETURN → SAFE_STATE):**
-- Araç safe haven koordinatına ulaştı (HC-015 mesafe karşılandı)
-- HC-009..HC-013 safe haven kriterleri karşılandığı doğrulandı
+**Transition conditions (RETURN → SAFE_STATE):**
+- Vehicle reached safe haven coordinate (HC-015 distance satisfied)
+- HC-009..HC-013 safe haven criteria confirmed satisfied
 
-**Geçiş koşulları (RETURN → SURFACE_EXPLORATION):**
-- Yer segmenti onayı (ground_approved)
-- `resource_state.return_reserve_wh >= HC-006.threshold * 1.5` (güvenli marj)
-- Termal marj nominal
+**Transition conditions (RETURN → SURFACE_EXPLORATION):**
+- Ground segment approval (ground_approved)
+- `resource_state.return_reserve_wh >= HC-006.threshold * 1.5` (safe margin)
+- Thermal margin nominal
 
-**Girişte zorunlu kontrol:**
-- Dönüş güzergahı hesaplandı
-- Safe haven koordinatı yüklenmiş
+**Mandatory check on entry:**
+- Return route calculated
+- Safe haven coordinate loaded
 
-**Çıkış koşulu:**
-- Safe haven'a ulaşıldı
+**Exit condition:**
+- Safe haven reached
 
 ---
 
 ### 4.6 SAFE_STATE
 
-**İzin verilen geçişler:**
-- SAFE_STATE → SURFACE_EXPLORATION (toparlanma tamamlandı; yer onayı)
-- SAFE_STATE → LANDING (yalnızca görev iptalinde; yer onayı)
+**Permitted transitions:**
+- SAFE_STATE → SURFACE_EXPLORATION (recovery complete; ground approval)
+- SAFE_STATE → LANDING (mission abort only; ground approval)
 
-**Geçiş koşulları (SAFE_STATE → SURFACE_EXPLORATION):**
-- `resource_state.state_of_charge_pct >= HC-008.threshold` (tam şarj için TBD)
+**Transition conditions (SAFE_STATE → SURFACE_EXPLORATION):**
+- `resource_state.state_of_charge_pct >= HC-008.threshold` (TBD for full charge)
 - `resource_state.thermal_margin_c >= HC-007.threshold`
-- Yer segmenti yeni görev paketi gönderdi (mission_package.schema.yaml)
-- HC-014 haberleşme penceresi aktif
+- Ground segment sent new mission package (mission_package.schema.yaml)
+- HC-014 communication window active
 
-**Girişte zorunlu kontrol:**
-- Safe haven HC-009..HC-015 kriterleri karşılandı
-- Şarj sistemi aktif
+**Mandatory check on entry:**
+- Safe haven HC-009..HC-015 criteria satisfied
+- Charging system active
 
-**Çıkış koşulu:**
-- Yer segmenti onayı + enerji/termal toparlanma tamamlandı
+**Exit condition:**
+- Ground segment approval + energy/thermal recovery complete
 
 ---
 
-## 5. Güvenlik Durumu Çapraz İlişki Matrisi (Uyum Notu 1)
+## 5. Safety State Cross-Reference Matrix (Compliance Note 1)
 
-Güvenlik durumları `docs/architecture/SAFETY_STATE_MACHINE.md`'de tanımlanmıştır.
-Bu tablo yalnızca faz–durum etkileşimini gösterir.
+Safety states are defined in `docs/architecture/SAFETY_STATE_MACHINE.md`.
+This table shows only the phase–state interaction.
 
-| Faz \ Güvenlik Durumu | NORMAL | CAUTION | RETURN_REQUIRED | SURVIVAL |
+| Phase \ Safety State | NOMINAL | CAUTION | RETURN_REQUIRED | SURVIVAL |
 |---|---|---|---|---|
-| CRUISE | Geçerli | Geçerli | Geçerli | Geçerli |
-| LANDING | Geçerli | Geçerli | Zorunlu Geçiş: iniş iptal + yörüngeye dön | Zorunlu Geçiş: acil iptal |
-| SURFACE_EXPLORATION | Geçerli | Geçerli; bilim kısıtlı | Zorunlu Geçiş: → RETURN | Zorunlu Geçiş: → SAFE_STATE |
-| PSR_OPS | Geçerli | Geçerli; erken uyarı | Zorunlu Geçiş: → RETURN (acil) | Zorunlu Geçiş: → RETURN veya → SAFE_STATE (enerji yetersizse) |
-| RETURN | Geçerli | Geçerli; hız artır | Geçerli; devam et | Zorunlu: hız+ısıtıcı optimizasyonu |
-| SAFE_STATE | Geçerli | Geçerli; şarj öncelikli | Geçerli; devam şarj | Geçerli; minimum güç modu |
+| CRUISE | Valid | Valid | Valid | Valid |
+| LANDING | Valid | Valid | Mandatory Transition: abort landing + return to orbit | Mandatory Transition: emergency abort |
+| SURFACE_EXPLORATION | Valid | Valid; science restricted | Mandatory Transition: → RETURN | Mandatory Transition: → SAFE_STATE |
+| PSR_OPS | Valid | Valid; early warning | Mandatory Transition: → RETURN (emergency) | Mandatory Transition: → RETURN or → SAFE_STATE (if energy insufficient) |
+| RETURN | Valid | Valid; increase speed | Valid; continue | Mandatory: speed+heater optimisation |
+| SAFE_STATE | Valid | Valid; charge priority | Valid; continue charging | Valid; minimum power mode |
 
-**Zorunlu Geçiş Örnekleri:**
+**Mandatory Transition Examples:**
 
-- PSR_OPS + SURVIVAL → Dönüş enerjisi yeterliyse: → RETURN; yetersizse: → SAFE_STATE (en yakın)
-- SURFACE_EXPLORATION + RETURN_REQUIRED → derhal → RETURN (planlayıcı görevi bırakır)
-- LANDING + RETURN_REQUIRED → iniş iptal komutu (yakıt yeterliyse yörüngeye çekil)
+- PSR_OPS + SURVIVAL → If return energy sufficient: → RETURN; if insufficient: → SAFE_STATE (nearest)
+- SURFACE_EXPLORATION + RETURN_REQUIRED → immediately → RETURN (planner drops mission)
+- LANDING + RETURN_REQUIRED → landing abort command (pull back to orbit if fuel sufficient)

@@ -1,178 +1,178 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on: [interfaces/schemas/environment_product.schema.yaml, safety/safety_budget.md, mission-intelligence/constraints/hard_constraints.py, docs/qar/]
-# open_items: [Tüm sayısal eşikler TBD — QAR ve araç modeline göre kalibre edilecek, quality_score eşiği (0.7) araç sensör paketine göre revize edilecek]
+# open_items: [All numerical thresholds TBD — to be calibrated against QAR and vehicle model, quality_score threshold (0.7) to be revised based on vehicle sensor package]
 
-# Belirsizlik Yönetimi Politikası — LUNA-AI v1.1
+# Uncertainty Management Policy — LUNA-AI v1.1
 
-## Amaç
+## Purpose
 
-Bu belge LUNA-AI sisteminde ortam verileri ve araç durum kestirimlerine ilişkin belirsizliklerin nasıl tanımlanacağını, biriktiğini, yönetileceğini ve karar akışına nasıl yansıtılacağını tanımlar.
+This document defines how uncertainties in environmental data and vehicle state estimates are defined, accumulated, managed, and reflected in the decision flow for the LUNA-AI system.
 
-**Temel ilke:** Hard constraints (HC-001..015) her zaman önce değerlendirilir. Belirsizlik yönetimi HC kümesinin muhafazakâr uygulanmasını güvence altına alır.
+**Core principle:** Hard constraints (HC-001..015) are always evaluated first. Uncertainty management ensures the conservative application of the HC set.
 
 ---
 
-## 1. Belirsizlik Eşikleri — Karar Tablosu
+## 1. Uncertainty Thresholds — Decision Table
 
-> **Not:** Tüm sayısal değerler TBD — QAR gereksinimleri ve araç modeline göre kalibre edilecek. Aşağıdaki değerler tasarım referans noktasıdır.
+> **Note:** All numerical values are TBD — to be calibrated against QAR requirements and vehicle model. The values below are design reference points.
 
-| Belirsizlik Tipi | Düşük (kabul — devam et) | Orta (operatöre sor) | Yüksek (eleme/dur) | FDIR Tetikleme |
+| Uncertainty Type | Low (accept — continue) | Medium (ask operator) | High (eliminate/stop) | FDIR Trigger |
 |-----------------|--------------------------|---------------------|-------------------|----------------|
-| Konum belirsizliği σ_pos | < 0.5m | 0.5–2m | > 2m | > QAR-NAV-002_threshold → SC-004 |
-| PSR sınır güveni | > 0.85 | 0.70–0.85 | < 0.70 | PSR girişi reddedilir (HC kontrolü) |
-| Enerji bütçe hatası | < 10% | 10–20% | > 20% | > 20% → worst-case planlama zorunlu |
-| DEM çözünürlük yeterliliği | < 5m/px için | 5–20m/px | > 20m/px | > 20m/px → PSR haritalama reddedilir |
-| Termal model sapması | < TBD% | TBD–TBD% | > TBD% | > eşik → SC-006 uyarı |
-| Landmark eşleşme güveni | > 0.80 | 0.60–0.80 | < 0.60 | < 0.60 → lokalizasyon reset girişimi |
+| Position uncertainty σ_pos | < 0.5m | 0.5–2m | > 2m | > QAR-NAV-002_threshold → SC-004 |
+| PSR boundary confidence | > 0.85 | 0.70–0.85 | < 0.70 | PSR entry rejected (HC check) |
+| Energy budget error | < 10% | 10–20% | > 20% | > 20% → worst-case planning mandatory |
+| DEM resolution adequacy | < 5m/px | 5–20m/px | > 20m/px | > 20m/px → PSR mapping rejected |
+| Thermal model deviation | < TBD% | TBD–TBD% | > TBD% | > threshold → SC-006 warning |
+| Landmark match confidence | > 0.80 | 0.60–0.80 | < 0.60 | < 0.60 → localisation reset attempt |
 
-**Kullanım kuralı:** Belirsizlik "Orta" aralığına girdiğinde araç operatöre sor bildirimi gönderir ve onay bekler (YER — otonomi matrisi). "Yüksek" aralığında ise karar yapısına göre eleme, durdurma veya FDIR tetikleme uygulanır.
+**Usage rule:** When uncertainty enters the "Medium" range, the vehicle sends an ask-operator notification and waits for approval (GCA — autonomy matrix). In the "High" range, elimination, halt or FDIR trigger is applied depending on the decision structure.
 
 ---
 
-## 2. Nominal vs Worst-Case Planlama
+## 2. Nominal vs Worst-Case Planning
 
-### 2.1 Nominal Planlama
+### 2.1 Nominal Planning
 
-Nominal beklenen değerlerle hesaplama yapılır. Kullanım alanı: bilimsel hedef sıralama, ön keşif rota planlaması, telemetri tahmini.
+Calculation using nominal expected values. Use cases: science target ranking, preliminary exploration route planning, telemetry estimation.
 
-### 2.2 Worst-Case Planlama
+### 2.2 Worst-Case Planning
 
-2σ belirsizlik payı eklenerek muhafazakâr hesaplama yapılır. **Zorunlu kullanım alanları:**
+Conservative calculation adding 2σ uncertainty margin. **Mandatory use cases:**
 
-- PSR dönüş rezervi hesabı (HC-006) — **her koşulda worst-case**
-- Safe haven seçimi (7 kriter)
-- Acil dönüş süresi tahmini
-- Karanlık toleransı hesabı
+- PSR return reserve calculation (HC-006) — **worst-case in all conditions**
+- Safe haven selection (7 criteria)
+- Emergency return time estimation
+- Darkness tolerance calculation
 
-**PSR özel kuralı:** PSR operasyonunda enerji hesabı DAIMA worst-case kullanılır, nominal değil. Nominal hesap yalnızca raporlama amaçlıdır.
+**PSR special rule:** In PSR operations, energy calculations ALWAYS use worst-case, not nominal. Nominal calculation is for reporting purposes only.
 
-### 2.3 Belirsizlik Payı Formülasyonu
+### 2.3 Uncertainty Margin Formulation
 
-Dönüş rezervi worst-case tahmini:
+Worst-case estimate of return reserve:
 
 ```
 return_reserve_wh_wc = return_reserve_wh_nominal × (1 + k_sigma × σ_energy_pct)
 ```
 
-Burada `k_sigma = 2` (2σ), `σ_energy_pct` enerji tüketim modeli belirsizliği (TBD — §10 araç profili).
+Where `k_sigma = 2` (2σ), `σ_energy_pct` is energy consumption model uncertainty (TBD — §10 vehicle profile).
 
 ---
 
-## 3. Belirsizlik Birikme Kuralı
+## 3. Uncertainty Accumulation Rule
 
-### 3.1 Konum Belirsizliği Birikimi
+### 3.1 Position Uncertainty Accumulation
 
-Her navigasyon adımında:
+At each navigation step:
 
 ```
 σ_pos²(t+1) = σ_pos²(t) + σ_IMU_drift² + σ_odometry²
 ```
 
-Birim: metre², her adım bağımsız gürültü eklenir.
+Unit: metres², independent noise added at each step.
 
-**Parametreler:** `σ_IMU_drift` ve `σ_odometry` değerleri TBD(source: §10 sensör paketi).
+**Parameters:** `σ_IMU_drift` and `σ_odometry` values are TBD(source: §10 sensor package).
 
-### 3.2 Belirsizlik Reset Koşulları
+### 3.2 Uncertainty Reset Conditions
 
-| Reset Tetikleyici | Reset Etkisi | Yeni σ_pos Değeri |
+| Reset Trigger | Reset Effect | New σ_pos Value |
 |------------------|--------------|-------------------|
-| Landmark eşleşmesi (güven > 0.80) | σ_pos sıfırlanır | Landmark ölçüm belirsizliği |
-| Orbital harita fit | σ_pos güncellenir | Fit kalitesine bağlı |
-| Statik duraksamada IMU kalibrasyonu | Drift azalır | TBD |
+| Landmark match (confidence > 0.80) | σ_pos reset | Landmark measurement uncertainty |
+| Orbital map fit | σ_pos updated | Dependent on fit quality |
+| IMU calibration during static pause | Drift reduced | TBD |
 
-### 3.3 FDIR Tetikleme Eşiği
+### 3.3 FDIR Trigger Threshold
 
-`σ_pos > §1 tablosu "Yüksek" eşiği` → SC-004 tetiklenir (Detection aşaması).
-
----
-
-## 4. Veri Kalitesi Degradasyon Protokolü
-
-Ortam ürünü kalite skoru `quality_score < 0.7` ise:
-
-1. **Ürün belirsizliğini yukarı revize et:** `uncertainty_1sigma` alanı genişletilir (otomatik).
-2. **Planlayıcıya düşük kalite uyarısı gönder:** `data_quality_flag = LOW` ile birlikte ürün iletilir.
-3. **Hard constraint eşiğini daha muhafazakâr uygula:** Nominal eşik yerine worst-case eşik kullanılır.
-4. **temporal_class kontrolü:** Düşük kaliteli kaynaktan gelen ürün `temporal_class = predicted` olarak işaretlenir; `historical` olarak kullanılamaz.
-
-**quality_score tanımı:** Kaynak veri çözünürlüğü, zaman tazeliği ve sensor güven skorunun ağırlıklı ortalaması. Hesaplama yöntemi TBD(source: data-platform provenance modülü).
+`σ_pos > §1 table "High" threshold` → SC-004 triggered (Detection phase).
 
 ---
 
-## 5. Bağlantılar
+## 4. Data Quality Degradation Protocol
 
-| Bağlantı | Belge | Alan |
+If environment product quality score `quality_score < 0.7`:
+
+1. **Revise product uncertainty upward:** `uncertainty_1sigma` field is widened (automatic).
+2. **Send low quality warning to planner:** Product transmitted with `data_quality_flag = LOW`.
+3. **Apply hard constraint threshold more conservatively:** Worst-case threshold used instead of nominal.
+4. **temporal_class check:** Product from low-quality source is marked `temporal_class = predicted`; cannot be used as `historical`.
+
+**quality_score definition:** Weighted average of source data resolution, temporal freshness and sensor confidence score. Calculation method TBD(source: data-platform provenance module).
+
+---
+
+## 5. Cross-References
+
+| Reference | Document | Field |
 |----------|-------|------|
-| Ortam ürünü belirsizlik alanı | `interfaces/schemas/environment_product.schema.yaml` | `uncertainty_1sigma` |
-| Emniyet bütçesi belirsizlik payı | `safety/safety_budget.md` | Enerji bütçe belirsizlik bölümü |
-| Dönüş enerjisi hard constraint | `mission-intelligence/constraints/hard_constraints.py` | HC-012, HC-006 |
-| Aydınlanma süresi hard constraint | `mission-intelligence/constraints/hard_constraints.py` | HC-009 |
-| Lokalizasyon QAR eşiği | `docs/qar/` | QAR-NAV-002 |
-| PSR girişi otonomi kuralı | `autonomy/autonomy_matrix.md` | PSR_OPS satırı |
+| Environment product uncertainty field | `interfaces/schemas/environment_product.schema.yaml` | `uncertainty_1sigma` |
+| Safety budget uncertainty margin | `safety/safety_budget.md` | Energy budget uncertainty section |
+| Return energy hard constraint | `mission-intelligence/constraints/hard_constraints.py` | HC-012, HC-006 |
+| Illumination duration hard constraint | `mission-intelligence/constraints/hard_constraints.py` | HC-009 |
+| Localisation QAR threshold | `docs/qar/` | QAR-NAV-002 |
+| PSR entry autonomy rule | `autonomy/autonomy_matrix.md` | PSR_OPS row |
 
 ---
 
-## 6. Uygulama Notları
+## 6. Implementation Notes
 
-### 6.1 Planlayıcıya Belirsizlik Aktarımı
+### 6.1 Uncertainty Propagation to Planner
 
-Planlayıcı her ortam ürününü `uncertainty_1sigma` ile birlikte alır. Rota planlamasında:
-- Düşük belirsizlik: nominal davranış
-- Orta belirsizlik: güvenlik marjı artırılır
-- Yüksek belirsizlik: ilgili alan plandan çıkarılır veya YER onayı istenir
+The planner receives each environment product together with `uncertainty_1sigma`. In route planning:
+- Low uncertainty: nominal behaviour
+- Medium uncertainty: safety margin increased
+- High uncertainty: relevant area excluded from plan or ground control approval requested
 
-### 6.2 PSR Sınır Güven Skoru
+### 6.2 PSR Boundary Confidence Score
 
-PSR sınır güveni < 0.85 olduğunda PSR girişi YER gerektirir (güven 0.85 üzerinde dahi YER — ancak ek kontrol gerekmez). Güven < 0.70 olduğunda PSR girişi reddedilir.
+When PSR boundary confidence < 0.85, PSR entry requires ground control approval (even when confidence > 0.85 — no additional check required). When confidence < 0.70, PSR entry is rejected.
 
-### 6.3 Enerji Bütçe Hatası
+### 6.3 Energy Budget Error
 
-`enerji_bütçe_hatası > 20%` → Hard constraint eşikleri worst-case moduna geçer. Power Mgmt bu kararı verir ve Planner'a iletir (Uyum Notu 3: Power Mgmt sahibi, Planner tüketici).
+`energy_budget_error > 20%` → Hard constraint thresholds switch to worst-case mode. Power Mgmt makes this decision and communicates it to the Planner (Compliance Note 3: Power Mgmt is the owner, Planner is the consumer).
 
 ---
 
-## 7. Dünya Görünürlük Belirsizliği (B5-EK)
+## 7. Earth Visibility Uncertainty (B5-EK)
 
-### 7.1 Marjinal Durum Belirsizliği
+### 7.1 Marginal Condition Uncertainty
 
-Dünya'nın ufka yakın olduğu koşullarda (elevation < TBD°) geometrik görünürlük hesabı ek belirsizlik kaynaklarına karşı duyarlıdır:
+When Earth is near the horizon (elevation < TBD°), geometric visibility calculation is sensitive to additional uncertainty sources:
 
-- **Atmosferik refraksiyon (Earth eclipse):** Repo bu etkiyi hesaplamaz. Gerçek Dünya görünürlüğü, Dünya'nın ufka yakın olduğu marjinal durumlarda ±bilinmeyen sapar. Bu etki `uncertainty_minutes` alanında yansıtılmalıdır.
-- **Ufuk profil hassasiyeti:** 720-ray horizon hesabı 80m DEM'den üretilir. Gerçek ufuk ile model arasındaki fark görünürlük penceresi başlangıç/bitiş zamanını etkiler.
-- **Uygulama kuralı:** Dünya elevation < TBD° olan pencereler `confidence: LOW` olarak işaretlenir; `longest_outage_hours` hesabında bu pencereler worst-case sayılır.
+- **Atmospheric refraction (Earth eclipse):** The pipeline does not calculate this effect. Real Earth visibility can deviate by ±unknown in marginal conditions when Earth is near the horizon. This effect must be reflected in the `uncertainty_minutes` field.
+- **Horizon profile sensitivity:** 720-ray horizon calculation produced from 80m DEM. The difference between the real horizon and the model affects visibility window start/end times.
+- **Application rule:** Windows where Earth elevation < TBD° are marked `confidence: LOW`; these windows are counted as worst-case in `longest_outage_hours` calculation.
 
-### 7.2 temporal_class Politikası
+### 7.2 temporal_class Policy
 
-| Kullanıcı zamanı | temporal_class | Açıklama |
+| Viewer time | temporal_class | Description |
 |------------------|---------------|----------|
-| Geçmiş (< şimdiki zaman) | `historical` | Gerçekleşmiş geometri — kesin değer |
-| Gelecek (≥ şimdiki zaman) | `predicted` | Hesaplanmış geometri — belirsizlik payı uygulanır |
+| Past (< current time) | `historical` | Occurred geometry — exact value |
+| Future (≥ current time) | `predicted` | Calculated geometry — uncertainty margin applied |
 
-**Kural:** Kullanıcı arayüzünde zaman kaydırıcısı kullanıldığında `temporal_class` otomatik olarak güncellenir. `predicted` etiketli veri `historical` kaynakla karıştırılamaz.
+**Rule:** When a time slider is used in the user interface, `temporal_class` is updated automatically. Data labelled `predicted` cannot be mixed with `historical` sources.
 
-### 7.3 Çözünürlük Belirsizlik Kaynakları
+### 7.3 Resolution Uncertainty Sources
 
-| DEM Çözünürlüğü | Belirsizlik Tipi | Etki |
+| DEM Resolution | Uncertainty Type | Impact |
 |-----------------|-----------------|------|
-| 80m (temel çözünürlük) | Küçük engel kaçırma | Yerel yol planlamasında gizli engel riski (RR-006 ile hizalı) |
-| 300m (site finder hücre) | Site sınır belirsizliği | ±150m sınır belirsizliği — PSR sınır güveni hesabını etkiler |
-| 2.7km (global trend) | Büyük ölçek trend | Uzun mesafe enerji/ışık tahmininde sapma |
+| 80m (base resolution) | Small obstacle miss | Hidden obstacle risk in local path planning (aligned with RR-006) |
+| 300m (site finder cell) | Site boundary uncertainty | ±150m boundary uncertainty — affects PSR boundary confidence calculation |
+| 2.7km (global trend) | Large-scale trend | Deviation in long-range energy/illumination estimates |
 
-**Pratikte:** 80m çözünürlük ile hesaplanan PSR sınır güveni skoru, 20m çözünürlükte yeniden hesaplandığında değişebilir. B4 AC-VAL-005 bunu ölçer.
+**In practice:** PSR boundary confidence score calculated at 80m resolution may change when recalculated at 20m resolution. B4 AC-VAL-005 measures this.
 
-### 7.4 Earth Eclipse Refraksiyon — Bilinen Eksiklik
+### 7.4 Earth Eclipse Refraction — Known Gap
 
-Referans pipeline (lunar-navigator) Dünya'nın güneş tutulması sırasındaki refraksiyon etkisini modellememektedir. Bu etki:
-- Görünürlük penceresi başlangıç/bitiş zamanını ±TBD dakika kaydırabilir
-- Marjinal durumlarda (Dünya elevation < 2°) yanlış "görünür" veya "görünmez" kararı üretebilir
-- **Azaltma:** Bu pencereler `confidence: LOW` ile işaretlenir ve link planlama hesabında güvenli bant dışı tutulur
+The reference pipeline (lunar-navigator) does not model the refraction effect during Earth eclipse. This effect:
+- Can shift visibility window start/end time by ±TBD minutes
+- In marginal conditions (Earth elevation < 2°) can produce incorrect "visible" or "invisible" decisions
+- **Mitigation:** These windows are marked `confidence: LOW` and kept outside the safety band in link planning calculations
 
 ---
 
-## Revizyon Geçmişi
+## Revision History
 
-| Versiyon | Tarih | Değişiklik |
+| Version | Date | Change |
 |----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — B5 görevi |
-| 0.2 | 2026-11-14 | B5-EK: Dünya görünürlük belirsizliği, temporal_class politikası, çözünürlük kaynakları, refraksiyon eksikliği |
+| 0.1 | 2026-11-14 | First draft — B5 task |
+| 0.2 | 2026-11-14 | B5-EK: Earth visibility uncertainty, temporal_class policy, resolution sources, refraction gap |

@@ -1,258 +1,258 @@
-# LUNA-AI Arayüz Kontrol Dokümanı (ICD) Şablonları
+# LUNA-AI Interface Control Document (ICD) Templates
 
-**Belge ID:** LUNA-AI-ARCH-002  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Bağlı ADR:** ADR-006
+**Document ID:** LUNA-AI-ARCH-002  
+**Version:** 0.1-draft  
+**Date:** 2026-11-14  
+**Related ADR:** ADR-006
 
 ---
 
-## Genel ICD Politikası
+## General ICD Policy
 
-- Tüm modüller aralarında yalnızca bu belgede tanımlı mesaj formatları üzerinden haberleşir.
-- Üretici modül arayüzü değiştirmek istediğinde sürüm numarasını artırır ve tüketici modülü bildirir.
-- Geriye dönük uyum: minör sürüm artışı mevcut alanları kırmaz; yalnızca yeni alanlar ekler.
-- Alan yokluğu (opsiyonel alan) ile alan değerinin sıfır/boş olması anlam olarak farklıdır.
-- Hata semantiği: her mesaj bir `status` alanı taşır; tüketici, `status != OK` durumunda varsayılan güvenli davranışı uygular.
+- All modules communicate with each other only via the message formats defined in this document.
+- When a producer module wishes to change an interface, it increments the version number and notifies the consumer module.
+- Backward compatibility: a minor version increment does not break existing fields; it only adds new fields.
+- Absence of a field (optional field) and a field value of zero/empty are semantically different.
+- Error semantics: every message carries a `status` field; the consumer applies safe default behaviour when `status != OK`.
 
 ---
 
 ## ICD-001: Power Management → Mission Planner
 
-**Arayüz ID:** ICD-001  
-**Üretici:** Güç Yönetimi (Power Management)  
-**Tüketici:** Mission Planner (Görev Planlayıcı)  
-**Güncelleme Frekansı:** 1 Hz (nominal); 10 Hz (CAUTION veya üstü durum)  
-**Taşıma:** FreeRTOS message queue (uçuş); CCSDS telemetri (yer segmenti yansıması)  
-**Versiyon:** 1.0
+**Interface ID:** ICD-001  
+**Producer:** Power Management  
+**Consumer:** Mission Planner  
+**Update Frequency:** 1 Hz (nominal); 10 Hz (CAUTION or above)  
+**Transport:** FreeRTOS message queue (flight); CCSDS telemetry (ground segment reflection)  
+**Version:** 1.0
 
-### Mesaj Formatı: `energy_state`
+### Message Format: `energy_state`
 
-| Alan | Tip | Birim | Aralık | Açıklama |
+| Field | Type | Unit | Range | Description |
 |------|-----|-------|--------|----------|
-| `msg_id` | uint16 | — | 0x0101 | Mesaj tipi sabiti |
-| `timestamp_ms` | uint64 | ms | 0 – 2^64 | Sistem başlangıcından geçen süre |
-| `soc_percent` | float32 | % | 0.0 – 100.0 | Mevcut şarj durumu |
-| `soc_uncertainty_pct` | float32 | % | 0.0 – 10.0 | SoC ölçüm belirsizliği (1-sigma) |
-| `voltage_v` | float32 | V | **TBD** – **TBD** | Ana batarya voltajı |
-| `current_ma` | float32 | mA | **TBD** – **TBD** | Anlık çekim akımı (pozitif=tüketim) |
-| `panel_power_w` | float32 | W | 0.0 – **TBD** | Güneş paneli anlık gücü |
-| `estimated_return_soc_pct` | float32 | % | 0.0 – 100.0 | Safe haven'a dönüş sonunda tahmini SoC |
-| `return_soc_uncertainty_pct` | float32 | % | 0.0 – 20.0 | Tahmin belirsizliği (1-sigma) |
-| `power_mode` | uint8 | — | 0=NORMAL, 1=SURVIVAL | Mevcut güç modu |
-| `status` | uint8 | — | 0=OK, 1=WARN, 2=ERROR | Mesaj durumu |
+| `msg_id` | uint16 | — | 0x0101 | Message type constant |
+| `timestamp_ms` | uint64 | ms | 0 – 2^64 | Elapsed time since system start |
+| `soc_percent` | float32 | % | 0.0 – 100.0 | Current state of charge |
+| `soc_uncertainty_pct` | float32 | % | 0.0 – 10.0 | SoC measurement uncertainty (1-sigma) |
+| `voltage_v` | float32 | V | **TBD** – **TBD** | Main battery voltage |
+| `current_ma` | float32 | mA | **TBD** – **TBD** | Instantaneous draw current (positive=consumption) |
+| `panel_power_w` | float32 | W | 0.0 – **TBD** | Solar panel instantaneous power |
+| `estimated_return_soc_pct` | float32 | % | 0.0 – 100.0 | Estimated SoC at end of return to safe haven |
+| `return_soc_uncertainty_pct` | float32 | % | 0.0 – 20.0 | Estimate uncertainty (1-sigma) |
+| `power_mode` | uint8 | — | 0=NORMAL, 1=SURVIVAL | Current power mode |
+| `status` | uint8 | — | 0=OK, 1=WARN, 2=ERROR | Message status |
 
-**Hata Semantiği:**
-- `status == WARN`: Mission Planner CAUTION tetikleyicisini değerlendirir
-- `status == ERROR`: Mission Planner son geçerli değeri tutar; FDIR'a hata event'i gönderilir
-- Mesaj timeout (> 2 s güncelleme yok): FDIR Güç heartbeat timeout olarak işler
+**Error Semantics:**
+- `status == WARN`: Mission Planner evaluates CAUTION trigger
+- `status == ERROR`: Mission Planner retains last valid value; error event sent to FDIR
+- Message timeout (> 2 s without update): FDIR treats as Power heartbeat timeout
 
-**Sürüm Uyumluluk Politikası:**
-- Yeni alan ekleme: minör sürüm artışı (1.0 → 1.1); tüketici yeni alanı görmezden gelir
-- Alan tipi/aralık değişikliği: majör sürüm artışı (1.0 → 2.0); tüketici uyumluluğu güncellenmeli
+**Version Compatibility Policy:**
+- Adding new field: minor version increment (1.0 → 1.1); consumer ignores new field
+- Field type/range change: major version increment (1.0 → 2.0); consumer compatibility must be updated
 
 ---
 
 ## ICD-002: Thermal Management → Mission Planner
 
-**Arayüz ID:** ICD-002  
-**Üretici:** Termal Yönetimi (Thermal Management)  
-**Tüketici:** Mission Planner (Görev Planlayıcı)  
-**Güncelleme Frekansı:** 1 Hz (nominal); 10 Hz (CAUTION veya üstü durum)  
-**Taşıma:** FreeRTOS message queue  
-**Versiyon:** 1.0
+**Interface ID:** ICD-002  
+**Producer:** Thermal Management  
+**Consumer:** Mission Planner  
+**Update Frequency:** 1 Hz (nominal); 10 Hz (CAUTION or above)  
+**Transport:** FreeRTOS message queue  
+**Version:** 1.0
 
-### Mesaj Formatı: `thermal_state`
+### Message Format: `thermal_state`
 
-| Alan | Tip | Birim | Aralık | Açıklama |
+| Field | Type | Unit | Range | Description |
 |------|-----|-------|--------|----------|
-| `msg_id` | uint16 | — | 0x0201 | Mesaj tipi sabiti |
-| `timestamp_ms` | uint64 | ms | 0 – 2^64 | Sistem başlangıcından geçen süre |
-| `num_sensors` | uint8 | — | 1–16 | Aktif sensör sayısı |
-| `sensor_temps_c[16]` | float32[16] | °C | **TBD** – **TBD** | Her sensörün sıcaklığı |
-| `sensor_ids[16]` | uint8[16] | — | 0–255 | Sensör kimlik numaraları |
-| `critical_component_ok` | bool | — | true/false | Tüm kritik bileşenler nominal aralıkta |
-| `heater_active_mask` | uint16 | — | bit mask | Aktif ısıtıcılar (bit başına bir ısıtıcı) |
-| `thermal_budget_w` | float32 | W | 0.0 – **TBD** | Mevcut termal yük |
-| `estimated_time_to_critical_s` | float32 | s | 0.0 – **TBD** | Mevcut hızla kritik eşiğe süre (-1 = hesaplanamaz) |
-| `thermal_mode` | uint8 | — | 0=NOMINAL, 1=WARN, 2=CRITICAL | Termal durum özeti |
-| `status` | uint8 | — | 0=OK, 1=WARN, 2=ERROR | Mesaj durumu |
+| `msg_id` | uint16 | — | 0x0201 | Message type constant |
+| `timestamp_ms` | uint64 | ms | 0 – 2^64 | Elapsed time since system start |
+| `num_sensors` | uint8 | — | 1–16 | Active sensor count |
+| `sensor_temps_c[16]` | float32[16] | °C | **TBD** – **TBD** | Temperature of each sensor |
+| `sensor_ids[16]` | uint8[16] | — | 0–255 | Sensor identification numbers |
+| `critical_component_ok` | bool | — | true/false | All critical components within nominal range |
+| `heater_active_mask` | uint16 | — | bit mask | Active heaters (one heater per bit) |
+| `thermal_budget_w` | float32 | W | 0.0 – **TBD** | Current thermal load |
+| `estimated_time_to_critical_s` | float32 | s | 0.0 – **TBD** | Time to critical threshold at current rate (-1 = cannot calculate) |
+| `thermal_mode` | uint8 | — | 0=NOMINAL, 1=WARN, 2=CRITICAL | Thermal state summary |
+| `status` | uint8 | — | 0=OK, 1=WARN, 2=ERROR | Message status |
 
-**Hata Semantiği:**
-- `thermal_mode == WARN`: Mission Planner yüksek güç aktivitelerini kısıtlar
-- `thermal_mode == CRITICAL`: Mission Planner FDIR'ı bildirir; FDIR CAUTION/RETURN kararı verir
-- Mesaj timeout (> 5 s): FDIR termal heartbeat timeout olarak işler
+**Error Semantics:**
+- `thermal_mode == WARN`: Mission Planner restricts high-power activities
+- `thermal_mode == CRITICAL`: Mission Planner notifies FDIR; FDIR makes CAUTION/RETURN decision
+- Message timeout (> 5 s): FDIR treats as thermal heartbeat timeout
 
 ---
 
 ## ICD-003: Navigation → Local Planner
 
-**Arayüz ID:** ICD-003  
-**Üretici:** Navigasyon  
-**Tüketici:** Yerel Planlayıcı (Local Planner)  
-**Güncelleme Frekansı:** ≥ 10 Hz (hareket halinde), ≥ 1 Hz (dur-bekle) [QAR NAV-003]  
-**Taşıma:** FreeRTOS message queue (yüksek öncelikli)  
-**Versiyon:** 1.0
+**Interface ID:** ICD-003  
+**Producer:** Navigation  
+**Consumer:** Local Planner  
+**Update Frequency:** ≥ 10 Hz (while moving), ≥ 1 Hz (stop-wait) [QAR NAV-003]  
+**Transport:** FreeRTOS message queue (high priority)  
+**Version:** 1.0
 
-### Mesaj Formatı: `vehicle_pose`
+### Message Format: `vehicle_pose`
 
-| Alan | Tip | Birim | Aralık | Açıklama |
+| Field | Type | Unit | Range | Description |
 |------|-----|-------|--------|----------|
-| `msg_id` | uint16 | — | 0x0301 | Mesaj tipi sabiti |
-| `timestamp_ms` | uint64 | ms | 0 – 2^64 | Poz tahminin zaman damgası |
-| `pos_x_m` | float64 | m | **TBD** koordinat sistemi | Yerel haritada X konumu |
-| `pos_y_m` | float64 | m | **TBD** koordinat sistemi | Yerel haritada Y konumu |
-| `pos_z_m` | float64 | m | **TBD** koordinat sistemi | Yerel haritada Z (yükseklik) |
-| `yaw_rad` | float32 | rad | -π – +π | Sapma açısı (Kuzey referanslı) |
-| `pitch_rad` | float32 | rad | -π/2 – +π/2 | Yunuslama açısı |
-| `roll_rad` | float32 | rad | -π – +π | Yalpalama açısı |
-| `uncertainty_m` | float32 | m | 0.0 – 100.0 | Konum belirsizliği (1-sigma, RMS) |
-| `uncertainty_rad` | float32 | rad | 0.0 – π | Yönelim belirsizliği (1-sigma) |
-| `velocity_x_ms` | float32 | m/s | **TBD** – **TBD** | X yönünde hız |
-| `velocity_y_ms` | float32 | m/s | **TBD** – **TBD** | Y yönünde hız |
-| `localization_source` | uint8 | — | 0=EKF_FULL, 1=DEAD_RECKONING, 2=LANDMARK_ONLY | Aktif lokalizasyon kaynağı |
-| `localization_valid` | bool | — | true/false | EKF konverjans durumu |
-| `status` | uint8 | — | 0=OK, 1=DEGRADED, 2=LOST | Lokalizasyon durumu |
+| `msg_id` | uint16 | — | 0x0301 | Message type constant |
+| `timestamp_ms` | uint64 | ms | 0 – 2^64 | Pose estimate timestamp |
+| `pos_x_m` | float64 | m | **TBD** coordinate system | X position in local map |
+| `pos_y_m` | float64 | m | **TBD** coordinate system | Y position in local map |
+| `pos_z_m` | float64 | m | **TBD** coordinate system | Z position in local map (elevation) |
+| `yaw_rad` | float32 | rad | -π – +π | Yaw angle (North-referenced) |
+| `pitch_rad` | float32 | rad | -π/2 – +π/2 | Pitch angle |
+| `roll_rad` | float32 | rad | -π – +π | Roll angle |
+| `uncertainty_m` | float32 | m | 0.0 – 100.0 | Position uncertainty (1-sigma, RMS) |
+| `uncertainty_rad` | float32 | rad | 0.0 – π | Orientation uncertainty (1-sigma) |
+| `velocity_x_ms` | float32 | m/s | **TBD** – **TBD** | Velocity in X direction |
+| `velocity_y_ms` | float32 | m/s | **TBD** – **TBD** | Velocity in Y direction |
+| `localization_source` | uint8 | — | 0=EKF_FULL, 1=DEAD_RECKONING, 2=LANDMARK_ONLY | Active localisation source |
+| `localization_valid` | bool | — | true/false | EKF convergence state |
+| `status` | uint8 | — | 0=OK, 1=DEGRADED, 2=LOST | Localisation status |
 
-**Kritik Eşik — `uncertainty_m`:**
-- `uncertainty_m` > 0.5 m → Yerel Planlayıcı engel yaklaşım hızını yarıya indirir
-- `uncertainty_m` > 1.0 m → Yerel Planlayıcı dur, navigasyona yeniden lokalizasyon talebi gönderir
-- `status == LOST` → FDIR'a lokalizasyon kaybı event'i gönderilir
+**Critical Threshold — `uncertainty_m`:**
+- `uncertainty_m` > 0.5 m → Local Planner halves obstacle approach speed
+- `uncertainty_m` > 1.0 m → Local Planner halts, sends relocalisation request to Navigation
+- `status == LOST` → Localisation loss event sent to FDIR
 
-**Hata Semantiği:**
-- `status == DEGRADED`: Yerel Planlayıcı yalnızca yüksek belirsizlik toleranslı manevralar yapar
-- `status == LOST`: Yerel Planlayıcı durma komutu verir; FDIR karar verir
-- Mesaj timeout (> 500 ms, hız > 0): FDIR navigasyon heartbeat timeout
+**Error Semantics:**
+- `status == DEGRADED`: Local Planner performs only high-uncertainty-tolerant manoeuvres
+- `status == LOST`: Local Planner issues halt command; FDIR decides
+- Message timeout (> 500 ms, speed > 0): FDIR navigation heartbeat timeout
 
 ---
 
 ## ICD-004: FDIR → Mission Executive
 
-**Arayüz ID:** ICD-004  
-**Üretici:** FDIR  
-**Tüketici:** Mission Executive (Görev Yürütücü / Mission Planner üst katmanı)  
-**Güncelleme Frekansı:** Durum değişiminde (event-driven) + 1 Hz kalp atışı  
-**Taşıma:** FreeRTOS message queue (en yüksek öncelikli kuyruk)  
-**Versiyon:** 1.0
+**Interface ID:** ICD-004  
+**Producer:** FDIR  
+**Consumer:** Mission Executive (Mission Planner upper layer)  
+**Update Frequency:** On state change (event-driven) + 1 Hz heartbeat  
+**Transport:** FreeRTOS message queue (highest-priority queue)  
+**Version:** 1.0
 
-### Mesaj Formatı: `safety_status`
+### Message Format: `safety_status`
 
-| Alan | Tip | Birim | Aralık | Açıklama |
+| Field | Type | Unit | Range | Description |
 |------|-----|-------|--------|----------|
-| `msg_id` | uint16 | — | 0x0401 | Mesaj tipi sabiti |
-| `timestamp_ms` | uint64 | ms | 0 – 2^64 | Zaman damgası |
-| `safety_state` | uint8 | — | 0=NOMINAL, 1=CAUTION, 2=RETURN_REQUIRED, 3=SURVIVAL | Mevcut güvenlik durumu |
-| `previous_state` | uint8 | — | 0–3 | Önceki güvenlik durumu |
-| `transition_reason` | uint16 | — | bit mask | Geçiş tetikleyicileri (her bit bir tetikleyici) |
-| `abort_signal` | bool | — | true/false | true ise Mission Planner tüm operasyonları dondurur |
-| `allowed_actions_mask` | uint32 | — | bit mask | Mevcut durumda izin verilen eylemler |
-| `time_in_state_ms` | uint32 | ms | 0 – 2^32 | Mevcut durumda geçen süre |
-| `fdir_confidence` | uint8 | — | 0–100 | FDIR kendi iç güven skoru (teşhis kalitesi) |
-| `status` | uint8 | — | 0=OK, 1=DEGRADED | FDIR kendi durumu |
+| `msg_id` | uint16 | — | 0x0401 | Message type constant |
+| `timestamp_ms` | uint64 | ms | 0 – 2^64 | Timestamp |
+| `safety_state` | uint8 | — | 0=NOMINAL, 1=CAUTION, 2=RETURN_REQUIRED, 3=SURVIVAL | Current safety state |
+| `previous_state` | uint8 | — | 0–3 | Previous safety state |
+| `transition_reason` | uint16 | — | bit mask | Transition triggers (each bit is one trigger) |
+| `abort_signal` | bool | — | true/false | If true, Mission Planner freezes all operations |
+| `allowed_actions_mask` | uint32 | — | bit mask | Actions permitted in current state |
+| `time_in_state_ms` | uint32 | ms | 0 – 2^32 | Time elapsed in current state |
+| `fdir_confidence` | uint8 | — | 0–100 | FDIR internal confidence score (diagnostic quality) |
+| `status` | uint8 | — | 0=OK, 1=DEGRADED | FDIR own status |
 
-### Abort Yayılma Mekanizması
+### Abort Propagation Mechanism
 
-`abort_signal == true` alındığında Mission Executive:
-1. Tüm aktif görev adımlarını dondurur (çalışan eylemi güvenli durumda bitirir veya keser)
-2. Hareket Kontrolüne "dur" komutu gönderir
-3. FDIR'a abort_acknowledged mesajı gönderir
-4. Durum değişikliği bekler
+When `abort_signal == true` is received, Mission Executive:
+1. Freezes all active mission steps (finishes or aborts running action in a safe state)
+2. Sends "halt" command to Motion Control
+3. Sends abort_acknowledged message to FDIR
+4. Awaits state change
 
-Mission Executive abort'u görmezden **gelemez**. Bu kısıt yazılım mimarisinde zorunlu kılınır (bloklu mesaj kuyruğu, kuyruk taşması yok).
+Mission Executive **cannot** ignore an abort. This constraint is enforced in software architecture (blocking message queue, no queue overflow).
 
 ---
 
 ## ICD-005: Ground → Flight (Uplink)
 
-**Arayüz ID:** ICD-005  
-**Üretici:** Yer Segmenti (Ground Station)  
-**Tüketici:** Araç Haberleşme + Mission Planner  
-**Taşıma:** CCSDS Telecommand (TC) protokolü  
-**Versiyon:** 1.0
+**Interface ID:** ICD-005  
+**Producer:** Ground Segment (Ground Station)  
+**Consumer:** Vehicle Communication + Mission Planner  
+**Transport:** CCSDS Telecommand (TC) protocol  
+**Version:** 1.0
 
-### Komut Tipleri
+### Command Types
 
-| Komut Tipi | Kod | Öncelik | Timeout | Açıklama |
+| Command Type | Code | Priority | Timeout | Description |
 |------------|-----|---------|---------|----------|
-| `TC_IMMEDIATE_ABORT` | 0x01 | P1 | Yok (en kısa sürede işle) | Tüm operasyonları durdur |
-| `TC_IMMEDIATE_RETURN` | 0x02 | P1 | Yok | Dönüşü başlat |
-| `TC_IMMEDIATE_POWER_OFF` | 0x03 | P1 | Yok | Belirtilen subsistemi kapat |
-| `TC_CONDITIONAL` | 0x10 | P2 | 1 saat | Koşullu eylem paketi |
-| `TC_PLAN_UPLOAD` | 0x20 | P3 | 24 saat | Günlük görev planı (CFDP ile) |
-| `TC_PARAM_UPDATE` | 0x30 | P3 | 1 saat | Parametre güncelleme |
-| `TC_QUERY` | 0x40 | P4 | 30 dak | Telemetri/durum isteği |
+| `TC_IMMEDIATE_ABORT` | 0x01 | P1 | None (process immediately) | Stop all operations |
+| `TC_IMMEDIATE_RETURN` | 0x02 | P1 | None | Initiate return |
+| `TC_IMMEDIATE_POWER_OFF` | 0x03 | P1 | None | Shut down specified subsystem |
+| `TC_CONDITIONAL` | 0x10 | P2 | 1 hour | Conditional action package |
+| `TC_PLAN_UPLOAD` | 0x20 | P3 | 24 hours | Daily mission plan (via CFDP) |
+| `TC_PARAM_UPDATE` | 0x30 | P3 | 1 hour | Parameter update |
+| `TC_QUERY` | 0x40 | P4 | 30 min | Telemetry/status request |
 
-### Uplink Paket Yapısı (CCSDS Space Packet)
+### Uplink Packet Structure (CCSDS Space Packet)
 
-| Alan | Tip | Birim | Açıklama |
+| Field | Type | Unit | Description |
 |------|-----|-------|----------|
-| `primary_header` | 6 byte | — | CCSDS birincil başlık (APID, sekans, uzunluk) |
-| `secondary_header` | 10 byte | — | Zaman damgası (CCSDS CUC formatı), komut tipi, öncelik |
-| `cmd_sequence_no` | uint32 | — | Komut sıra numarası (tekrar tespit) |
-| `checksum_crc32` | uint32 | — | CRC-32 bütünlük kodu |
-| `payload` | değişken | — | Komut gövdesi (komut tipine göre yapı değişir) |
+| `primary_header` | 6 bytes | — | CCSDS primary header (APID, sequence, length) |
+| `secondary_header` | 10 bytes | — | Timestamp (CCSDS CUC format), command type, priority |
+| `cmd_sequence_no` | uint32 | — | Command sequence number (duplicate detection) |
+| `checksum_crc32` | uint32 | — | CRC-32 integrity code |
+| `payload` | variable | — | Command body (structure varies by command type) |
 
-**Link Yok Kuralı:** Araç link yokken TC_PLAN_UPLOAD beklemede tutulur; sonraki pencerede işlenir. TC_IMMEDIATE komutlar işleme kuyruğu başına geçer.
+**No-Link Rule:** When vehicle has no link, TC_PLAN_UPLOAD is held pending; processed in next window. TC_IMMEDIATE commands move to front of processing queue.
 
-**Sürüm Uyumluluk:** Araç tanımadığı komut tipini `NACK` ile yanıtlar; görmezden gelmez.
+**Version Compatibility:** Vehicle responds to unrecognised command types with `NACK`; does not ignore them.
 
 ---
 
 ## ICD-006: Flight → Ground (Downlink)
 
-**Arayüz ID:** ICD-006  
-**Üretici:** Araç (Flight Segment)  
-**Tüketici:** Yer Segmenti (Ground Station)  
-**Taşıma:** CCSDS Space Packet (TM — Telemetry)  
-**Versiyon:** 1.0
+**Interface ID:** ICD-006  
+**Producer:** Vehicle (Flight Segment)  
+**Consumer:** Ground Segment (Ground Station)  
+**Transport:** CCSDS Space Packet (TM — Telemetry)  
+**Version:** 1.0
 
-### Telemetri Paket Yapısı
+### Telemetry Packet Structure
 
-| Alan | Tip | Birim | Güncelleme Frekansı | Açıklama |
+| Field | Type | Unit | Update Frequency | Description |
 |------|-----|-------|---------------------|----------|
-| `primary_header` | 6 byte | — | Her paket | CCSDS birincil başlık |
-| `secondary_header` | 10 byte | — | Her paket | Zaman damgası + paket tipi |
-| `safety_state` | uint8 | — | Durum değişiminde + 1 Hz | Mevcut güvenlik durumu |
-| `soc_percent` | float32 | % | 1 Hz / 10 Hz (CAUTION) | Şarj durumu |
-| `pos_x_m` | float64 | m | 1 Hz / 10 Hz (CAUTION) | Araç X konumu |
-| `pos_y_m` | float64 | m | 1 Hz / 10 Hz (CAUTION) | Araç Y konumu |
-| `pos_uncertainty_m` | float32 | m | 1 Hz | Konum belirsizliği |
-| `avg_temp_c` | float32 | °C | 1 Hz | Ortalama kritik bileşen sıcaklığı |
-| `max_temp_c` | float32 | °C | 1 Hz | En sıcak ölçülen bileşen |
-| `link_quality` | uint8 | % | 1 Hz | Alınan sinyal gücü göstergesi |
-| `active_faults_mask` | uint32 | — | Değişimde | Aktif arıza bayrakları |
-| `mission_step_id` | uint16 | — | 1 Hz | Mevcut görev adımı |
-| `science_data_pending_kb` | uint32 | KB | 1 Hz | İletilmeyi bekleyen bilimsel veri |
-| `checksum_crc32` | uint32 | — | Her paket | CRC-32 bütünlük kodu |
+| `primary_header` | 6 bytes | — | Every packet | CCSDS primary header |
+| `secondary_header` | 10 bytes | — | Every packet | Timestamp + packet type |
+| `safety_state` | uint8 | — | On state change + 1 Hz | Current safety state |
+| `soc_percent` | float32 | % | 1 Hz / 10 Hz (CAUTION) | State of charge |
+| `pos_x_m` | float64 | m | 1 Hz / 10 Hz (CAUTION) | Vehicle X position |
+| `pos_y_m` | float64 | m | 1 Hz / 10 Hz (CAUTION) | Vehicle Y position |
+| `pos_uncertainty_m` | float32 | m | 1 Hz | Position uncertainty |
+| `avg_temp_c` | float32 | °C | 1 Hz | Average critical component temperature |
+| `max_temp_c` | float32 | °C | 1 Hz | Hottest measured component |
+| `link_quality` | uint8 | % | 1 Hz | Received signal strength indicator |
+| `active_faults_mask` | uint32 | — | On change | Active fault flags |
+| `mission_step_id` | uint16 | — | 1 Hz | Current mission step |
+| `science_data_pending_kb` | uint32 | KB | 1 Hz | Scientific data awaiting downlink |
+| `checksum_crc32` | uint32 | — | Every packet | CRC-32 integrity code |
 
-### Downlink Önceliklendirme
+### Downlink Prioritisation
 
-| Paket Tipi | Öncelik | Frekans | Açıklama |
+| Packet Type | Priority | Frequency | Description |
 |-----------|---------|---------|----------|
-| Acil durum telemetrisi | P1 | Anlık | Güvenlik durumu geçişi, kritik arıza |
-| Temel sistem telemetrisi | P2 | ≤ 10 s | SoC, konum, sıcaklık |
-| Görev durumu | P3 | ≤ 60 s | Adım ID, bilimsel veri özeti |
-| Bilimsel ham veri | P4 | Link izin verdiğince | Görüntü, spektroskopi |
+| Emergency telemetry | P1 | Instantaneous | Safety state transition, critical fault |
+| Core system telemetry | P2 | ≤ 10 s | SoC, position, temperature |
+| Mission status | P3 | ≤ 60 s | Step ID, scientific data summary |
+| Scientific raw data | P4 | As link permits | Images, spectroscopy |
 
-**Tamponlama:** Link yokken tüm telemetri onboard tampon belleğe yazılır. Tampon dolduğunda en düşük öncelikli paketler üzerine yazılır. P1 paketler hiçbir zaman üzerine yazılmaz.
+**Buffering:** All telemetry is written to onboard buffer memory when link is absent. When buffer is full, lowest-priority packets are overwritten. P1 packets are never overwritten.
 
-**Hata Semantiği:**
-- CRC hatası: yer segmenti paketi atar ve yeniden talep eder (TC_QUERY)
-- Paket kayıp: sıra numarası boşluğu tespit edilirse yer segmenti kayıp aralığı bildirir
+**Error Semantics:**
+- CRC error: ground segment discards packet and re-requests (TC_QUERY)
+- Packet loss: if sequence number gap detected, ground segment reports missing range
 
 ---
 
-## Arayüz Versiyon Matrisi
+## Interface Version Matrix
 
-| ICD ID | Mevcut Sürüm | Üretici Modülü | Tüketici Modülü | Son Güncelleme |
+| ICD ID | Current Version | Producer Module | Consumer Module | Last Updated |
 |--------|-------------|----------------|-----------------|----------------|
-| ICD-001 | 1.0 | Güç Yönetimi | Mission Planner | 2026-11-14 |
-| ICD-002 | 1.0 | Termal Yönetimi | Mission Planner | 2026-11-14 |
-| ICD-003 | 1.0 | Navigasyon | Yerel Planlayıcı | 2026-11-14 |
+| ICD-001 | 1.0 | Power Management | Mission Planner | 2026-11-14 |
+| ICD-002 | 1.0 | Thermal Management | Mission Planner | 2026-11-14 |
+| ICD-003 | 1.0 | Navigation | Local Planner | 2026-11-14 |
 | ICD-004 | 1.0 | FDIR | Mission Executive | 2026-11-14 |
-| ICD-005 | 1.0 | Yer Segmenti | Araç Haberleşme | 2026-11-14 |
-| ICD-006 | 1.0 | Araç | Yer Segmenti | 2026-11-14 |
+| ICD-005 | 1.0 | Ground Segment | Vehicle Communication | 2026-11-14 |
+| ICD-006 | 1.0 | Vehicle | Ground Segment | 2026-11-14 |
 
 ---
 
-*TBD değerleri donanım parametreleri ve orbital analiz tamamlandığında güncellenecektir. Her ICD değişikliği en az 48 saat öncesinden tüketici modül sahibine bildirilir.*
+*TBD values will be updated when hardware parameters and orbital analysis are complete. Each ICD change is notified to consumer module owner at least 48 hours in advance.*

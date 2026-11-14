@@ -1,12 +1,12 @@
 # vehicle/
 
-Araç alt sistem yazılımı: iniş GNC, lokalizasyon, algılama, hareket kontrolü. Bkz. v1.0 §4.6.
+Vehicle subsystem software: landing GNC, localisation, perception, mobility control. See v1.0 §4.6.
 
-Uyum Notu 4: İniş GNC ile yüzey navigasyonu ayrıdır. Handover sınırları `vehicle/localization/navigation_architecture.md §5` ile tanımlanmıştır.
+Compliance Note 4: Landing GNC and surface navigation are separate. Handover boundaries are defined in `vehicle/localization/navigation_architecture.md §5`.
 
-## Alt Dizinler
+## Subdirectories
 
-- `landing-gnc/` — İniş güdüm, navigasyon ve kontrol; yüzey navigasyona handover sağlar.
-- `localization/` — EKF tabanlı konum kestirimi; IMU + odometry + landmark füzyonu.
-- `perception/` — Stereo görüntü, lidar, engel algılama; DEM güncelleme.
-- `mobility-control/` — Tekerlek/yürüyüş komutu yürütme; eğim ve slip kontrolü.
+- `landing-gnc/` — Landing guidance, navigation and control; provides handover to surface navigation.
+- `localization/` — EKF-based position estimation; IMU + odometry + landmark fusion.
+- `perception/` — Stereo imaging, lidar, obstacle detection; DEM update.
+- `mobility-control/` — Wheel/drive command execution; slope and slip control.

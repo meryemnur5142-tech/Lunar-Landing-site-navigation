@@ -7,91 +7,91 @@ depends_on:
   - interfaces/schemas/earth_visibility_windows.schema.yaml
   - interfaces/schemas/multi_site_geometry_product.schema.yaml
   - interfaces/schemas/landing_window_product.schema.yaml
-  - domain/mission/phase_state_machine.md  (A3-EK: LANDING giris kosullari)
+  - domain/mission/phase_state_machine.md  (A3-EK: LANDING entry conditions)
   - safety/safety_budget.md  (A4-EK: max_communication_outage_hours)
 open_items:
-  - repo submodule path TBD (dogrudan submodule mu, fork mu, referans mi — entegrasyon karari)
+  - repo submodule path TBD (direct submodule vs fork vs reference — integration decision)
   - production migration schedule TBD
-  - GPU ray-marching browser→flight segment bridge TBD(source: §10 araç bilgisayar kapasitesi)
+  - GPU ray-marching browser→flight segment bridge TBD(source: §10 vehicle computer capacity)
 ---
 
-# Repo Entegrasyon Haritası — lunar-navigator → LUNA-AI
+# Repo Integration Map — lunar-navigator → LUNA-AI
 
-**Kaynak:** `daniel27-space/lunar-navigator` (NASA Space Apps Challenge 2026)
-**Doğrulama:** JPL Horizons ±0.001°, NASA GSFC r=0.988/0.993
+**Source:** `daniel27-space/lunar-navigator` (NASA Space Apps Challenge 2026)
+**Validation:** JPL Horizons ±0.001°, NASA GSFC r=0.988/0.993
 
-**Strateji:** Referans implementasyon — kopyalanmaz, bağlanır.
-Hackathon prototipi güçlü algoritmik temel sunuyor; LUNA-AI üretim segmentine
-doğrudan gömülmez, referans alınır ve araç-güvenli arayüzlerle sarılır.
+**Strategy:** Reference implementation — not copied, linked.
+The hackathon prototype provides a strong algorithmic foundation; it is not embedded
+directly into the LUNA-AI production segment, but referenced and wrapped with vehicle-safe interfaces.
 
 ---
 
-## 1. Bileşen Haritası
+## 1. Component Map
 
-| Repo Modülü | LUNA-AI Hedefi | Entegrasyon Türü | Uyarlama Notu |
+| Repo Module | LUNA-AI Target | Integration Type | Adaptation Note |
 |---|---|---|---|
-| `pipeline/ephem/` (SPICE DE440) | `data-platform/processing/ephemeris/` | Referans | Değişmeden alınır |
-| `pipeline/terrain/horizon.py` + `web/src/lib/horizon.ts` (720-ray) | `data-platform/processing/horizon/` | Referans | Değişmeden alınır |
-| Güneş/Dünya disk görünürlüğü hesabı | `data-platform/processing/visibility/` | Referans | Değişmeden alınır |
-| 3B GPU gölge ray-marching | `apps/ground-control/` prototip UI | Prototip korunur | Üretim öncesi review gerekir; browser-only → flight bridge TBD |
-| Site finder (eğim/güneş/Dünya/PSR) | `mission-intelligence/candidate-filter/` | Referans; sıralama yeniden düzenlenir | Uyum Notu 5: sıralama güvenlik kararı vermez; HC eleme önce gelir |
-| "When to land" (7/14/30 gün) | `mission-intelligence/landing-window-optimizer/` | Doğrudan kullanılabilir | `landing_window_product.schema.yaml` arayüzüyle sarılır |
-| Çoklu bölge karşılaştırması (2–3) | `mission-intelligence/multi-site-time-comparator/` | Genişletilir | 2–3 → 5 bölge; `multi_site_geometry_product.schema.yaml` |
-| 60-gün güneş/Dünya penceresi + en uzun gece/kesinti | Güvenlik bütçesi §4.7 Haberleşme + §4.5 Termal | Doğrudan kullanılabilir | Uyum Notu 6: görünürlük ≠ link planlama |
-| `docs/DATA_CONTRACT.md` | A2 veri sözleşmeleri (`interfaces/schemas/`) | Girdi | Türetildi; genişletildi |
-| `docs/VALIDATION.md` | B4 kabul kriterleri | Doğrulama kanıtı | JPL/NASA GSFC/Gläser referansları |
+| `pipeline/ephem/` (SPICE DE440) | `data-platform/processing/ephemeris/` | Reference | Taken unchanged |
+| `pipeline/terrain/horizon.py` + `web/src/lib/horizon.ts` (720-ray) | `data-platform/processing/horizon/` | Reference | Taken unchanged |
+| Sun/Earth disk visibility calculation | `data-platform/processing/visibility/` | Reference | Taken unchanged |
+| 3D GPU shadow ray-marching | `apps/ground-control/` prototype UI | Prototype kept | Pre-production review required; browser-only → flight bridge TBD |
+| Site finder (slope/sun/Earth/PSR) | `mission-intelligence/candidate-filter/` | Reference; ranking reorganised | Compliance Note 5: ranking does not make safety decisions; HC elimination comes first |
+| "When to land" (7/14/30 days) | `mission-intelligence/landing-window-optimizer/` | Directly usable | Wrapped with `landing_window_product.schema.yaml` interface |
+| Multi-site comparison (2–3) | `mission-intelligence/multi-site-time-comparator/` | Extended | 2–3 → 5 sites; `multi_site_geometry_product.schema.yaml` |
+| 60-day sun/Earth window + longest night/outage | Safety budget §4.7 Communication + §4.5 Thermal | Directly usable | Compliance Note 6: visibility ≠ link planning |
+| `docs/DATA_CONTRACT.md` | A2 data contracts (`interfaces/schemas/`) | Input | Derived; extended |
+| `docs/VALIDATION.md` | B4 acceptance criteria | Validation evidence | JPL/NASA GSFC/Gläser references |
 
 ---
 
-## 2. Değişmeden Alınan / Uyarlanan / Yeniden Yazılan
+## 2. Taken Unchanged / Adapted / Rewritten
 
-### Değişmeden Alınan
-- `pipeline/ephem/` — SPICE DE440 efemeris işlem hattı
-- `pipeline/terrain/horizon.py` ve `horizon.ts` — 720-ray ufuk tarama algoritması
-- Güneş/Dünya disk görünürlüğü hesabı
-- "When to land" pencere hesaplama mantığı
+### Taken Unchanged
+- `pipeline/ephem/` — SPICE DE440 ephemeris pipeline
+- `pipeline/terrain/horizon.py` and `horizon.ts` — 720-ray horizon scan algorithm
+- Sun/Earth disk visibility calculation
+- "When to land" window calculation logic
 
-### Uyarlanan
-- **Site finder sıralaması:** HC eleme önce uygulanır; ağırlıklı toplam yalnızca geçen adayları sıralar (Uyum Notu 5)
-- **Çoklu bölge karşılaştırması:** 2–3 bölgeden 5 bölgeye genişletildi; `multi_site_geometry_product.schema.yaml` arayüzüyle paketlendi
-- **60-gün pencere çıktısı:** `earth_visibility_windows.schema.yaml` ve `safety_budget.md §6` arayüzlerine bağlandı
+### Adapted
+- **Site finder ranking:** HC elimination applied first; weighted total only ranks passing candidates (Compliance Note 5)
+- **Multi-site comparison:** Extended from 2–3 sites to 5; packaged with `multi_site_geometry_product.schema.yaml` interface
+- **60-day window output:** Connected to `earth_visibility_windows.schema.yaml` and `safety_budget.md §6` interfaces
 
-### Üretim Öncesi Review Gereken
-- **GPU ray-marching:** Browser-only prototip; flight segment köprüsü TBD (araç bilgisayarı GPU kapasitesi §10)
+### Requiring Pre-Production Review
+- **GPU ray-marching:** Browser-only prototype; flight segment bridge TBD (vehicle computer GPU capacity §10)
 
-### Yeniden Yazılan
-- Yok (v1.1 kapsamında)
+### Rewritten
+- None (within v1.1 scope)
 
 ---
 
-## 3. Repo'nun Bilinen Sınırları — LUNA-AI'de Nasıl Ele Alınır
+## 3. Repo's Known Limitations — How LUNA-AI Addresses Them
 
-| Sınır | LUNA-AI Çözümü |
+| Limitation | LUNA-AI Solution |
 |---|---|
-| Çözünürlük: 80m / 300m / 2.7km | A2 `terrain_resolution` alanında zorunlu; planlayıcıya açık bildirilir; gizlenmez (Uyum Notu 7) |
-| Zaman aralığı: 2024–2035 (SPICE DE440) | A2 `ephemeris_validity_range` alanında zorunlu; bu aralık dışı ürün reddedilir |
-| Observer height hassasiyeti ("a mast a metre taller can halve the longest night") | B2 senaryo; B3 risk kaydı; operasyonel araç yüksekliği §10'dan alınır |
-| Earth eclipse refraksiyon ihmalı | B3 risk kaydı; belirsizlik kaynağı; `uncertainty_minutes` alanında yansıtılır |
-| Site finder 300m hücre çözünürlüğü | B3 risk kaydı; A1 HC-001..HC-005 not alanında belirtildi; 80m doğrulama gerekebilir |
+| Resolution: 80 m / 300 m / 2.7 km | A2 `terrain_resolution` field is required; declared openly to the planner; not hidden (Compliance Note 7) |
+| Time range: 2024–2035 (SPICE DE440) | A2 `ephemeris_validity_range` field is required; product outside this range is rejected |
+| Observer height sensitivity ("a mast a metre taller can halve the longest night") | B2 scenario; B3 risk register; operational vehicle height taken from §10 |
+| Earth eclipse refraction ignored | B3 risk register; source of uncertainty; reflected in `uncertainty_minutes` field |
+| Site finder 300 m cell resolution | B3 risk register; noted in A1 HC-001..HC-005 notes; 80 m validation may be needed |
 
 ---
 
-## 4. Önemli Uyum Notları
+## 4. Key Compliance Notes
 
-| Uyum Notu | İçerik | Bu Belgedeki Yansıması |
+| Compliance Note | Content | Reflection in This Document |
 |---|---|---|
-| **Uyum Notu 5** | Önce hard constraint eleme; sıralama skoru elemeyi atlayamaz | §1 site finder satırı; §2 uyarlama notu |
-| **Uyum Notu 6** | "Dünya ufukta görünür mü" ≠ haberleşme link planlaması | §1 60-gün pencere satırı |
-| **Uyum Notu 7** | Çözünürlük/zaman sınırları gizlenmez, A2'de zorunlu alan | §3 ilk iki satır |
-| **Uyum Notu 8** | Repo hackathon prototipi; referans alınır, birebir kopyalanmaz | §2 strateji paragrafı |
+| **Compliance Note 5** | HC elimination first; ranking score cannot bypass elimination | §1 site finder row; §2 adaptation note |
+| **Compliance Note 6** | "Is Earth visible above the horizon?" ≠ communication link planning | §1 60-day window row |
+| **Compliance Note 7** | Resolution/time limits not hidden; required field in A2 | §3 first two rows |
+| **Compliance Note 8** | Repo is a hackathon prototype; referenced, not copied verbatim | §2 strategy paragraph |
 
 ---
 
-## 5. Entegrasyon Kararları (Açık Maddeler)
+## 5. Integration Decisions (Open Items)
 
-| Karar | Seçenek | Durum |
+| Decision | Option | Status |
 |---|---|---|
-| Repo bağlantı türü | git submodule / fork / API çağrısı | TBD — submodule path belirlenmeli |
-| GPU ray-marching taşıması | Browser-only bırak / flight bridge yaz | TBD(source: §10 araç bilgisayarı) |
-| Production migration zamanlaması | M4 / M5 | TBD |
-| Validation: en uzun gece metriği uçuş kabul kriterine dönüşümü | B4 kabul testi | TBD — B serisi görev |
+| Repo link type | git submodule / fork / API call | TBD — submodule path to be determined |
+| GPU ray-marching migration | Keep browser-only / write flight bridge | TBD(source: §10 vehicle computer) |
+| Production migration timing | M4 / M5 | TBD |
+| Validation: longest night metric conversion to flight acceptance criterion | B4 acceptance test | TBD — B-series task |

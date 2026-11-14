@@ -1,127 +1,127 @@
-# LUNA-AI Kritik Modüller FMEA (Failure Mode and Effects Analysis)
+# LUNA-AI Critical Modules FMEA (Failure Mode and Effects Analysis)
 
-**Belge ID:** LUNA-AI-FMEA-001  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Yöntem:** MIL-STD-1629A uyumlu; uzay görev uyarlaması
-
----
-
-## Puanlama Skalası
-
-| Skor | Şiddet (S) | Olasılık (O) | Tespit (D) |
-|------|-----------|-------------|-----------|
-| 1 | Minimal etki | Son derece düşük | Neredeyse kesin tespit |
-| 2 | Küçük etki | Düşük | Yüksek tespit olasılığı |
-| 3 | Orta etki | Orta | Orta tespit olasılığı |
-| 4 | Kritik etki | Yüksek | Düşük tespit olasılığı |
-| 5 | Felaket (görev/araç kaybı) | Çok yüksek | Tespit edilemez |
-
-**RPN = Şiddet × Olasılık × Tespit**  
-**RPN ≥ 50:** Zorunlu önlem gerektirir  
-**RPN ≥ 80:** Kritik; tasarım değişikliği önerilir
+**Document ID:** LUNA-AI-FMEA-001
+**Version:** 0.1-draft
+**Date:** 2026-11-14
+**Method:** MIL-STD-1629A compliant; space mission adaptation
 
 ---
 
-## FMEA Tablosu
+## Scoring Scale
 
-### Modül: Güç Yönetimi
+| Score | Severity (S) | Occurrence (O) | Detection (D) |
+|-------|-------------|---------------|--------------|
+| 1 | Minimal impact | Extremely low | Almost certain detection |
+| 2 | Minor impact | Low | High detection probability |
+| 3 | Moderate impact | Moderate | Moderate detection probability |
+| 4 | Critical impact | High | Low detection probability |
+| 5 | Catastrophic (mission/vehicle loss) | Very high | Undetectable |
 
-| Modül | Bileşen | Hata Modu | Etki | Şiddet (S) | Olasılık (O) | Tespit (D) | RPN | Önlem |
-|-------|---------|-----------|------|-----------|-------------|-----------|-----|-------|
-| Güç Yönetimi | Batarya | Ani kapasite düşüşü (SoC ölçüm < gerçek) | Dönüş enerjisi yetersiz kalır; araç PSR içinde enerji biter → Görev veya araç kaybı | 5 | 2 | 3 | **30** | Çift SoC ölçüm yöntemi (voltaj + Coulomb sayacı); dönüş marjı konservatif tutulur (%15 eşik) |
-| Güç Yönetimi | Güneş Paneli | Panel açılım arızası (servo sıkışma) | Şarj olmaz; görev uzatılamaz; enerji rezervi düşer | 4 | 2 | 2 | **16** | Mekanik redundancy (yay destekli fail-open); şarj eksikliği güç monitörü ile < 30 s içinde tespit |
-| Güç Yönetimi | Yük Yönetim Devresi | Kritik yük kesme komutu iletilemiyor | SURVIVAL modunda yüksek güç tüketimi devam eder; SoC hızla düşer | 5 | 1 | 2 | **10** | Donanım kesici (latching relay); yazılım ve donanım ayrı yoldan kesim sağlar |
-| Güç Yönetimi | Şarj Regülatörü | Aşırı şarj (overcharge koruması devredışı) | Batarya ısınır; termal kritik; yangın riski | 5 | 1 | 2 | **10** | Donanım şarj koruma devresi; yazılım bağımsız voltaj izleme |
-
----
-
-### Modül: Termal Yönetimi
-
-| Modül | Bileşen | Hata Modu | Etki | Şiddet (S) | Olasılık (O) | Tespit (D) | RPN | Önlem |
-|-------|---------|-----------|------|-----------|-------------|-----------|-----|-------|
-| Termal Yönetimi | Isıtıcı | Isıtıcı açık devre arızası (çalışmıyor) | Kritik bileşen soğur → elektronik arıza → navigasyon/güç kaybı | 5 | 2 | 2 | **20** | Yedek ısıtıcı devresi; sıcaklık sensörü ile 1 s periyodik izleme; FDIR erken uyarı |
-| Termal Yönetimi | Sıcaklık Sensörü | Sensör kısa devre (sabit yanlış okuma) | Yanlış sıcaklık verisi; termal kararlar hatalı → gecikmiş müdahale | 4 | 2 | 2 | **16** | Her kritik noktada ≥ 2 bağımsız sensör; oybirliği mantığı; anormallik tespiti |
-| Termal Yönetimi | Termal Kontrol Yazılımı | Isıtıcı kontrol döngüsü donuyor (task freeze) | Isıtıcılar müdahalesiz; sıcaklık drift edebilir | 4 | 2 | 2 | **16** | FDIR watchdog (5 s timeout); watchdog tetiklenince FDIR doğrudan ısıtıcı güvenli durumuna geçirir |
+**RPN = Severity × Occurrence × Detection**
+**RPN ≥ 50:** Mandatory action required
+**RPN ≥ 80:** Critical; design change recommended
 
 ---
 
-### Modül: Navigasyon
+## FMEA Table
 
-| Modül | Bileşen | Hata Modu | Etki | Şiddet (S) | Olasılık (O) | Tespit (D) | RPN | Önlem |
-|-------|---------|-----------|------|-----------|-------------|-----------|-----|-------|
-| Navigasyon | IMU (Atalet Ölçüm Birimi) | Yüksek drift (kalibrasyon bozulması) | Konum hatası birikerek > 1 m RMS olur; Yerel Planlayıcı engel yaklaşım hızını kısar, durabilir | 4 | 3 | 2 | **24** | Çok-sensör füzyon (IMU + LiDAR landmark + kamera); EKF kovaryans izleme; hızlı yeniden kalibrasyon |
-| Navigasyon | LiDAR | Toz/parçacık tarafından kirletilme (geri dönüş artar) | Görünür mesafe azalır; engel algılama güvenilirliği düşer | 3 | 3 | 2 | **18** | Birden fazla ölçüm perspektifi; kamera ile çapraz doğrulama; yazılımda outlier filtreleme |
-| Navigasyon | EKF (Extended Kalman Filter) | Yanlış başlatma (initialization failure) | Lokalizasyon hiçbir zaman konverjans sağlamaz; araç hareket edemez | 4 | 2 | 2 | **16** | Boot testi: EKF konverjans < **TBD** saniye içinde sağlanmazsa FDIR bildirilir; yeniden başlatma prosedürü |
+### Module: Power Management
 
----
-
-### Modül: FDIR
-
-| Modül | Bileşen | Hata Modu | Etki | Şiddet (S) | Olasılık (O) | Tespit (D) | RPN | Önlem |
-|-------|---------|-----------|------|-----------|-------------|-----------|-----|-------|
-| FDIR | FDIR Yazılım Görevi | FDIR task freeze (watchdog kick durdu) | Durum makinesi güncelleme almaz; güvenlik kararları yapılamaz → tek hata noktası | 5 | 1 | 1 | **5** | Donanım watchdog: FDIR donunca sistem yeniden başlatılır; boot sonrası otomatik CAUTION; kritik görev izleme dual-channel |
-| FDIR | Durum Makinesi Mantığı | Yanlış durum geçişi (false positive return) | Araç erken dönüş tetikler; görev hedefi yitirilir | 3 | 2 | 2 | **12** | Formal doğrulama (TLA+); 10.000 simülasyon senaryosu; histerezis eşiği (gürültü filtresi) |
-| FDIR | Hata Tespit Eşikleri | Çok gevşek eşik (missed fault) | Kritik hata geç tespit edilir; CAUTION atlanarak SURVIVAL'a gelinebilir | 5 | 2 | 3 | **30** | Parametre doğrulama testi (eşik sweep); güvenli tasarım: her eşik 3 bağımsız mühendis tarafından incelendi |
+| Module | Component | Failure Mode | Effect | Severity (S) | Occurrence (O) | Detection (D) | RPN | Mitigation |
+|--------|-----------|--------------|--------|-------------|---------------|--------------|-----|-----------|
+| Power Management | Battery | Sudden capacity drop (SoC reading < actual) | Return energy becomes insufficient; vehicle runs out of energy inside PSR → mission or vehicle loss | 5 | 2 | 3 | **30** | Dual SoC measurement method (voltage + Coulomb counter); return margin kept conservative (15% threshold) |
+| Power Management | Solar Panel | Panel deployment failure (servo jam) | No charging; mission cannot be extended; energy reserve drops | 4 | 2 | 2 | **16** | Mechanical redundancy (spring-assisted fail-open); charging shortfall detected by power monitor within < 30 s |
+| Power Management | Load Management Circuit | Critical load shedding command cannot be delivered | High power consumption continues in SURVIVAL mode; SoC drops rapidly | 5 | 1 | 2 | **10** | Hardware circuit breaker (latching relay); software and hardware provide separate shedding paths |
+| Power Management | Charge Regulator | Overcharge (overcharge protection disabled) | Battery heats up; thermal critical; fire risk | 5 | 1 | 2 | **10** | Hardware charge protection circuit; independent voltage monitoring by software |
 
 ---
 
-### Modül: Hareket Kontrolü
+### Module: Thermal Management
 
-| Modül | Bileşen | Hata Modu | Etki | Şiddet (S) | Olasılık (O) | Tespit (D) | RPN | Önlem |
-|-------|---------|-----------|------|-----------|-------------|-----------|-----|-------|
-| Hareket Kontrolü | Motor Sürücüsü | Motor sürücü arızası (bir tekerlek) | Araç düz gidemiyor; manevra kısıtlanıyor | 3 | 3 | 2 | **18** | 4+ tekerlekli diferansiyel sürüş; sürücü arızası motor akım sensörü ile < 500 ms tespit |
-| Hareket Kontrolü | Servo Kontrolcüsü | Servo sıkışma (panel veya anten) | Panel yönlendirilemiyor (enerji azalır) veya anten yönlendirilemiyor (link zayıflar) | 3 | 2 | 2 | **12** | Fail-safe mekanizması (servo son güvenli konumda kilitlenir); manual override komutu (TC_IMMEDIATE) |
-| Hareket Kontrolü | Tekerlek Enkoder | Enkoder okuma hatası | Hız/konum geri beslemesi yanlış → Yerel Planlayıcı hatalı hareket komutu → çarpışma riski | 4 | 2 | 2 | **16** | IMU hızla çapraz doğrulama; anormallik tespitinde enkoder devre dışı, IMU-only moda geçiş |
-
----
-
-## Özet Analiz
-
-### En Yüksek RPN'li 3 Hata Modu
-
-| Sıra | Modül | Hata Modu | RPN | Kritik Olan |
-|------|-------|-----------|-----|-------------|
-| 1 | Güç Yönetimi | Ani batarya kapasite düşüşü | **30** | Dönüş enerjisi hesabı yanlış → araç PSR'da mahsur kalabilir |
-| 2 | FDIR | Çok gevşek eşik — kaçırılan kritik hata | **30** | Kritik durum geç tespit → SURVIVAL'a hızla ulaşma riski |
-| 3 | Navigasyon | IMU yüksek drift | **24** | Lokalizasyon kaybı → araç durmak zorunda |
+| Module | Component | Failure Mode | Effect | Severity (S) | Occurrence (O) | Detection (D) | RPN | Mitigation |
+|--------|-----------|--------------|--------|-------------|---------------|--------------|-----|-----------|
+| Thermal Management | Heater | Heater open-circuit failure (not working) | Critical component cools → electronics failure → navigation/power loss | 5 | 2 | 2 | **20** | Redundant heater circuit; temperature sensor with 1 s periodic monitoring; FDIR early warning |
+| Thermal Management | Temperature Sensor | Sensor short circuit (fixed false reading) | Incorrect temperature data; thermal decisions erroneous → delayed intervention | 4 | 2 | 2 | **16** | ≥ 2 independent sensors at each critical point; voting logic; anomaly detection |
+| Thermal Management | Thermal Control Software | Heater control loop freezes (task freeze) | Heaters without intervention; temperature can drift | 4 | 2 | 2 | **16** | FDIR watchdog (5 s timeout); on watchdog trigger, FDIR directly moves heater to safe state |
 
 ---
 
-### Single-Point Failure (Tekil Arıza Noktası) Listesi
+### Module: Navigation
 
-Aşağıdaki bileşenler mevcut tasarımda yedeksizdir ve arızalandığında derhal görev kesintisine yol açar:
-
-| Bileşen | Risk | Önerilen Önlem |
-|---------|------|----------------|
-| FDIR donanım watchdog | FDIR donduğunda güvenlik kararı yok | Donanım watchdog çift kanalı veya secondary processor |
-| Ana batarya paketi | Toplam güç kaybı | Minimum iki bağımsız batarya modülü (paralel veya backup) |
-| Birincil haberleşme modülü | Link tamamen kesilir | Yedek düşük-kazançlı/UHF omni anten (düşük bant genişliği ama link sürdürür) |
-| IMU | Navigasyon tamamen kör | Yedek MEMS IMU veya güçlü visual odometry yeteneği |
+| Module | Component | Failure Mode | Effect | Severity (S) | Occurrence (O) | Detection (D) | RPN | Mitigation |
+|--------|-----------|--------------|--------|-------------|---------------|--------------|-----|-----------|
+| Navigation | IMU (Inertial Measurement Unit) | High drift (calibration corrupted) | Position error accumulates to > 1 m RMS; Local Planner throttles obstacle approach speed, may stop | 4 | 3 | 2 | **24** | Multi-sensor fusion (IMU + LiDAR landmark + camera); EKF covariance monitoring; rapid recalibration |
+| Navigation | LiDAR | Contamination by dust/particles (increased return) | Visible range decreases; obstacle detection reliability drops | 3 | 3 | 2 | **18** | Multiple measurement perspectives; cross-validation with camera; outlier filtering in software |
+| Navigation | EKF (Extended Kalman Filter) | Incorrect initialisation (initialization failure) | Localisation never converges; vehicle cannot move | 4 | 2 | 2 | **16** | Boot test: if EKF convergence not achieved within **TBD** seconds, FDIR is notified; restart procedure |
 
 ---
 
-### Görev Kaybı vs Araç Kaybı Ayrımı
+### Module: FDIR
 
-| Hata Kategorisi | Tanım | Örnek Hata Modları |
-|----------------|-------|-------------------|
-| **Görev Kaybı** | Araç güvende ancak bilimsel hedefler gerçekleştirilemez | Panel açılım arızası, servo sıkışma, IMU drift, yanlış durum geçişi |
-| **Araç Kaybı** | Araçtan geri dönüş sağlanamaz veya araç tahrip olur | Batarya ani kapasite düşüşü (PSR içinde), kritik ısıtıcı arızası (sıfırın altında ortamda), FDIR freeze (watchdog yok) |
-| **Veri Kaybı** | Bilimsel veri toplanamaz veya iletilemiyor | LiDAR kirlenmesi, haberleşme kaybı (tamponlama yeterli değilse) |
-
-**Öncelik:** Araç güvenliği her zaman görev hedeflerinin önünde gelir. Görev kaybı senaryoları kabul edilebilir; araç kaybı senaryoları için mutlaka yedeklilik veya yazılım azaltma önlemi tanımlanmalıdır.
+| Module | Component | Failure Mode | Effect | Severity (S) | Occurrence (O) | Detection (D) | RPN | Mitigation |
+|--------|-----------|--------------|--------|-------------|---------------|--------------|-----|-----------|
+| FDIR | FDIR Software Task | FDIR task freeze (watchdog kick stopped) | State machine receives no updates; safety decisions cannot be made → single point of failure | 5 | 1 | 1 | **5** | Hardware watchdog: on FDIR freeze the system is restarted; automatic CAUTION after boot; critical task monitoring dual-channel |
+| FDIR | State Machine Logic | Incorrect state transition (false positive return) | Vehicle triggers early return; mission objective lost | 3 | 2 | 2 | **12** | Formal verification (TLA+); 10,000 simulation scenarios; hysteresis threshold (noise filter) |
+| FDIR | Fault Detection Thresholds | Threshold too loose (missed fault) | Critical fault detected late; CAUTION may be skipped and SURVIVAL reached | 5 | 2 | 3 | **30** | Parameter validation test (threshold sweep); safety design: each threshold reviewed by 3 independent engineers |
 
 ---
 
-## TBD Takip Listesi
+### Module: Motion Control
 
-| ID | TBD Parametresi | Bağımlı Veri |
-|----|----------------|--------------|
-| FMEA-TBD-001 | Batarya kimyası belirlenince ani kapasite düşüşü ihtimali güncellenecek | Batarya seçimi |
-| FMEA-TBD-002 | IMU parça seçimine göre drift değeri güncellenmeli | IMU parça BoM |
-| FMEA-TBD-003 | Termal ortam (PSR içi min sıcaklık) belirlendikçe ısıtıcı arıza olasılığı güncellenecek | Termal analiz |
-| FMEA-TBD-004 | Radyasyon ortamı analizi tamamlanınca SEU kaynaklı yazılım arızası olasılıkları eklenecek | Radyasyon analizi |
+| Module | Component | Failure Mode | Effect | Severity (S) | Occurrence (O) | Detection (D) | RPN | Mitigation |
+|--------|-----------|--------------|--------|-------------|---------------|--------------|-----|-----------|
+| Motion Control | Motor Driver | Motor driver failure (one wheel) | Vehicle cannot travel straight; manoeuvrability restricted | 3 | 3 | 2 | **18** | 4+ wheel differential drive; driver failure detected by motor current sensor in < 500 ms |
+| Motion Control | Servo Controller | Servo jam (panel or antenna) | Panel cannot be oriented (energy drops) or antenna cannot be oriented (link weakens) | 3 | 2 | 2 | **12** | Fail-safe mechanism (servo locks at last safe position); manual override command (TC_IMMEDIATE) |
+| Motion Control | Wheel Encoder | Encoder read error | Speed/position feedback incorrect → Local Planner issues erroneous motion command → collision risk | 4 | 2 | 2 | **16** | Cross-validation with IMU speed; on anomaly detection, encoder disabled, switch to IMU-only mode |
 
 ---
 
-*Bu FMEA taslak aşamada olup donanım seçimleri tamamlandıkça güncellenecektir. FMEA'nın her revizyonu sistem tasarım gözden geçirme toplantısında onaylanacaktır.*
+## Summary Analysis
+
+### Top 3 Failure Modes by RPN
+
+| Rank | Module | Failure Mode | RPN | Why Critical |
+|------|--------|--------------|-----|-------------|
+| 1 | Power Management | Sudden battery capacity drop | **30** | Return energy calculation incorrect → vehicle can become stranded in PSR |
+| 2 | FDIR | Threshold too loose — missed critical fault | **30** | Critical state detected late → risk of rapidly reaching SURVIVAL |
+| 3 | Navigation | IMU high drift | **24** | Localisation loss → vehicle must stop |
+
+---
+
+### Single-Point Failure List
+
+The following components are non-redundant in the current design and cause immediate mission interruption if they fail:
+
+| Component | Risk | Recommended Mitigation |
+|-----------|------|----------------------|
+| FDIR hardware watchdog | No safety decision when FDIR freezes | Dual-channel hardware watchdog or secondary processor |
+| Main battery pack | Total power loss | Minimum two independent battery modules (parallel or backup) |
+| Primary communication module | Link completely severed | Backup low-gain/UHF omni antenna (low bandwidth but maintains link) |
+| IMU | Navigation completely blind | Backup MEMS IMU or strong visual odometry capability |
+
+---
+
+### Mission Loss vs Vehicle Loss Distinction
+
+| Failure Category | Definition | Example Failure Modes |
+|-----------------|------------|----------------------|
+| **Mission Loss** | Vehicle safe but scientific objectives cannot be achieved | Panel deployment failure, servo jam, IMU drift, incorrect state transition |
+| **Vehicle Loss** | Return from vehicle cannot be achieved or vehicle is damaged | Battery sudden capacity drop (inside PSR), critical heater failure (sub-zero environment), FDIR freeze (no watchdog) |
+| **Data Loss** | Scientific data cannot be collected or transmitted | LiDAR contamination, communication loss (if buffering insufficient) |
+
+**Priority:** Vehicle safety always takes precedence over mission objectives. Mission loss scenarios are acceptable; for vehicle loss scenarios, redundancy or software mitigation must always be defined.
+
+---
+
+## TBD Tracking List
+
+| ID | TBD Parameter | Dependent Data |
+|----|--------------|----------------|
+| FMEA-TBD-001 | Sudden capacity drop probability will be updated once battery chemistry is determined | Battery selection |
+| FMEA-TBD-002 | Drift value should be updated per IMU part selection | IMU part BoM |
+| FMEA-TBD-003 | Heater failure probability will be updated as thermal environment (PSR minimum temperature) is determined | Thermal analysis |
+| FMEA-TBD-004 | SEU-caused software failure probabilities will be added once radiation environment analysis is complete | Radiation analysis |
+
+---
+
+*This FMEA is in draft stage and will be updated as hardware selections are finalised. Every revision of the FMEA will be approved at a system design review meeting.*

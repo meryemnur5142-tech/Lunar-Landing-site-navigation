@@ -1,228 +1,228 @@
-# LUNA-AI Güvenlik Durum Makinesi Tasarımı
+# LUNA-AI Safety State Machine Design
 
-**Belge ID:** LUNA-AI-ARCH-001  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Bağlı ADR:** ADR-005  
-**Bağlı QAR:** FDIR-001, FDIR-002, FDIR-004, FDIR-005
+**Document ID:** LUNA-AI-ARCH-001
+**Version:** 0.1-draft
+**Date:** 2026-11-14
+**Related ADR:** ADR-005
+**Related QAR:** FDIR-001, FDIR-002, FDIR-004, FDIR-005
 
 ---
 
-## 1. Durum Tanımları
+## 1. State Definitions
 
 ### NOMINAL
 
-Araç tam operasyonel kapasitede çalışmaktadır. Tüm subsistemler kabul edilen parametre aralıklarındadır.
+The vehicle is operating at full operational capacity. All subsystems are within accepted parameter ranges.
 
-**İzlenen Parametreler:**
-- SoC > dönüş eşiği + güvenlik marjı (bkz. QAR PWR-001)
-- Navigasyon konum belirsizliği < 0.5 m RMS (NAV-001)
-- Tüm kritik bileşen sıcaklıkları nominal aralıkta (THM-004/005)
-- Haberleşme link_timeout sayacı < eşik (COM-004)
-- Tüm FDIR heartbeat'leri zamanında alınıyor
+**Monitored Parameters:**
+- SoC > return threshold + safety margin (see QAR PWR-001)
+- Navigation position uncertainty < 0.5 m RMS (NAV-001)
+- All critical component temperatures within nominal range (THM-004/005)
+- Communication link_timeout counter < threshold (COM-004)
+- All FDIR heartbeats received on time
 
-**İzin Verilen Eylemler:**
-- PSR girişi (tüm PSR giriş koşulları sağlanmış ise)
-- Tam hız keşif operasyonu
-- Bilimsel sensör operasyonu
-- Yeni görev planı alma ve uygulama
-- Rota replanning
+**Permitted Actions:**
+- PSR entry (if all PSR entry conditions are satisfied)
+- Full-speed exploration operation
+- Scientific sensor operation
+- Receiving and applying a new mission plan
+- Route replanning
 
 ---
 
 ### CAUTION
 
-Bir veya daha fazla parametre gözlem aralığında (erken uyarı) ancak henüz kritik eşikte değil. Araç operasyona devam eder fakat risk artmıştır.
+One or more parameters are in the observation range (early warning) but not yet at the critical threshold. The vehicle continues operations but risk has increased.
 
-**Tetikleyiciler (aşağıdakilerden herhangi biri):**
-- SoC < %25 veya öngörülen dönüş marjı < %20
-- Navigasyon belirsizliği 0.5–1.0 m RMS
-- Herhangi bir bileşen sıcaklığı uyarı aralığında (nominal limitin %80'i)
-- Haberleşme link yokluğu > **TBD:** dakika (uyarı eşiği)
-- Mission Planner heartbeat gecikmeli (uyarı eşiği; kritik değil)
+**Triggers (any of the following):**
+- SoC < 25% or projected return margin < 20%
+- Navigation uncertainty 0.5–1.0 m RMS
+- Any component temperature in warning range (80% of nominal limit)
+- Communication link absence > **TBD:** minutes (warning threshold)
+- Mission Planner heartbeat delayed (warning threshold; not critical)
 
-**İzin Verilen Eylemler:**
-- Devam eden operasyon tamamlanır (güvenli son noktaya kadar)
-- Yeni PSR girişi yok
-- Replanning önceliklendirilir (dönüş rotası hazır tutulur)
-- Yer segmentine CAUTION flag gönderilir
+**Permitted Actions:**
+- Ongoing operation completed (up to safe stopping point)
+- No new PSR entry
+- Replanning prioritised (return route kept ready)
+- CAUTION flag sent to ground segment
 
-**Kısıtlanan Eylemler:**
-- Yeni PSR girişi başlatılamaz
-- Yüksek güç tüketimli bilimsel operasyon başlatılamaz
+**Restricted Actions:**
+- Cannot initiate new PSR entry
+- Cannot start high-power scientific operation
 
 ---
 
 ### RETURN_REQUIRED
 
-Araç güvenli dönüşe başlamalıdır. Devam etmek kabul edilemez risk taşımaktadır.
+The vehicle must begin a safe return. Continuing carries unacceptable risk.
 
-**Tetikleyiciler (aşağıdakilerden herhangi biri):**
-- SoC < %15 (PWR-001) veya öngörülen dönüş enerjisi yetersiz
-- Haberleşme link yokluğu > **TBD:** dakika (kritik eşik, COM-004)
-- Navigasyon lokalizasyon kaybı recovery başarısız > **TBD:** saniye
-- Yer segmentinden RETURN_REQUIRED komutu (TC-IMMEDIATE)
-- Termal kritik devam ediyor ve lokal müdahale başarısız
+**Triggers (any of the following):**
+- SoC < 15% (PWR-001) or projected return energy insufficient
+- Communication link absence > **TBD:** minutes (critical threshold, COM-004)
+- Navigation localisation loss recovery failed > **TBD:** seconds
+- RETURN_REQUIRED command from ground segment (TC-IMMEDIATE)
+- Thermal critical ongoing and local intervention failed
 
-**İzin Verilen Eylemler:**
-- Safe haven'a dönüş rotası hesaplama ve icra
-- Navigasyon ve FDIR tam çalışır durumda
-- Haberleşme aktif (uplink varsa)
-- Checkpoint kaydetme
+**Permitted Actions:**
+- Safe haven return route calculation and execution
+- Navigation and FDIR fully operational
+- Communication active (if uplink available)
+- Checkpoint saving
 
-**Kısıtlanan Eylemler:**
-- Bilimsel operasyon tamamen dondurulur
-- Keşif rotası devam ettirilmez
-- PSR girişi kesinlikle yasak
+**Restricted Actions:**
+- Scientific operation completely frozen
+- Exploration route not continued
+- PSR entry strictly forbidden
 
 ---
 
 ### SURVIVAL
 
-Görev kaybı veya araç kaybı riski yüksektir. Tüm kaynaklar hayatta kalma için yönlendirilir.
+Risk of mission loss or vehicle loss is high. All resources directed to survival.
 
-**Tetikleyiciler (aşağıdakilerden herhangi biri):**
-- SoC < %10
-- Kritik donanım arızası (hareket kontrol, termal, birincil navigasyon)
-- Hızlı aşırı ısınma: **TBD:** °C/dak üzerinde sıcaklık artışı
-- FDIR kendi iç heartbeat'ini kaybetti (self-watchdog)
-- Çoklu eş zamanlı P1 arızası
+**Triggers (any of the following):**
+- SoC < 10%
+- Critical hardware failure (motion control, thermal, primary navigation)
+- Rapid overheating: temperature rise > **TBD:** °C/min
+- FDIR lost its own internal heartbeat (self-watchdog)
+- Multiple simultaneous P1 failures
 
-**İzin Verilen Eylemler:**
-- Navigasyon (minimum moda düşürülmüş: IMU + dead-reckoning)
-- FDIR (çekirdek işlevi)
-- Haberleşme (minimum güçte beacon)
-- Minimum ısıtma (pil koruma)
+**Permitted Actions:**
+- Navigation (reduced to minimum mode: IMU + dead-reckoning)
+- FDIR (core function)
+- Communication (minimum-power beacon)
+- Minimum heating (battery protection)
 
-**Kesilen Yükler:**
-- Tüm bilimsel sensörler
-- Yüksek güçlü haberleşme (yalnızca beacon kalır)
-- Planlayıcı ve replanning hesaplamaları
-- Kamera, LiDAR (navigasyon için değil)
-- Panel servo (son pozisyonda kilitlenir)
+**Shed Loads:**
+- All scientific sensors
+- High-power communication (beacon only remains)
+- Planner and replanning calculations
+- Camera, LiDAR (not for navigation)
+- Panel servo (locked at last position)
 
 ---
 
-## 2. Durum Geçiş Koşulları
+## 2. State Transition Conditions
 
 ```
 NOMINAL ──────────────────────► CAUTION
- │  enerji_uyarı OR nav_uyarı OR termal_uyarı OR link_uyarı
+ │  energy_warning OR nav_warning OR thermal_warning OR link_warning
  │
  ├──────────────────────────────► RETURN_REQUIRED
- │  SoC < %15 OR link_kritik OR nav_kayıp_timeout OR yer_komutu
+ │  SoC < 15% OR link_critical OR nav_loss_timeout OR ground_command
  │
  └──────────────────────────────► SURVIVAL
-    SoC < %10 OR kritik_arıza OR hızlı_ısınma
+    SoC < 10% OR critical_failure OR rapid_heating
 
 CAUTION ──────────────────────► NOMINAL
- │  tüm parametreler nominal aralığa döndü
+ │  all parameters returned to nominal range
  │
  ├──────────────────────────────► RETURN_REQUIRED
- │  herhangi bir RETURN tetikleyicisi aktif
+ │  any RETURN trigger active
  │
  └──────────────────────────────► SURVIVAL
-    herhangi bir SURVIVAL tetikleyicisi aktif
+    any SURVIVAL trigger active
 
 RETURN_REQUIRED ──────────────► SURVIVAL
- │  dönüş sırasında SURVIVAL tetikleyicisi aktif
+ │  SURVIVAL trigger active during return
  │
- └──────────────────────────────► NOMINAL  [yalnızca yer onayı ile]
-    safe haven'a ulaşıldı AND enerji yeterli AND yer segmenti onayladı
+ └──────────────────────────────► NOMINAL  [ground approval only]
+    safe_haven_reached AND energy_sufficient AND ground_segment_approved
 
-SURVIVAL ─────────────────────► RETURN_REQUIRED [yalnızca yer onayı ile]
-    temel sistem kurtarıldı AND enerji > %10 AND yer segmenti onayladı
+SURVIVAL ─────────────────────► RETURN_REQUIRED [ground approval only]
+    basic_system_recovered AND energy > 10% AND ground_segment_approved
 ```
 
-> **Not:** SURVIVAL'dan doğrudan NOMINAL'e geçiş yoktur. Araç her zaman RETURN_REQUIRED üzerinden geçer ve yer segmentinin açık onayı gerekir.
+> **Note:** There is no direct transition from SURVIVAL to NOMINAL. The vehicle always passes through RETURN_REQUIRED and requires explicit ground segment approval.
 
-### Sayısal Eşik Referans Tablosu
+### Numerical Threshold Reference Table
 
-| Parametre | CAUTION Eşiği | RETURN_REQUIRED Eşiği | SURVIVAL Eşiği |
-|-----------|--------------|----------------------|---------------|
-| SoC | < %25 | < %15 | < %10 |
-| Nav. Belirsizlik | 0.5–1.0 m RMS | > 1.0 m RMS kayıp | — |
-| Link Kesintisi | > **TBD** dak (uyarı) | > **TBD** dak (kritik) | — |
-| Sıcaklık | Nominal limitin %80'i | Nominal limitin dışı | Hızlı artış > **TBD** °C/dak |
-| SoC Tahmin Marjı | < %20 dönüş marjı | < %15 dönüş marjı | < %10 toplam SoC |
+| Parameter | CAUTION Threshold | RETURN_REQUIRED Threshold | SURVIVAL Threshold |
+|-----------|-----------------|--------------------------|-------------------|
+| SoC | < 25% | < 15% | < 10% |
+| Nav. Uncertainty | 0.5–1.0 m RMS | > 1.0 m RMS loss | — |
+| Link Outage | > **TBD** min (warning) | > **TBD** min (critical) | — |
+| Temperature | 80% of nominal limit | Outside nominal limit | Rapid rise > **TBD** °C/min |
+| SoC Projected Margin | < 20% return margin | < 15% return margin | < 10% total SoC |
 
 ---
 
-## 3. Watchdog Tasarımı
+## 3. Watchdog Design
 
-### 3.1 Heartbeat Gönderen Modüller
+### 3.1 Modules Sending Heartbeats
 
-Her kritik FreeRTOS görevi, FDIR watchdog kuyruğuna düzenli heartbeat mesajları gönderir:
+Every critical FreeRTOS task sends regular heartbeat messages to the FDIR watchdog queue:
 
-| Modül | Heartbeat Periyodu | Timeout Eşiği | Timeout Sonucu |
-|-------|-------------------|---------------|----------------|
-| Navigasyon | 100 ms | 500 ms | CAUTION → nav heartbeat kaybı |
-| Güç Yönetimi | 500 ms | 2 s | CAUTION → güç heartbeat kaybı |
-| Termal Yönetimi | 1 s | 5 s | CAUTION → termal heartbeat kaybı |
-| Hareket Kontrolü | 100 ms | 500 ms | CAUTION → hareket heartbeat kaybı |
-| Mission Planner | 2 s | 10 s | CAUTION (planlayıcı donduruldu — FDIR bağımsız çalışır) |
-| Haberleşme | 5 s | 30 s | CAUTION → haberleşme heartbeat kaybı |
+| Module | Heartbeat Period | Timeout Threshold | Timeout Result |
+|--------|-----------------|-------------------|----------------|
+| Navigation | 100 ms | 500 ms | CAUTION → nav heartbeat loss |
+| Power Management | 500 ms | 2 s | CAUTION → power heartbeat loss |
+| Thermal Management | 1 s | 5 s | CAUTION → thermal heartbeat loss |
+| Motion Control | 100 ms | 500 ms | CAUTION → motion heartbeat loss |
+| Mission Planner | 2 s | 10 s | CAUTION (planner frozen — FDIR operates independently) |
+| Communication | 5 s | 30 s | CAUTION → communication heartbeat loss |
 
-**FDIR kendi watchdog döngüsü:**
-- FDIR, ayrı bir donanım watchdog timer'a heartbeat gönderir
-- FDIR kendisi donduğunda donanım watchdog sistemi yeniden başlatır
-- Yeniden başlatma sonrası FDIR CAUTION'dan başlar, geçmişi değerlendirir
+**FDIR's own watchdog loop:**
+- FDIR sends a heartbeat to a separate hardware watchdog timer
+- When FDIR itself freezes, the hardware watchdog restarts the system
+- After restart, FDIR starts from CAUTION and evaluates history
 
-### 3.2 Watchdog Uygulaması
+### 3.2 Watchdog Implementation
 
 ```
 FDIR_Task (Priority: Highest)
 │
-├── Heartbeat monitor loop (her 50 ms kontrol)
-│   └── Subsistem heartbeat kayıt tablosunu kontrol et
-│       → Timeout var mı? → Durum geçişini tetikle
+├── Heartbeat monitor loop (checks every 50 ms)
+│   └── Check subsystem heartbeat record table
+│       → Timeout? → Trigger state transition
 │
-├── Durum makinesi değerlendirme
-│   → Mevcut durum + tüm tetikleyici sinyalleri
-│   → Geçiş tablosunu uygula
-│   → Yeni durum aktivasyonu
+├── State machine evaluation
+│   → Current state + all trigger signals
+│   → Apply transition table
+│   → New state activation
 │
-└── Donanım watchdog kick (her 25 ms)
-    → Kaçırılırsa: donanım reset → FDIR yeniden başlar
+└── Hardware watchdog kick (every 25 ms)
+    → If missed: hardware reset → FDIR restarts
 ```
 
 ---
 
-## 4. FDIR Bağımsızlık Gereksinimleri
+## 4. FDIR Independence Requirements
 
-FDIR, görev yürütme kararlarını Mission Planner'a bırakır; ancak güvenlik kararları FDIR'ın münhasır yetkisindedir.
+FDIR delegates mission execution decisions to Mission Planner; however, safety decisions are within FDIR's exclusive authority.
 
-### 4.1 FDIR ile Mission Planner Arasında Paylaşılmayanlar
+### 4.1 Not Shared Between FDIR and Mission Planner
 
-| Kaynak / Veri | Neden Paylaşılmaz |
-|---------------|-------------------|
-| FDIR durum makinesi çalışma zamanı durumu | Planner hatası FDIR'ı etkilememeli |
-| Watchdog timer kayıtları | Tamper riski; sadece FDIR okur |
-| SURVIVAL modu güç kesim listesi | Planner devre dışıyken bile çalışmalı |
-| Donanım watchdog kick sinyali | FDIR'ın kendi döngüsüne ait |
-| Kesmesi zor olmayan kritik donanım arayüzleri | Planner komutuna gerek yok |
+| Resource / Data | Why Not Shared |
+|----------------|----------------|
+| FDIR state machine runtime state | Planner failure must not affect FDIR |
+| Watchdog timer records | Tamper risk; only FDIR reads |
+| SURVIVAL mode power shed list | Must work even when planner is inactive |
+| Hardware watchdog kick signal | Belongs to FDIR's own loop |
+| Critical hardware interfaces not easily interrupted | No planner command needed |
 
-### 4.2 FDIR ile Mission Planner Arasında Paylaşılanlar (ICD ile)
+### 4.2 Shared Between FDIR and Mission Planner (via ICD)
 
-| Veri | Yön | ICD | Açıklama |
-|------|-----|-----|----------|
-| `safety_status` | FDIR → Planner | ICD-004 | Mevcut güvenlik durumu |
-| `abort_signal` | FDIR → Planner | ICD-004 | Planner tüm operasyonları dondurur |
-| Planner heartbeat | Planner → FDIR | — | Planner sağlık bildirimi |
-| `fdir_caution_event` | FDIR → Planner | ICD-004 | Planner kısıtlanan eylem listesini günceller |
+| Data | Direction | ICD | Description |
+|------|-----------|-----|-------------|
+| `safety_status` | FDIR → Planner | ICD-004 | Current safety state |
+| `abort_signal` | FDIR → Planner | ICD-004 | Planner freezes all operations |
+| Planner heartbeat | Planner → FDIR | — | Planner health report |
+| `fdir_caution_event` | FDIR → Planner | ICD-004 | Planner updates restricted action list |
 
-### 4.3 Bağımsız Çalışma Senaryosu
+### 4.3 Independent Operation Scenario
 
-Mission Planner donduğunda FDIR şunları bağımsız yapabilir:
-- Durum geçişi (NOMINAL → RETURN_REQUIRED)
-- Temel hareket durdurma komutu (Hareket Kontrolüne doğrudan)
-- Güç kesme komutu (Güç Yönetimine doğrudan)
-- Navigasyona minimum moda geçiş komutu
-- Haberleşmeye acil beacon komutu
+When Mission Planner freezes, FDIR can independently:
+- Perform state transition (NOMINAL → RETURN_REQUIRED)
+- Issue basic motion stop command (directly to Motion Control)
+- Issue power shed command (directly to Power Management)
+- Issue minimum-mode transition command to Navigation
+- Issue emergency beacon command to Communication
 
 ---
 
-## 5. PlantUML Durum Diyagramı
+## 5. PlantUML State Diagram
 
 ```plantuml
 @startuml LUNA-AI Safety State Machine
@@ -230,54 +230,54 @@ Mission Planner donduğunda FDIR şunları bağımsız yapabilir:
 [*] --> NOMINAL : boot_complete AND subsystems_ok
 
 state NOMINAL {
-  NOMINAL : Tüm subsistemler nominal
-  NOMINAL : PSR girişine izin verilir
-  NOMINAL : Tam keşif operasyonu
-  NOMINAL : İzlenen: SoC, nav, termal, link, heartbeat
+  NOMINAL : All subsystems nominal
+  NOMINAL : PSR entry permitted
+  NOMINAL : Full exploration operation
+  NOMINAL : Monitored: SoC, nav, thermal, link, heartbeat
 }
 
 state CAUTION {
-  CAUTION : Erken uyarı durumu
-  CAUTION : Yeni PSR girişi yasak
-  CAUTION : Mevcut operasyon tamamlanır
-  CAUTION : Dönüş rotası hazır tutulur
+  CAUTION : Early warning state
+  CAUTION : New PSR entry forbidden
+  CAUTION : Ongoing operation completed
+  CAUTION : Return route kept ready
 }
 
 state RETURN_REQUIRED {
-  RETURN_REQUIRED : Dönüş zorunlu
-  RETURN_REQUIRED : Bilimsel operasyon donduruldu
-  RETURN_REQUIRED : Safe haven rotası aktif
+  RETURN_REQUIRED : Return mandatory
+  RETURN_REQUIRED : Scientific operation frozen
+  RETURN_REQUIRED : Safe haven route active
 }
 
 state SURVIVAL {
-  SURVIVAL : Hayatta kalma modu
-  SURVIVAL : Yalnızca nav + FDIR + beacon aktif
-  SURVIVAL : Tüm opsiyonel yükler kesildi
+  SURVIVAL : Survival mode
+  SURVIVAL : Only nav + FDIR + beacon active
+  SURVIVAL : All optional loads shed
 }
 
-NOMINAL --> CAUTION : enerji_uyarı OR nav_uyarı OR\ntermal_uyarı OR link_uyarı
-NOMINAL --> RETURN_REQUIRED : SoC < 15% OR link_kritik OR\nnav_kayıp OR yer_komutu
-NOMINAL --> SURVIVAL : SoC < 10% OR kritik_arıza OR\nhızlı_ısınma
+NOMINAL --> CAUTION : energy_warning OR nav_warning OR\nthermal_warning OR link_warning
+NOMINAL --> RETURN_REQUIRED : SoC < 15% OR link_critical OR\nnav_loss OR ground_command
+NOMINAL --> SURVIVAL : SoC < 10% OR critical_failure OR\nrapid_heating
 
-CAUTION --> NOMINAL : tüm_parametreler_nominal\n[tüm_tetikleyiciler_temiz]
-CAUTION --> RETURN_REQUIRED : RETURN tetikleyicisi aktif
-CAUTION --> SURVIVAL : SURVIVAL tetikleyicisi aktif
+CAUTION --> NOMINAL : all_parameters_nominal\n[all_triggers_clear]
+CAUTION --> RETURN_REQUIRED : RETURN trigger active
+CAUTION --> SURVIVAL : SURVIVAL trigger active
 
-RETURN_REQUIRED --> SURVIVAL : SURVIVAL tetikleyicisi aktif
-RETURN_REQUIRED --> NOMINAL : safe_haven_ulaşıldı AND\nenerji_yeterli AND yer_onayı
+RETURN_REQUIRED --> SURVIVAL : SURVIVAL trigger active
+RETURN_REQUIRED --> NOMINAL : safe_haven_reached AND\nenergy_sufficient AND ground_approval
 
-SURVIVAL --> RETURN_REQUIRED : temel_sistem_kurtarıldı AND\nenerji > 10% AND yer_onayı
+SURVIVAL --> RETURN_REQUIRED : basic_system_recovered AND\nenergy > 10% AND ground_approval
 
 note right of SURVIVAL
-  SURVIVAL'dan NOMINAL'e
-  doğrudan geçiş yoktur.
-  Yer segmenti onayı zorunludur.
+  No direct transition from
+  SURVIVAL to NOMINAL.
+  Ground segment approval mandatory.
 end note
 
 note right of FDIR
-  FDIR her durumda çalışır.
-  Mission Planner'dan bağımsızdır.
-  Donanım watchdog: 25 ms kick.
+  FDIR operates in every state.
+  Independent of Mission Planner.
+  Hardware watchdog: 25 ms kick.
 end note
 
 @enduml
@@ -285,18 +285,18 @@ end note
 
 ---
 
-## 6. Formal Doğrulama Kapsamı
+## 6. Formal Verification Scope
 
-Aşağıdaki özellikler TLA+ veya eşdeğer model checker ile doğrulanacaktır:
+The following properties will be verified with TLA+ or an equivalent model checker:
 
-| Özellik | Açıklama | Test Türü |
-|---------|----------|-----------|
-| **Güvenlik (Safety)** | SURVIVAL'dan yer onayı olmadan çıkış yok | Invariant check |
-| **Canlılık (Liveness)** | RETURN_REQUIRED tetiklendiğinde araç nihayetinde safe haven'a ulaşır | Liveness check |
-| **Deterministik** | Aynı girdi seti her zaman aynı geçişi üretir | State space exhaustion |
-| **Kilitlenme yok** | Hiçbir durum kombinasyonunda deadlock oluşmaz | Deadlock freedom check |
-| **Çoklu tetikleyici tutarlılığı** | Eş zamanlı P1 tetikleyicileri her zaman en yüksek öncelikli duruma geçirir | Reachability check |
+| Property | Description | Test Type |
+|----------|-------------|-----------|
+| **Safety** | No exit from SURVIVAL without ground approval | Invariant check |
+| **Liveness** | When RETURN_REQUIRED is triggered, the vehicle eventually reaches the safe haven | Liveness check |
+| **Deterministic** | The same set of inputs always produces the same transition | State space exhaustion |
+| **No deadlock** | No deadlock occurs in any state combination | Deadlock freedom check |
+| **Multiple trigger consistency** | Simultaneous P1 triggers always transition to the highest-priority state | Reachability check |
 
 ---
 
-*Detaylı watchdog timer konfigürasyonu ve FreeRTOS görev öncelik tablosu sistem tasarımı aşamasında bu belgeye eklenecektir.*
+*Detailed watchdog timer configuration and FreeRTOS task priority table will be added to this document during the system design phase.*

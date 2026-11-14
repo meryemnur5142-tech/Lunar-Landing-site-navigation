@@ -4,18 +4,18 @@
 #   - domain/mission/constraints/hard_constraints_catalog.yaml  (HC-014, HC-017, HC-018)
 #   - safety/safety_budget.md  (§6 max_communication_outage_hours)
 # open_items:
-#   - uncertainty_minutes araç donanım gecikmesine bağlı TBD(source: §10)
-#   - longest_outage_duration_hours operasyonel eşik §10 donanım verisiyle belirlenecek
+#   - uncertainty_minutes tied to vehicle hardware latency TBD(source: §10)
+#   - longest_outage_duration_hours operational threshold to be determined with §10 hardware data
 
 schema_version: "1.0.0"
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: "EarthVisibilityWindows"
 description: >
-  Araçtan Dünya görünürlük penceresi verisi.
-  Kaynak: daniel27-space/lunar-navigator pipeline/ephem/ (SPICE DE440).
-  Bu veri HC-014 ve HC-018 hard constraint kontrolünde, A4 safety_budget §6'da kullanılır.
-  Uyum Notu 6: "Dünya ufukta görünür mü" (bu şema) ≠ haberleşme link planlaması (§4.7).
-  Görünürlük gerekli koşuldur; link kalitesi, iletim hızı ayrı değerlendirilir.
+  Earth visibility window data from the vehicle.
+  Source: daniel27-space/lunar-navigator pipeline/ephem/ (SPICE DE440).
+  This data is used in HC-014 and HC-018 hard constraint checks, and A4 safety_budget §6.
+  Compliance Note 6: "Is Earth visible on the horizon" (this schema) ≠ communication link planning (§4.7).
+  Visibility is a necessary condition; link quality and transmission rate are evaluated separately.
 
 type: object
 
@@ -32,51 +32,51 @@ properties:
 
   schema_version:
     type: string
-    description: "Bu şemanın versiyonu."
+    description: "Version of this schema."
     pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
 
   timestamp_utc:
     type: string
     format: date-time
-    description: "Bu görünürlük tahmininin üretildiği zaman (UTC)."
+    description: "Time this visibility estimate was produced (UTC)."
 
   earth_visible:
     type: boolean
     description: >
-      Anlık Dünya görünürlüğü. true = Dünya ufukta / üstünde görünür.
-      HC-018 iniş zamanı doğrulamasında kullanılır.
+      Instantaneous Earth visibility. true = Earth is visible on/above the horizon.
+      Used in HC-018 landing time validation.
 
   next_change_time:
     type: string
     format: date-time
-    description: "Sonraki görünürlük değişikliği zamanı (UTC). Planlayıcı pencere hesabında kullanır."
+    description: "Time of the next visibility change (UTC). Used by planner for window calculation."
 
   longest_outage_duration_hours:
     type: number
     description: >
-      Yaklaşan 60 günlük penceredeki en uzun haberleşme kesintisi (saat).
-      Kaynak: lunar-navigator 60-gün güneş/Dünya penceresi analizi,
-      "longest night/communication gap" metriği.
-      safety_budget.md §6 max_communication_outage_hours ile karşılaştırılır.
-      TBD(source: §10 — operasyonel eşik donanım verisine bağlı).
+      Longest communication outage in the upcoming 60-day window (hours).
+      Source: lunar-navigator 60-day sun/Earth window analysis,
+      "longest night/communication gap" metric.
+      Compared against safety_budget.md §6 max_communication_outage_hours.
+      TBD(source: §10 — operational threshold depends on hardware data).
     minimum: 0.0
 
   uncertainty_minutes:
     type: integer
     description: >
-      Görünürlük sınırı tahmin belirsizliği (dakika).
-      Kaynak: lunar-navigator efemeris hassasiyeti.
-      TBD(source: §10 araç donanım gecikmesi + anten açısı toleransı).
+      Visibility boundary prediction uncertainty (minutes).
+      Source: lunar-navigator ephemeris accuracy.
+      TBD(source: §10 vehicle hardware latency + antenna angle tolerance).
     minimum: 0
 
   source:
     type: string
-    description: "Veri kaynağı. Beklenen: 'lunar-navigator/pipeline/ephem/ SPICE DE440'"
+    description: "Data source. Expected: 'lunar-navigator/pipeline/ephem/ SPICE DE440'"
     minLength: 1
 
   visibility_windows_next_7days:
     type: array
-    description: "Yaklaşan 7 günlük görünürlük pencereleri listesi (opsiyonel; planlama kolaylığı)."
+    description: "List of visibility windows for the upcoming 7 days (optional; planning convenience)."
     items:
       type: object
       required: [start_utc, end_utc, duration_hours]
@@ -87,7 +87,7 @@ properties:
 
   ephemeris_validity_range:
     type: object
-    description: "Bu tahminin geçerli olduğu efemeris aralığı."
+    description: "Ephemeris range for which this estimate is valid."
     properties:
       start: { type: string, format: date }
       end:   { type: string, format: date }

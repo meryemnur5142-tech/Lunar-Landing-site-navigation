@@ -1,97 +1,97 @@
 # status: draft
 # owner: Agent C
 # depends_on: [docs/adr/FMEA_KRITIK_MODULLER.md, docs/architecture/SAFETY_STATE_MACHINE.md, docs/architecture/ICD_TEMPLATES.md]
-# open_items: [TBD-RED-001..TBD-RED-008 — araç kütlesi/hacim kısıtları kesinleşmeden uygulanamayan yedeklilikler; RPN'ler donanım seçimi sonrası güncellenecek]
+# open_items: [TBD-RED-001..TBD-RED-008 — redundancy options not implementable until vehicle mass/volume constraints are confirmed; RPNs will be updated after hardware selection]
 
-# Redundancy Matrix (Yedeklilik Matrisi) — LUNA-AI v1.0
+# Redundancy Matrix — LUNA-AI v1.0
 
-**Belge ID:** LUNA-AI-ARCH-003  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Bağlı Belgeler:** LUNA-AI-FMEA-001, LUNA-AI-ARCH-001, ADR-005
-
----
-
-## Yedeklilik Tipi Tanımları
-
-| Kod | Tip | Açıklama |
-|-----|-----|----------|
-| **Simplex** | Tekil | Yedekleme yok; tek bileşen. Arıza doğrudan etki. |
-| **Dual** | Çift | İki özdeş bileşen; biri arızalanınca diğeri devralır. |
-| **Triple (2-of-3)** | Üçlü Oylama | Üç bağımsız kanal; 2'si anlaştığı değer kullanılır (majority voting). |
-| **Functional** | Fonksiyonel | Farklı teknoloji/yöntemle aynı işlevi sağlayan yedek (heterojen). |
-
-## Failover Tipi Tanımları
-
-| Kod | Tip | Açıklama |
-|-----|-----|----------|
-| **Cold Standby** | Soğuk Bekleme | Yedek güçsüz bekler; failover süresi dakika mertebesinde. |
-| **Warm Standby** | Ilık Bekleme | Yedek güçlü ama aktif değil; saniye mertebesinde failover. |
-| **Hot Standby** | Sıcak Bekleme | Yedek sürekli aktif ve senkron; anlık (< 1 s) failover. |
+**Document ID:** LUNA-AI-ARCH-003  
+**Version:** 0.1-draft  
+**Date:** 2026-11-14  
+**Related Documents:** LUNA-AI-FMEA-001, LUNA-AI-ARCH-001, ADR-005
 
 ---
 
-## Yedeklilik Matrisi
+## Redundancy Type Definitions
 
-| Modül | Bileşen | Yedeklilik Tipi | Failover Stratejisi | Tespit Süresi | Recovery Süresi | FMEA RPN Ref |
+| Code | Type | Description |
+|-----|-----|----------|
+| **Simplex** | Single | No backup; single component. Failure has immediate impact. |
+| **Dual** | Dual | Two identical components; one takes over when the other fails. |
+| **Triple (2-of-3)** | Triple Voting | Three independent channels; the value agreed by 2 is used (majority voting). |
+| **Functional** | Functional | Backup that provides the same function via a different technology/method (heterogeneous). |
+
+## Failover Type Definitions
+
+| Code | Type | Description |
+|-----|-----|----------|
+| **Cold Standby** | Cold Standby | Backup waits unpowered; failover time on the order of minutes. |
+| **Warm Standby** | Warm Standby | Backup is powered but not active; failover on the order of seconds. |
+| **Hot Standby** | Hot Standby | Backup is continuously active and synchronised; instant (< 1 s) failover. |
+
+---
+
+## Redundancy Matrix
+
+| Module | Component | Redundancy Type | Failover Strategy | Detection Time | Recovery Time | FMEA RPN Ref |
 |-------|---------|-----------------|---------------------|---------------|-----------------|--------------|
-| **Güç Yönetimi** | Güç Dağıtım Ünitesi (PDU) | Dual | Hot Standby — ikincil PDU sürekli izler; birincil kayıpsa anlık devir | < 500 ms (donanım latch) | < 1 s (otomatik) | FMEA-RPN-PWR-003 (RPN: 10) |
-| **Güç Yönetimi** | Batarya Sistemi | Dual (iki bağımsız modül) | Warm Standby — ikincil modül şarjlı bekler; birincil arızalanınca bağlanır | < 2 s (SoC monitörü) | < 5 s (güç aktarımı) | FMEA-RPN-PWR-001 (RPN: 30) |
-| **Uçuş Bilgisayarı** | Ana Bilgisayar (OBC) | Dual | Warm Standby — yedek OBC senkron bellek güncellenir; birincil donunca watchdog tetikler | < 500 ms (FDIR watchdog) | < 10 s (boot + durum restorasyon) | FMEA-RPN-FDIR-001 (RPN: 5) |
-| **Navigasyon** | IMU / Navigasyon Sensörü | Functional (IMU birincil + visual odometry/EKF yedek) | Warm Standby — IMU sağlıklıysa tam füzyon; arızalanınca kamera+odometry-only moda geçiş | < 500 ms (EKF kovaryans izleme) | < 5 s (mod geçişi) | FMEA-RPN-NAV-001 (RPN: 24) |
-| **Güvenlik** | FDIR Watchdog | Dual (yazılım FDIR + donanım watchdog) | Hot Standby — donanım watchdog FDIR'dan bağımsız çalışır; FDIR donunca donanım reset atar | < 25 ms (donanım kick süresi) | < 30 s (boot + CAUTION'dan başlama) | FMEA-RPN-FDIR-001 (RPN: 5) |
-| **Haberleşme** | Alıcı-Verici (Transceiver) | Dual (yüksek kazançlı yönlü + omni UHF) | Cold Standby — birincil yön kaybında omni UHF devreye girer (düşük bant genişliği ama link sürdürür) | < 30 s (link timeout izleme) | < 60 s (omni UHF bağlantı kurma) | FMEA-RPN-COM-001 (N/A — SPF listesi) |
-| **Termal Yönetim** | Isıtıcı Kontrolcüsü | Dual (birincil kontrolcü + donanım fallback devresi) | Warm Standby — birincil kontrolcü donunca FDIR doğrudan donanım fallback devresini tetikler | < 5 s (termal heartbeat timeout) | < 2 s (fallback devre aktivasyonu) | FMEA-RPN-THM-001 (RPN: 20) |
-| **Hareket Kontrolü** | Motor Sürücüleri | Functional (4+ tekerlekli diferansiyel sürüş; tek tekerlek kaybı toleranslı) | Degraded Mode — arızalı tekerlek izole edilir; kalan tekerleklerle asimetrik sürüş | < 500 ms (akım sensörü anomali tespiti) | < 2 s (sürücü izolasyon komutu) | FMEA-RPN-MOT-001 (RPN: 18) |
+| **Power Management** | Power Distribution Unit (PDU) | Dual | Hot Standby — secondary PDU monitors continuously; instant transfer if primary is lost | < 500 ms (hardware latch) | < 1 s (automatic) | FMEA-RPN-PWR-003 (RPN: 10) |
+| **Power Management** | Battery System | Dual (two independent modules) | Warm Standby — secondary module waits charged; connects when primary fails | < 2 s (SoC monitor) | < 5 s (power transfer) | FMEA-RPN-PWR-001 (RPN: 30) |
+| **Flight Computer** | Main Computer (OBC) | Dual | Warm Standby — backup OBC gets synchronous memory updates; watchdog triggers when primary hangs | < 500 ms (FDIR watchdog) | < 10 s (boot + state restoration) | FMEA-RPN-FDIR-001 (RPN: 5) |
+| **Navigation** | IMU / Navigation Sensor | Functional (IMU primary + visual odometry/EKF backup) | Warm Standby — full fusion when IMU healthy; switches to camera+odometry-only mode on failure | < 500 ms (EKF covariance monitoring) | < 5 s (mode transition) | FMEA-RPN-NAV-001 (RPN: 24) |
+| **Safety** | FDIR Watchdog | Dual (software FDIR + hardware watchdog) | Hot Standby — hardware watchdog operates independently of FDIR; hardware reset fires when FDIR hangs | < 25 ms (hardware kick period) | < 30 s (boot + start from CAUTION) | FMEA-RPN-FDIR-001 (RPN: 5) |
+| **Communication** | Transceiver | Dual (high-gain directional + omni UHF) | Cold Standby — omni UHF activates on primary pointing loss (low bandwidth but maintains link) | < 30 s (link timeout monitoring) | < 60 s (omni UHF link establishment) | FMEA-RPN-COM-001 (N/A — SPF list) |
+| **Thermal Management** | Heater Controller | Dual (primary controller + hardware fallback circuit) | Warm Standby — FDIR directly triggers hardware fallback circuit when primary controller hangs | < 5 s (thermal heartbeat timeout) | < 2 s (fallback circuit activation) | FMEA-RPN-THM-001 (RPN: 20) |
+| **Motion Control** | Motor Drivers | Functional (4+ wheel differential drive; tolerates single wheel loss) | Degraded Mode — faulty wheel isolated; asymmetric drive with remaining wheels | < 500 ms (current sensor anomaly detection) | < 2 s (driver isolation command) | FMEA-RPN-MOT-001 (RPN: 18) |
 
 ---
 
-## 1. Single-Point Failure (Tekil Arıza Noktası) Listesi
+## 1. Single-Point Failure List
 
-Simplex tasarım veya yüksek RPN'li bileşenler; mevcut mimaride arızalanınca derhal görev kesintisine yol açar:
+Simplex design or high-RPN components; failure in current architecture immediately causes mission interruption:
 
-| # | Bileşen | Neden SPF | FMEA RPN | Mevcut Risk |
+| # | Component | Why SPF | FMEA RPN | Current Risk |
 |---|---------|-----------|----------|-------------|
-| SPF-001 | Güneş Paneli Mekanik Açılım | Servo sıkışmasında şarj olmaz; yazılımsal yedek yok (mekanik sistem) | RPN: 16 | Görev kaybı (enerji üretimi sıfıra düşer) |
-| SPF-002 | Batarya Ana Paketi (mevcut tek modül tasarımında) | Toplam güç kaybı; araç tamamen devre dışı | RPN: 30 | **Araç kaybı** |
-| SPF-003 | FDIR Durum Makinesi Mantığı | Yanlış durum geçişi veya FDIR freeze → güvenlik kararları yapılamaz | RPN: 12–30 | Araç kaybı riski |
-| SPF-004 | IMU (Birincil navigasyon; visual odometry henüz entegre değilse) | Navigasyon tamamen kör; araç hareket edemez | RPN: 24 | Görev kaybı / araç takılı kalır |
-| SPF-005 | Yük Yönetim Devresi (Load Switch) | SURVIVAL modunda yüksek güç kesim komutu iletilemez; SoC hızla düşer | RPN: 10 | Araç kaybı (enerji tükenme) |
+| SPF-001 | Solar Panel Mechanical Deployment | No charging if servo stalls; no software backup (mechanical system) | RPN: 16 | Mission loss (energy generation drops to zero) |
+| SPF-002 | Battery Main Pack (in current single-module design) | Total power loss; vehicle completely disabled | RPN: 30 | **Vehicle loss** |
+| SPF-003 | FDIR State Machine Logic | Wrong state transition or FDIR freeze → safety decisions cannot be made | RPN: 12–30 | Vehicle loss risk |
+| SPF-004 | IMU (Primary navigation; if visual odometry not yet integrated) | Navigation completely blind; vehicle cannot move | RPN: 24 | Mission loss / vehicle stranded |
+| SPF-005 | Load Management Circuit (Load Switch) | High-power cut command cannot be transmitted in SURVIVAL mode; SoC drops rapidly | RPN: 10 | Vehicle loss (energy depletion) |
 
 ---
 
-## 2. Önerilen Aksiyonlar
+## 2. Recommended Actions
 
-| # | Hedef SPF / Bileşen | Öneri | Öncelik |
+| # | Target SPF / Component | Recommendation | Priority |
 |---|---------------------|-------|---------|
-| ACT-001 | Batarya Sistemi (SPF-002) | İki bağımsız batarya modülü ekle (paralel veya bağımsız devre); mevcut matristeki Dual tasarımını onaya al ve kütleye göre boyutlandır | P-CRIT |
-| ACT-002 | Haberleşme Alıcı-Vericisi | Birincil yüksek kazançlı anten arızasında UHF omni yedek bağlantıyı HIL testleriyle doğrula | P-HIGH |
-| ACT-003 | IMU (SPF-004) | Visual odometry / kamera-tabanlı odometry fonksiyonel yedek olarak P2'de entegre et; EKF'e ikinci kaynak olarak bağla | P-HIGH |
-| ACT-004 | Yük Yönetim Devresi (SPF-005) | Latching relay donanım kesici + yazılım yolundan bağımsız donanım yolunu formal olarak doğrula; FMEA RPN güncellemesi yap | P-HIGH |
-| ACT-005 | Güneş Paneli Açılımı (SPF-001) | Yay destekli fail-open mekanizması mevcut; ek eylem: açılım başarısını fırlatma sonrası kontrol protokolüne ekle ve sensörle doğrula | P-MED |
-| ACT-006 | OBC Çift Bilgisayar | Warm standby OBC için bellek senkronizasyon protokolü tasarla; failover süresi < 10 s kabul kriterini SIL'de doğrula | P-MED |
+| ACT-001 | Battery System (SPF-002) | Add two independent battery modules (parallel or separate circuit); approve Dual design in current matrix and size by mass | P-CRIT |
+| ACT-002 | Communication Transceiver | Validate UHF omni backup link on primary high-gain antenna failure through HIL tests | P-HIGH |
+| ACT-003 | IMU (SPF-004) | Integrate visual odometry / camera-based odometry as functional backup in P2; connect as second source to EKF | P-HIGH |
+| ACT-004 | Load Management Circuit (SPF-005) | Formally verify latching relay hardware switch + hardware path independent from software path; update FMEA RPN | P-HIGH |
+| ACT-005 | Solar Panel Deployment (SPF-001) | Spring-assisted fail-open mechanism present; additional action: add deployment success to post-launch check protocol and verify with sensor | P-MED |
+| ACT-006 | OBC Dual Computer | Design memory synchronisation protocol for warm standby OBC; validate failover time < 10 s acceptance criterion in SIL | P-MED |
 
 ---
 
-## 3. Araç Kütlesi / Hacim Kısıtları Bilinmeden Uygulanamayan Yedeklilikler (TBD)
+## 3. Redundancies Not Implementable Without Vehicle Mass/Volume Constraints (TBD)
 
-Aşağıdaki yedeklilik kararları §10 araç verisi (kütle bütçesi, hacim zarfı, güç bütçesi) gelene kadar uygulanamaz. `config/tbd_register.md`'e eklendi.
+The following redundancy decisions cannot be implemented until §10 vehicle data (mass budget, volume envelope, power budget) arrives. Added to `config/tbd_register.md`.
 
-| TBD ID | Yedeklilik | Neden TBD |
+| TBD ID | Redundancy | Why TBD |
 |--------|------------|-----------|
-| TBD-RED-001 | İkinci IMU modülü ekleme | IMU kütlesi + hacmi araç bütçesiyle kısıtlı; dual IMU veya ekstra kamera seçimi §10 sonrası belirlenecek |
-| TBD-RED-002 | Üçlü OBC (Triple Voting) | Her ek OBC ~TBD kg; araç kütle bütçesi bilinmeden triple feasibility değerlendirilemez |
-| TBD-RED-003 | İkinci batarya modülü boyutlandırması (Wh) | Batarya kapasitesi (TBD-BAT-001) ve kimyası (TBD-BAT-002) belirlenene kadar dual batarya hacim planlaması yapılamaz |
-| TBD-RED-004 | UHF omni anten boyutu ve frekans bandı | Araç yapısındaki anten montaj hacmi (§10 yapı alt sistemi) ve onaylı frekans planı (TBD-COM-001) bilinmeden anten seçimi netleşmez |
-| TBD-RED-005 | Motor sürücü redundancy seviyesi (Dual yerine Triple) | Motor sayısı ve araç tahrik mimarisi (§10 hareket alt sistemi) onaylanmadan ek sürücü ekleme değerlendirilemez |
-| TBD-RED-006 | Termal fallback ısıtıcı güç kapasitesi (W) | Termal kütle (TBD-THM-001) ve yalıtım konfigürasyonu bilinmeden fallback ısıtıcı boyutlandırması yapılamaz |
-| TBD-RED-007 | Yedek güneş paneli veya alternatif enerji kaynağı | Araç kütlesi ve panel gerimi (TBD-SOL-001) belirlenmeden ek panel ekleme fizibilite değerlendirilemez |
-| TBD-RED-008 | PDU yedeklilik detayı (güç hattı yönlendirme) | Araç güç dağıtım topolojisi (kablo harnesi) §10 araç mühendisliğiyle belirlenir |
+| TBD-RED-001 | Adding second IMU module | IMU mass + volume constrained by vehicle budget; dual IMU or extra camera selection to be determined after §10 |
+| TBD-RED-002 | Triple OBC (Triple Voting) | Each additional OBC ~TBD kg; triple feasibility cannot be evaluated without vehicle mass budget |
+| TBD-RED-003 | Second battery module sizing (Wh) | Dual battery volume planning not possible until battery capacity (TBD-BAT-001) and chemistry (TBD-BAT-002) are confirmed |
+| TBD-RED-004 | UHF omni antenna size and frequency band | Antenna selection unclear until antenna mounting volume in vehicle structure (§10 structure subsystem) and approved frequency plan (TBD-COM-001) are known |
+| TBD-RED-005 | Motor driver redundancy level (Triple instead of Dual) | Adding extra driver cannot be evaluated until motor count and vehicle drive architecture (§10 mobility subsystem) are approved |
+| TBD-RED-006 | Thermal fallback heater power capacity (W) | Fallback heater sizing not possible until thermal mass (TBD-THM-001) and insulation configuration are known |
+| TBD-RED-007 | Backup solar panel or alternative energy source | Additional panel feasibility cannot be evaluated until vehicle mass and panel output (TBD-SOL-001) are confirmed |
+| TBD-RED-008 | PDU redundancy detail (power line routing) | Vehicle power distribution topology (cable harness) determined with §10 vehicle engineering |
 
 ---
 
-## Revizyon Geçmişi
+## Revision History
 
-| Versiyon | Tarih | Değişiklik |
+| Version | Date | Change |
 |----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — Agent C, C1 görevi |
+| 0.1 | 2026-11-14 | First draft — Agent C, C1 task |

@@ -1,271 +1,271 @@
 # LUNA-AI Concept of Operations (CONOPS)
 
-**Belge ID:** LUNA-AI-CONOPS-001  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Durum:** Taslak — Donanım parametreleri TBD
+**Document ID:** LUNA-AI-CONOPS-001  
+**Version:** 0.1-draft  
+**Date:** 2026-11-14  
+**Status:** Draft — Hardware parameters TBD
 
 ---
 
-## 1. Görev Tanımı ve Hedefler
+## 1. Mission Definition and Objectives
 
-LUNA-AI, Ay güneyindeki PSR (Permanently Shadowed Region / Kalıcı Gölge Bölgesi) içeren kraterleri bilimsel ve operasyonel verilerle değerlendiren otonom bir Ay yüzey görev sistemidir.
+LUNA-AI is an autonomous lunar surface mission system that evaluates craters containing PSRs (Permanently Shadowed Regions) near the lunar south pole using scientific and operational data.
 
-### 1.1 Birincil Hedefler
+### 1.1 Primary Objectives
 
-- Ay güney kutbu yakınındaki hedef kraterlere güvenli erişim sağlamak
-- PSR içindeki buz/kaynak bölgelerini in-situ sensörlerle haritalandırmak
-- Her operasyon gününü yeterli enerji rezerviyle safe haven'a dönerek tamamlamak
+- Provide safe access to target craters near the lunar south pole
+- Map ice/resource regions inside PSRs with in-situ sensors
+- Complete each operation day by returning to safe haven with sufficient energy reserve
 
-### 1.2 Kapsam Dışı
+### 1.2 Out of Scope
 
-- Ay dışı (transit / cruise) faz bu CONOPS kapsamında değildir
-- Iniş ve yüzey transferi aşamaları ayrı bir CONOPS ile ele alınacaktır
+- Trans-lunar (transit / cruise) phase is not covered by this CONOPS
+- Landing and surface transfer phases will be addressed in a separate CONOPS
 
 ---
 
-## 2. Sistem Segmentleri
+## 2. System Segments
 
-| Segment | Alt Bileşenler | Birincil Sorumluluk |
+| Segment | Sub-Components | Primary Responsibility |
 |---------|----------------|---------------------|
-| **Ground Segment** | Bilimsel Analiz, Görev Tasarımı, Operatör Arayüzü | Uzun vadeli görev planlaması, bilimsel önceliklendirme, telemetri analizi |
-| **Flight Segment** | Navigasyon, FDIR, Hareket Kontrolü, Güç Yönetimi, Termal, Haberleşme | Gerçek zamanlı operasyon, güvenlik, otonom karar |
-| **Simulation & Validation** | Dijital İkiz, Senaryo Test Ortamı | Görev öncesi doğrulama, risk analizi, eğitim |
+| **Ground Segment** | Scientific Analysis, Mission Design, Operator Interface | Long-term mission planning, scientific prioritisation, telemetry analysis |
+| **Flight Segment** | Navigation, FDIR, Motion Control, Power Management, Thermal, Communication | Real-time operation, safety, autonomous decision-making |
+| **Simulation & Validation** | Digital Twin, Scenario Test Environment | Pre-mission verification, risk analysis, training |
 
 ---
 
-## 3. Nominal Görev Günü
+## 3. Nominal Mission Day
 
-Ay güneyinde bir güneş dönemi yaklaşık **14 Dünya günüdür**. Araç, her çalışma döngüsünde aşağıdaki adımları izler.
+One solar period at the lunar south pole is approximately **14 Earth days**. The vehicle follows the steps below in each operation cycle.
 
-> **Varsayım:** Araç gece boyunca safe haven'da beklemiş, bataryalar tam şarjlı, termal sistem nominal aralıkta.
+> **Assumption:** Vehicle has been waiting at safe haven overnight, batteries fully charged, thermal system within nominal range.
 
-### Adım 1 — Sabah Sistem Kontrolü (Sorumlu: FDIR + Güç Yönetimi)
+### Step 1 — Morning System Check (Owner: FDIR + Power Management)
 
-| Alt-adım | Açıklama | Çıktı |
+| Sub-step | Description | Output |
 |----------|----------|-------|
-| 1.1 | FDIR boot-on-wakeup testi: tüm subsistemlerden heartbeat doğrulama | Go / No-Go |
-| 1.2 | Güç Yönetimi: batarya SoC ölçümü, açılış enerjisi hesabı | energy_state mesajı |
-| 1.3 | Termal Yönetimi: kritik bileşen sıcaklıkları kontrol | thermal_state mesajı |
-| 1.4 | Navigasyon: IMU başlatma, star-tracker / Sun-sensor kalibrasyonu | vehicle_pose ilk fix |
-| 1.5 | Haberleşme: yer ile uplink/downlink link testi | link_status |
+| 1.1 | FDIR boot-on-wakeup test: heartbeat verification from all subsystems | Go / No-Go |
+| 1.2 | Power Management: battery SoC measurement, opening energy calculation | energy_state message |
+| 1.3 | Thermal Management: check critical component temperatures | thermal_state message |
+| 1.4 | Navigation: IMU initialisation, star-tracker / Sun-sensor calibration | vehicle_pose initial fix |
+| 1.5 | Communication: uplink/downlink link test with ground | link_status |
 
-**Çıkış koşulu:** Tüm subsistemler nominal → Görev Planlayıcıya Go ver.
+**Exit condition:** All subsystems nominal → Give Go to Mission Planner.
 
-### Adım 2 — Güneş Paneli Açılımı ve Şarj (Sorumlu: Güç Yönetimi)
+### Step 2 — Solar Panel Deployment and Charging (Owner: Power Management)
 
-| Alt-adım | Açıklama | Sorumlu Modül |
+| Sub-step | Description | Responsible Module |
 |----------|----------|---------------|
-| 2.1 | Panel yönlendirme algoritması güneş açısını hesapla | Güç Yönetimi |
-| 2.2 | Panel servo komutu gönder | Hareket Kontrolü |
-| 2.3 | Şarj akımı doğrulama: **TBD:** minimum panel verimliliği eşiği | Güç Yönetimi |
-| 2.4 | Şarj güncelleme oranı: her **TBD:** saniyede energy_state yayımla | Güç Yönetimi → Mission Planner |
+| 2.1 | Panel orientation algorithm calculates solar angle | Power Management |
+| 2.2 | Send panel servo command | Motion Control |
+| 2.3 | Charging current verification: **TBD:** minimum panel efficiency threshold | Power Management |
+| 2.4 | Charge update rate: publish energy_state every **TBD:** seconds | Power Management → Mission Planner |
 
-### Adım 3 — Günlük Plan Alımı (Sorumlu: Haberleşme + Görev Planlayıcı)
+### Step 3 — Daily Plan Reception (Owner: Communication + Mission Planner)
 
-| Alt-adım | Açıklama |
+| Sub-step | Description |
 |----------|----------|
-| 3.1 | Uplink penceresi açılana kadar bekle (link penceresi: **TBD:** başlangıç/bitiş) |
-| 3.2 | Yer segmentinden günlük görev paketini al (ICD-005 formatında) |
-| 3.3 | Görev Planlayıcı paketi doğrula: parametreler, enerji bütçesi tutarlılığı |
-| 3.4 | Doğrulama başarılıysa planı aktif et; hata varsa önceki güvenli planı koru |
+| 3.1 | Wait for uplink window to open (link window: **TBD:** start/end) |
+| 3.2 | Receive daily mission package from ground segment (ICD-005 format) |
+| 3.3 | Mission Planner validates package: parameters, energy budget consistency |
+| 3.4 | If validation successful, activate plan; if error, retain previous safe plan |
 
-### Adım 4 — Keşif Operasyonu (Sorumlu: Navigasyon + Yerel Planlayıcı + Hareket Kontrolü)
+### Step 4 — Exploration Operation (Owner: Navigation + Local Planner + Motion Control)
 
-| Alt-adım | Açıklama |
+| Sub-step | Description |
 |----------|----------|
-| 4.1 | Görev Planlayıcı global rotayı yayımla (ICD-001/002/003 üzerinden durum güncelleme) |
-| 4.2 | Yerel Planlayıcı engel haritasını güncelle, anlık yol üret |
-| 4.3 | Hareket Kontrolü waypoint'lere doğru hareketi icra et |
-| 4.4 | Her **TBD:** saniyede FDIR subsistem sağlık kontrolü yap |
-| 4.5 | Bilimsel sensörler: krater kenarına yaklaşınca spektroskopi/kamera başlat |
-| 4.6 | Telemetri: her **TBD:** saniyede yer segmentine downlink (ICD-006) |
+| 4.1 | Mission Planner publishes global route (state updates via ICD-001/002/003) |
+| 4.2 | Local Planner updates obstacle map, generates instantaneous path |
+| 4.3 | Motion Control executes movement toward waypoints |
+| 4.4 | FDIR subsystem health check every **TBD:** seconds |
+| 4.5 | Scientific sensors: start spectroscopy/camera when approaching crater edge |
+| 4.6 | Telemetry: downlink to ground segment every **TBD:** seconds (ICD-006) |
 
-**Sürekli kontrol:** Güç Yönetimi dönüş enerjisi rezervini izle → %15 SoC altına düşme ihtimali varsa Görev Planlayıcıya CAUTION yayımla.
+**Continuous check:** Power Management monitors return energy reserve → publishes CAUTION to Mission Planner if SoC risks dropping below 15%.
 
-### Adım 5 — Öğleden Sonra Enerjiy Değerlendirmesi (Sorumlu: Görev Planlayıcı)
+### Step 5 — Afternoon Energy Assessment (Owner: Mission Planner)
 
-| Alt-adım | Açıklama |
+| Sub-step | Description |
 |----------|----------|
-| 5.1 | Mevcut SoC ve öngörülen tüketim ile dönüş enerji hesabı yap |
-| 5.2 | Hesaplanan dönüş marjı < %25 SoC → operasyon süresini kıs, dönüş hazırlığına geç |
-| 5.3 | Güneş açısı düşüyorsa panel yeniden yönlendir |
-| 5.4 | Yer segmentine öğle durum raporu gönder |
+| 5.1 | Calculate return energy with current SoC and projected consumption |
+| 5.2 | Calculated return margin < 25% SoC → shorten operation time, prepare for return |
+| 5.3 | If solar angle declining, re-orient panel |
+| 5.4 | Send midday status report to ground segment |
 
-### Adım 6 — Safe Haven Dönüş Manevrası (Sorumlu: Navigasyon + Görev Planlayıcı)
+### Step 6 — Safe Haven Return Manoeuvre (Owner: Navigation + Mission Planner)
 
-| Alt-adım | Açıklama |
+| Sub-step | Description |
 |----------|----------|
-| 6.1 | Görev Planlayıcı dönüş tetikleyicisine ulaşınca (enerji, zaman veya yer komutu) RETURN_REQUIRED durumuna geç |
-| 6.2 | Navigasyon safe haven koordinatlarına A* rota hesapla |
-| 6.3 | Hareket Kontrolü dönüş rotasını icra et |
-| 6.4 | Her güvenli konuma ulaşımda checkpoint kaydet (acil durumda fallback noktası) |
-| 6.5 | Safe haven'a varışta sistem durumunu doğrula, yer segmentine nihai günlük rapor gönder |
+| 6.1 | Mission Planner transitions to RETURN_REQUIRED when return trigger is reached (energy, time or ground command) |
+| 6.2 | Navigation calculates A* route to safe haven coordinates |
+| 6.3 | Motion Control executes return route |
+| 6.4 | Record checkpoint at each safe location reached (fallback point for emergencies) |
+| 6.5 | At safe haven arrival, verify system state, send final daily report to ground segment |
 
-### Adım 7 — Gece Hazırlığı (Sorumlu: Termal + Güç Yönetimi)
+### Step 7 — Night Preparation (Owner: Thermal + Power Management)
 
-| Alt-adım | Açıklama |
+| Sub-step | Description |
 |----------|----------|
-| 7.1 | Panel güneş izlemesini kapat |
-| 7.2 | Termal Yönetimi: ısıtıcıları aktive et, kritik bileşenleri minimum sıcaklık üzerinde tut |
-| 7.3 | Güç Yönetimi: gece hayatta kalma güç moduna geç, devre dışı bırakılabilir yükleri kes |
-| 7.4 | FDIR gece izleme modunu başlat (düşük frekanslı heartbeat) |
+| 7.1 | Shut down panel solar tracking |
+| 7.2 | Thermal Management: activate heaters, keep critical components above minimum temperature |
+| 7.3 | Power Management: switch to night survival power mode, shed deferrable loads |
+| 7.4 | FDIR initiates night monitoring mode (low-frequency heartbeat) |
 
 ---
 
-## 4. PSR Giriş Senaryosu
+## 4. PSR Entry Scenario
 
-PSR operasyonu en yüksek risk taşıyan görev fazıdır. Aşağıdaki akış, güvenlik önce prensibinin uygulandığı koşullu geçiş mantığını gösterir.
+PSR operations carry the highest mission risk. The flow below shows the conditional transition logic applying the safety-first principle.
 
-### 4.1 Giriş Öncesi Koşul Doğrulama
+### 4.1 Pre-Entry Condition Verification
 
-| Koşul | Sorumlu Modül | Kabul Eşiği |
+| Condition | Responsible Module | Acceptance Threshold |
 |-------|---------------|-------------|
-| Batarya SoC | Güç Yönetimi | **TBD:** minimum % SoC (tam dönüş + güvenlik marjı karşılanmalı) |
-| Navigasyon doğruluğu | Navigasyon | <0.5 m RMS konum hatası |
-| Yer iletişimi | Haberleşme | Son başarılı uplink < **TBD:** dakika önce |
-| Termal bütçe | Termal Yönetimi | Tüm kritik bileşenler nominal aralıkta |
-| Hava durumu (lokal) | Navigasyon | Toz fırtınası tespiti yok |
-| FDIR durumu | FDIR | NOMINAL veya CAUTION (RETURN_REQUIRED'da giriş yok) |
+| Battery SoC | Power Management | **TBD:** minimum % SoC (full return + safety margin must be met) |
+| Navigation accuracy | Navigation | < 0.5 m RMS position error |
+| Ground communication | Communication | Last successful uplink < **TBD:** minutes ago |
+| Thermal budget | Thermal Management | All critical components within nominal range |
+| Local conditions | Navigation | No dust storm detected |
+| FDIR state | FDIR | NOMINAL or CAUTION (no entry in RETURN_REQUIRED) |
 
-**Tüm koşullar sağlanmazsa PSR girişi iptal edilir ve araç bekleme moduna geçer.**
+**If all conditions are not met, PSR entry is cancelled and the vehicle enters standby mode.**
 
-### 4.2 PSR İçi Operasyon
+### 4.2 In-PSR Operations
 
-| Adım | Açıklama | Kritik Parametre |
+| Step | Description | Critical Parameter |
 |------|----------|-----------------|
-| 4.2.1 | PSR sınırını geç; FDIR PSR moduna geç (artırılmış izleme frekansı) | — |
-| 4.2.2 | Aktif aydınlatma başlat (LED veya spotlight) | Güç tüketimi artışını enerji bütçesine ekle |
-| 4.2.3 | Yerel Planlayıcı görüş kısıtlı navigasyon moduna geç | LiDAR/stereo ağırlığını artır |
-| 4.2.4 | Her **TBD:** saniyede enerji tüketimi ve batarya durumunu değerlendir | Dönüş tetikleyici SoC eşiği |
-| 4.2.5 | Bilimsel numune/ölçüm al | spektroskopi, termal ölçüm, fotoğraf |
-| 4.2.6 | Haberleşme kaybı beklenir; otonom karar alma devreye girer | link_timeout = **TBD:** saniye |
+| 4.2.1 | Cross PSR boundary; FDIR transitions to PSR mode (increased monitoring frequency) | — |
+| 4.2.2 | Start active illumination (LED or spotlight) | Add power consumption increase to energy budget |
+| 4.2.3 | Local Planner transitions to limited-visibility navigation mode | Increase LiDAR/stereo weight |
+| 4.2.4 | Evaluate energy consumption and battery state every **TBD:** seconds | Return trigger SoC threshold |
+| 4.2.5 | Collect scientific samples/measurements | spectroscopy, thermal measurement, photography |
+| 4.2.6 | Communication loss expected; autonomous decision-making engages | link_timeout = **TBD:** seconds |
 
-### 4.3 Dönüş Kararı
+### 4.3 Return Decision
 
-Aşağıdaki koşullardan **herhangi biri** tetiklendiğinde araç PSR'dan çıkışa başlar:
+When **any** of the following conditions is triggered, the vehicle begins exiting the PSR:
 
-| Tetikleyici | Eşik | Öncelik |
+| Trigger | Threshold | Priority |
 |------------|------|---------|
-| Batarya SoC dönüş eşiği | **TBD:** % SoC | P1 (en yüksek) |
-| Planlanan PSR görev süresi doldu | **TBD:** dakika | P2 |
-| Yer "PSR çıkış" komutu alındı | — | P2 |
-| Termal kritik uyarı | **TBD:** °C | P1 |
-| Navigasyon lokalizasyon kaybı | Konum belirsizliği > **TBD:** m | P1 |
+| Battery SoC return threshold | **TBD:** % SoC | P1 (highest) |
+| Planned PSR mission duration elapsed | **TBD:** minutes | P2 |
+| Ground "PSR exit" command received | — | P2 |
+| Thermal critical warning | **TBD:** °C | P1 |
+| Navigation localisation loss | Position uncertainty > **TBD:** m | P1 |
 
-### 4.4 Acil Dönüş
+### 4.4 Emergency Return
 
-P1 tetikleyici karşılandığında araç derhal **son bilinen güvenli waypoint**'e döner:
+When a P1 trigger is met, the vehicle immediately returns to the **last known safe waypoint**:
 
-1. FDIR SURVIVAL durumuna geçer
-2. Tüm bilimsel operasyonlar dondurulur
-3. Hareket Kontrolü acil dönüş rotasını hesaplar (mevcut harita + son bilinen pozisyon)
-4. Güç Yönetimi hayatta kalma modunu aktive eder (yalnızca navigasyon + FDIR + haberleşme beslemede kalır)
-5. PSR dışına çıkıldığında yer segmentine acil durum paketi gönderilir
+1. FDIR transitions to SURVIVAL state
+2. All scientific operations frozen
+3. Motion Control calculates emergency return route (current map + last known position)
+4. Power Management activates survival mode (only navigation + FDIR + communication remain powered)
+5. When outside PSR, an emergency status packet is sent to ground segment
 
 ---
 
-## 5. Kriz Senaryoları
+## 5. Crisis Scenarios
 
-### Senaryo A — Haberleşme Kaybı
+### Scenario A — Communication Loss
 
-**Tetikleyici:** Downlink veya uplink kesintisi > **TBD:** dakika (link_timeout)
+**Trigger:** Downlink or uplink interruption > **TBD:** minutes (link_timeout)
 
-| Adım | Araç Kararı | Yer Bildirimi |
+| Step | Vehicle Decision | Ground Notification |
 |------|-------------|---------------|
-| A.1 | Otonom mod aktif: görev planı yerel kopyadan devam | Yer, link kaybını anlık bildirir |
-| A.2 | FDIR durum makinesi CAUTION → iç ses mesajı (PSR içinde değilse) | — |
-| A.3 | Haberleşme modülü yeniden bağlantı girişimi (her **TBD:** saniyede retry) | — |
-| A.4 | link_timeout_extended (> **TBD:** dakika) → RETURN_REQUIRED | Yer segmenti DF anteni ile konum arar |
-| A.5 | Safe haven'a varış → sistem yeniden bağlantı bekler, düşük güç modunda bekle | Yer segmenti araçtan ping alınca bağlantıyı yeniden kurar |
+| A.1 | Autonomous mode active: mission plan continues from local copy | Ground immediately notified of link loss |
+| A.2 | FDIR state machine CAUTION → internal silent message (if not inside PSR) | — |
+| A.3 | Communication module retries reconnection (retry every **TBD:** seconds) | — |
+| A.4 | link_timeout_extended (> **TBD:** minutes) → RETURN_REQUIRED | Ground segment searches for position with DF antenna |
+| A.5 | On safe haven arrival → system waits for reconnection in low-power mode | Ground segment re-establishes link when ping received from vehicle |
 
-**Kurallar:** Link yokken araç yeni risk almaz; sadece mevcut planı tamamlar veya döner.
+**Rules:** Without link the vehicle takes no new risks; only completes current plan or returns.
 
 ---
 
-### Senaryo B — Enerji Kritik (%15 SoC Altı)
+### Scenario B — Energy Critical (Below 15% SoC)
 
-**Tetikleyici:** SoC < %15 veya öngörülen dönüş enerjisi yetersiz
+**Trigger:** SoC < 15% or projected return energy insufficient
 
-| Adım | Araç Kararı | Yer Bildirimi |
+| Step | Vehicle Decision | Ground Notification |
 |------|-------------|---------------|
-| B.1 | FDIR CAUTION → tüm bilimsel yükler ve opsiyonel subsistemler kesilir | Telemetride CAUTION flag |
-| B.2 | Güç Yönetimi hayatta kalma güç bütçesini hesapla | — |
-| B.3 | SoC < %15 ise RETURN_REQUIRED: safe haven rotasına başla | Kritik enerji uyarısı downlink |
-| B.4 | SoC < %10 ise SURVIVAL: yalnızca navigasyon + FDIR + haberleşme beslemede | Acil enerji paketi gönder |
-| B.5 | Safe haven ulaşımında güneş panelini konumlandır, şarj bekle | Yer segmenti enerji durumunu izler |
+| B.1 | FDIR CAUTION → all scientific loads and optional subsystems shed | CAUTION flag in telemetry |
+| B.2 | Power Management calculates survival power budget | — |
+| B.3 | If SoC < 15%: RETURN_REQUIRED: begin safe haven route | Critical energy warning downlink |
+| B.4 | If SoC < 10%: SURVIVAL: only navigation + FDIR + communication remain powered | Send emergency energy packet |
+| B.5 | On safe haven arrival, position panel, await charge | Ground segment monitors energy state |
 
-**Not:** %15 SoC nominal dönüş marjı; B.3 adımında araç konum ve termal kayıpları da hesaba katar.
+**Note:** 15% SoC is the nominal return margin; at step B.3 the vehicle also accounts for positional and thermal losses.
 
 ---
 
-### Senaryo C — Lokalizasyon Kaybı
+### Scenario C — Localisation Loss
 
-**Tetikleyici:** Navigasyon konum belirsizliği > **TBD:** m RMS veya EKF (Extended Kalman Filter) uyumsuz
+**Trigger:** Navigation position uncertainty > **TBD:** m RMS or EKF (Extended Kalman Filter) inconsistent
 
-| Adım | Araç Kararı | Yer Bildirimi |
+| Step | Vehicle Decision | Ground Notification |
 |------|-------------|---------------|
-| C.1 | Hareket Kontrolü dur (position hold / sıfır hız komutu) | FDIR lokalizasyon kaybı uyarısı gönder |
-| C.2 | Navigasyon son bilinen iyi pozisyonu referans al | — |
-| C.3 | Yeniden lokalizasyon girişimi: IMU dead-reckoning + görsel landmark eşleştirme | — |
-| C.4 | **TBD:** sn içinde lokalizasyon geri geldi → CAUTION'dan çık, harekete devam | — |
-| C.5 | Lokalizasyon geri gelmediyse → RETURN_REQUIRED; last-known-good waypoint üzerinden geri dön | Yer segmenti lokalizasyon kaybı bildir |
-| C.6 | Lokalizasyon hiç geri gelmezse → SURVIVAL; radar/kamera yardımıyla dead-reckoning safe haven | Acil önlem aktivasyon bildirimi |
+| C.1 | Motion Control halts (position hold / zero velocity command) | FDIR sends localisation loss warning |
+| C.2 | Navigation references last known good position | — |
+| C.3 | Relocalisation attempt: IMU dead-reckoning + visual landmark matching | — |
+| C.4 | Localisation restored within **TBD:** s → exit CAUTION, resume movement | — |
+| C.5 | If localisation not restored → RETURN_REQUIRED; return via last-known-good waypoint | Ground segment notified of localisation loss |
+| C.6 | If localisation never restored → SURVIVAL; dead-reckoning to safe haven with radar/camera assistance | Emergency measure activation notification |
 
 ---
 
-### Senaryo D — Termal Kritik
+### Scenario D — Thermal Critical
 
-**Tetikleyici:** Herhangi bir izlenen bileşen sıcaklığı makul eşik dışına çıkar
+**Trigger:** Any monitored component temperature exceeds acceptable threshold
 
-| Adım | Araç Kararı | Yer Bildirimi |
+| Step | Vehicle Decision | Ground Notification |
 |------|-------------|---------------|
-| D.1 | FDIR termal uyarısı üretir; Termal Yönetimi devreye girer | CAUTION flag downlink |
-| D.2 | Isıtma/soğutma sistemi aktive et; sıcaklığı **TBD:** saniye içinde nominal aralığa çek | — |
-| D.3 | Termal kritik bölge devam ediyorsa: sıcaklığa katkıda bulunan yükleri kes | — |
-| D.4 | Sıcaklık `max_critical` eşiğini geçerse → RETURN_REQUIRED; güneşe dik yüzeyden uzaklaş | Kritik termal uyarısı gönder |
-| D.5 | Hızlı aşırı ısınma (rate > **TBD:** °C/dak) → SURVIVAL; acil güç kesimi + konuma bak | Acil termal paketi gönder |
+| D.1 | FDIR generates thermal warning; Thermal Management engages | CAUTION flag downlink |
+| D.2 | Activate heating/cooling system; return temperature to nominal range within **TBD:** seconds | — |
+| D.3 | If thermal critical region persists: shed loads contributing to temperature | — |
+| D.4 | If temperature exceeds `max_critical` threshold → RETURN_REQUIRED; move away from Sun-facing surface | Send critical thermal warning |
+| D.5 | Rapid overheating (rate > **TBD:** °C/min) → SURVIVAL; emergency power cut + check position | Send emergency thermal packet |
 
 ---
 
-## 6. Yer-Araç Sınırı
+## 6. Ground-Vehicle Boundary
 
-### 6.1 Komut Tipleri
+### 6.1 Command Types
 
-| Komut Tipi | Açıklama | Öncelik | Araç Üzerine Etkisi |
+| Command Type | Description | Priority | Effect on Vehicle |
 |------------|----------|---------|---------------------|
-| **TC-IMMEDIATE** | Acil durdur, acil dönüş, acil güç kapat | P1 | FDIR bypass ile direkt icra |
-| **TC-CONDITIONAL** | "X koşulu sağlanırsa yap" | P2 | FDIR doğrulaması sonra icra |
-| **TC-PLAN** | Günlük görev paketi yükle | P3 | Görev Planlayıcı doğrular |
-| **TC-PARAM** | Parametre güncelleme (eşik, zaman aşımı) | P3 | Subsistem onayı gerekir |
-| **TC-QUERY** | Telemetri/durum isteği | P4 | Bilgi akışı, eylem yok |
+| **TC-IMMEDIATE** | Emergency stop, emergency return, emergency power off | P1 | Direct execution bypassing FDIR |
+| **TC-CONDITIONAL** | "Do if condition X is met" | P2 | Execute after FDIR validation |
+| **TC-PLAN** | Load daily mission package | P3 | Mission Planner validates |
+| **TC-PARAM** | Parameter update (threshold, timeout) | P3 | Subsystem approval required |
+| **TC-QUERY** | Telemetry/status request | P4 | Information flow, no action |
 
-### 6.2 Link Penceresi
+### 6.2 Link Window
 
-**TBD:** Orbital mekanik simülasyonu tamamlandığında gerçek link pencere zamanları (başlangıç, süre, frekans) eklenecektir. Yüksek kazançlı anten yönelimi de bu analize bağlıdır.
+**TBD:** When orbital mechanics simulation is complete, real link window times (start, duration, frequency) will be added. High-gain antenna orientation is also tied to this analysis.
 
-**Tipik varsayım (yer değiştirilecek):** Günde yaklaşık 2–4 link penceresi, her pencere 15–45 dakika.
+**Typical assumption (to be replaced):** Approximately 2–4 link windows per day, each window 15–45 minutes.
 
-### 6.3 Link Yokken Kurallar
+### 6.3 Rules During No-Link
 
-1. Araç aktif görev planını devam ettirir — yeni risk almaz, PSR girişi yapmaz.
-2. Durum makinesi CAUTION'da kalır; RETURN_REQUIRED'a geçiş kendi tetikleyicileriyle olur.
-3. Otonom karar alma yetkisi tam aktif: Görev Planlayıcı ve FDIR bağımsız çalışır.
-4. Link penceresi açıldığında araç tamponlanmış tüm telemetriyi önce boşaltır, ardından yeni komut alır.
-5. Çakışan komut + otonom karar: **TC-IMMEDIATE** her zaman önce gelir; diğer komutlar FDIR onayından geçer.
+1. Vehicle continues active mission plan — takes no new risks, does not enter PSR.
+2. State machine remains in CAUTION; RETURN_REQUIRED transition occurs via its own triggers.
+3. Autonomous decision authority fully active: Mission Planner and FDIR operate independently.
+4. When link window opens, vehicle first flushes all buffered telemetry, then receives new commands.
+5. Conflicting command + autonomous decision: **TC-IMMEDIATE** always takes precedence; other commands pass FDIR approval.
 
 ---
 
-## 7. Temel Prensipler (Referans)
+## 7. Core Principles (Reference)
 
-| Prensip | Açıklama |
+| Principle | Description |
 |---------|----------|
-| **Güvenlik Önce** | Hiçbir görev hedefi güvenlik durumu gerekliliklerini geçersiz kılamaz |
-| **Yer-Uçuş Ayrımı** | Yer segmenti planlama ve analiz yapar; anlık kararlar uçuş segmentine aittir |
-| **Belirsizlik Görünür** | Tüm tahmin ve hesaplamalar belirsizlik bandıyla yayımlanır |
-| **Simülasyon Doğrulamadan Önce** | Her yeni görev parametresi dijital ikizde test edilmeden uygulanamaz |
-| **Arayüz Tabanlı Modülerlik** | Modüller yalnızca tanımlı ICD mesajları üzerinden haberleşir |
+| **Safety First** | No mission objective can override safety state requirements |
+| **Ground-Flight Separation** | Ground segment performs planning and analysis; instantaneous decisions belong to flight segment |
+| **Uncertainty Visible** | All estimates and calculations are published with uncertainty bands |
+| **Simulation Before Flight** | No new mission parameter may be applied without first testing in the digital twin |
+| **Interface-Based Modularity** | Modules communicate only over defined ICD messages |
 
 ---
 
-*Sonraki adım: Donanım parametreleri (batarya kapasitesi, panel alanı, termal limitler) geldikten sonra tüm TBD alanları güncellenecek ve CONOPS versiyon 1.0 yayımlanacaktır.*
+*Next step: Once hardware parameters (battery capacity, panel area, thermal limits) are received, all TBD fields will be updated and CONOPS version 1.0 will be published.*

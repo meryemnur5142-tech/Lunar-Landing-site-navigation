@@ -1,339 +1,339 @@
 # status: draft
 # owner: Agent C
 # depends_on: [config/tbd_register.md, tests/acceptance_criteria.md, docs/qar/QAR_TABLE.md, docs/adr/FMEA_KRITIK_MODULLER.md, infrastructure/risk_register.md, tests/verification_strategy.md]
-# open_items: [P2/P3 tahmini süreler §10 araç verisi ve Agent D çalışmasının hızına bağlı; TBD kapıları config/tbd_register.md'den izleniyor]
+# open_items: [P2/P3 estimated durations depend on §10 vehicle data and Agent D work rate; TBD gates tracked from config/tbd_register.md]
 
-# LUNA-AI Geliştirme Yol Haritası — P0–P3
+# LUNA-AI Development Roadmap — P0–P3
 
-**Belge ID:** LUNA-AI-ROAD-001  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Bağlı Belgeler:** LUNA-AI-TEST-001 (Doğrulama Stratejisi), tests/acceptance_criteria.md, config/tbd_register.md
-
----
-
-## Yol Haritası Özeti
-
-```
-Ön Aşama  ✅ TAMAMLANDI
-P0        ✅ TAMAMLANDI (kısmen — lunar-navigator submodule ⏳)
-P1        🔄 DEVAM EDİYOR — Agent B/C çıktıları teslim edildi; ODE/SPICE entegrasyon ⏳
-P2        🔄 DEVAM EDİYOR — Agent D (feature/faz2-otonomi branch'inde)
-P3        🔲 BAŞLAMADI — §10 araç verisi bekleniyor
-```
-
-**Önemli Not:** P2 → P3 kapısı 6 kritik TBD'nin kapanmasını zorunlu kılar. Bu TBD'ler §10 araç mühendisliği verisi olmadan kapanamaz.
+**Document ID:** LUNA-AI-ROAD-001  
+**Version:** 0.1-draft  
+**Date:** 2026-11-14  
+**Related Documents:** LUNA-AI-TEST-001 (Verification Strategy), tests/acceptance_criteria.md, config/tbd_register.md
 
 ---
 
-## Ön Aşama — Konsept ve Tasarım Temeli ✅ TAMAMLANDI
+## Roadmap Summary
 
-**Durum:** Tamamlandı  
-**Dal:** main (merge edildi)
+```
+Pre-Phase  COMPLETE
+P0         COMPLETE (partially — lunar-navigator submodule pending)
+P1         IN PROGRESS — Agent B/C outputs delivered; ODE/SPICE integration pending
+P2         IN PROGRESS — Agent D (on feature/faz2-otonomi branch)
+P3         NOT STARTED — awaiting §10 vehicle data
+```
 
-### Tamamlanan Çıktılar
+**Important Note:** P2 → P3 gate requires 6 critical TBDs to be closed. These TBDs cannot be closed without §10 vehicle engineering data.
 
-| Çıktı | Belge | Durum |
+---
+
+## Pre-Phase — Concept and Design Foundation — COMPLETE
+
+**Status:** Complete  
+**Branch:** main (merged)
+
+### Completed Outputs
+
+| Output | Document | Status |
 |-------|-------|-------|
-| Operasyonel Konsept (ConOps) | `docs/conops/CONOPS.md` | ✅ |
-| Kalite Nitelik Gereksinimleri (QAR) | `docs/qar/QAR_TABLE.md` (30 madde) | ✅ |
-| Kritik Modüller FMEA | `docs/adr/FMEA_KRITIK_MODULLER.md` (top-10 RPN) | ✅ |
-| Mimari Karar Kayıtları | `docs/adr/ADR-001..006` | ✅ |
-| Hard Constraints Kataloğu | `domain/mission/constraints/hard_constraints_catalog.md` (18 HC) | ✅ |
-| Faz Durum Makinesi | `domain/mission/phase_state_machine.md` | ✅ |
-| Güvenlik Durum Makinesi Tasarımı | `docs/architecture/SAFETY_STATE_MACHINE.md` | ✅ |
-| ICD Şablonları | `docs/architecture/ICD_TEMPLATES.md` (ICD-001..006) | ✅ |
-| Emniyet Bütçesi | `safety/safety_budget.md` | ✅ |
-| Otonomi Matrisi | `autonomy/autonomy_matrix.md` | ✅ |
-| Risk Kaydı | `infrastructure/risk_register.md` (15 risk) | ✅ |
-| Operasyonel Senaryolar | `simulation/scenarios/operational_scenarios.md` (SC-001..009) | ✅ |
-| Kabul Kriterleri | `tests/acceptance_criteria.md` (P0-P3 AC + AC-VAL-001..005) | ✅ |
-| TBD Kaydı | `config/tbd_register.md` (44+ TBD) | ✅ |
+| Operational Concept (ConOps) | `docs/conops/CONOPS.md` | DONE |
+| Quality Attribute Requirements (QAR) | `docs/qar/QAR_TABLE.md` (30 items) | DONE |
+| Critical Modules FMEA | `docs/adr/FMEA_KRITIK_MODULLER.md` (top-10 RPN) | DONE |
+| Architecture Decision Records | `docs/adr/ADR-001..006` | DONE |
+| Hard Constraints Catalogue | `domain/mission/constraints/hard_constraints_catalog.md` (18 HC) | DONE |
+| Phase State Machine | `domain/mission/phase_state_machine.md` | DONE |
+| Safety State Machine Design | `docs/architecture/SAFETY_STATE_MACHINE.md` | DONE |
+| ICD Templates | `docs/architecture/ICD_TEMPLATES.md` (ICD-001..006) | DONE |
+| Safety Budget | `safety/safety_budget.md` | DONE |
+| Autonomy Matrix | `autonomy/autonomy_matrix.md` | DONE |
+| Risk Register | `infrastructure/risk_register.md` (15 risks) | DONE |
+| Operational Scenarios | `simulation/scenarios/operational_scenarios.md` (SC-001..009) | DONE |
+| Acceptance Criteria | `tests/acceptance_criteria.md` (P0-P3 AC + AC-VAL-001..005) | DONE |
+| TBD Register | `config/tbd_register.md` (44+ TBDs) | DONE |
 
 ---
 
-## P0 — Mimari Temel ✅ BÜYÜK ÖLÇÜDE TAMAMLANDI
+## P0 — Architecture Foundation — LARGELY COMPLETE
 
-**Durum:** Büyük ölçüde tamamlandı; bir kalemi beklemede  
-**Dal:** main (merge edildi)  
-**Kabul Kriterleri:** `tests/acceptance_criteria.md` P0-AC-01..07
+**Status:** Largely complete; one item pending  
+**Branch:** main (merged)  
+**Acceptance Criteria:** `tests/acceptance_criteria.md` P0-AC-01..07
 
-### Tamamlanan Çıktılar
+### Completed Outputs
 
-| Çıktı | Belge / Modül | Durum |
+| Output | Document / Module | Status |
 |-------|---------------|-------|
-| ICD Şemaları (10 JSON Schema) | `interfaces/schemas/*.schema.yaml` | ✅ |
-| Python TypedDict + JSON Schema uyum | `interfaces/v1/energy_state.py`, `thermal_state.py`, `vehicle_pose.py` | ✅ |
-| Yedeklilik Matrisi | `docs/architecture/redundancy_matrix.md` | ✅ |
-| Güvenlik Durum Makinesi (PlantUML) | `docs/architecture/PLANTUML_DIAGRAMS.md` (Diyagram 5) | ✅ |
-| Hard Constraints Python motoru | `mission_intelligence/constraints/hard_constraints.py` | ✅ |
-| Enerji durum sözleşmesi | `interfaces/v1/energy_state.py` | ✅ |
-| Termal durum sözleşmesi | `interfaces/v1/thermal_state.py` | ✅ |
-| Araç poz sözleşmesi | `interfaces/v1/vehicle_pose.py` | ✅ |
-| Bileşen + Dağıtım + Sekans Diyagramları | `docs/architecture/PLANTUML_DIAGRAMS.md` (Diyagram 1-4) | ✅ |
+| ICD Schemas (10 JSON Schemas) | `interfaces/schemas/*.schema.yaml` | DONE |
+| Python TypedDict + JSON Schema compatibility | `interfaces/v1/energy_state.py`, `thermal_state.py`, `vehicle_pose.py` | DONE |
+| Redundancy Matrix | `docs/architecture/redundancy_matrix.md` | DONE |
+| Safety State Machine (PlantUML) | `docs/architecture/PLANTUML_DIAGRAMS.md` (Diagram 5) | DONE |
+| Hard Constraints Python engine | `mission_intelligence/constraints/hard_constraints.py` | DONE |
+| Energy state contract | `interfaces/v1/energy_state.py` | DONE |
+| Thermal state contract | `interfaces/v1/thermal_state.py` | DONE |
+| Vehicle pose contract | `interfaces/v1/vehicle_pose.py` | DONE |
+| Component + Deployment + Sequence Diagrams | `docs/architecture/PLANTUML_DIAGRAMS.md` (Diagrams 1-4) | DONE |
 
-### Bekleyen Kalem
+### Pending Item
 
-| Kalem | Bağımlılık | Durum |
+| Item | Dependency | Status |
 |-------|-----------|-------|
-| lunar-navigator submodule bağlantısı | TBD-REPO-001: submodule vs referans dizin kararı | ⏳ |
+| lunar-navigator submodule connection | TBD-REPO-001: submodule vs reference directory decision | PENDING |
 
-### Giriş Koşulları (Karşılandı)
+### Entry Conditions (Met)
 
-- Ön aşama tüm çıktıları teslim edildi.
-- Proje bağlamı ve teknik kısıtlamalar belgelendi.
+- Pre-phase all outputs delivered.
+- Project context and technical constraints documented.
 
-### Çıkış Kriterleri
+### Exit Criteria
 
-- ✅ P0-AC-01..07 unit testleri yeşil (mevcut 29 unit test + ICD şema testleri)
-- ✅ Tüm modül arayüzleri ICD şemasına uygun
-- ✅ HC motoru HC-001..015 kümesini değerlendiriyor
-- ⏳ lunar-navigator entegrasyon kararı (TBD-REPO-001 kapandıktan sonra)
+- P0-AC-01..07 unit tests green (current 29 unit tests + ICD schema tests)
+- All module interfaces conformant to ICD schema
+- HC engine evaluating HC-001..015 set
+- lunar-navigator integration decision (after TBD-REPO-001 closed) — pending
 
-### Kritik Bağımlılıklar
+### Critical Dependencies
 
-| Bağımlılık | Kaynak | Durum |
+| Dependency | Source | Status |
 |-----------|--------|-------|
-| TBD-REPO-001 (submodule vs referans) | Proje kararı | ⏳ AÇIK |
+| TBD-REPO-001 (submodule vs reference) | Project decision | OPEN |
 
 ---
 
-## P1 — Bilimsel Platform 🔄 DEVAM EDİYOR
+## P1 — Scientific Platform — IN PROGRESS
 
-**Durum:** Çekirdek çıktılar teslim edildi; entegrasyon kalemleri beklemede  
-**Dal:** feature/faz1-tamamlama (bu branch)  
-**Kabul Kriterleri:** `tests/acceptance_criteria.md` P1-AC-01..06  
-**Tahmini Süre:** §10 bağımsız: 2–4 hafta tamamlama; §10 bağımlı: §10 sonrası
+**Status:** Core outputs delivered; integration items pending  
+**Branch:** feature/faz1-tamamlama (this branch)  
+**Acceptance Criteria:** `tests/acceptance_criteria.md` P1-AC-01..06  
+**Estimated Duration:** §10-independent: 2–4 weeks to complete; §10-dependent: after §10
 
-### Tamamlanan Çıktılar
+### Completed Outputs
 
-| Çıktı | Belge / Modül | Durum |
+| Output | Document / Module | Status |
 |-------|---------------|-------|
-| Veri alım hattı taslakları | `data-platform/ingestion/base_ingestor.py` | ✅ |
-| Terrain analyzer | `data-platform/processing/terrain_analyzer.py` | ✅ |
-| Krater aday filtreleme + sıralama | `mission_intelligence/scoring/scorer.py`, `hard_constraints.py` | ✅ |
-| Domain modelleri | `domain/crater/models.py`, `domain/environment/models.py`, `domain/mission/models.py` | ✅ |
-| Dijital İkiz temel altyapısı | `simulation/simulator_design.md` | ✅ |
-| Senaryo çalıştırıcısı tasarımı | `simulation/simulator_design.md` §4 | ✅ |
-| Örnek senaryo YAML | `simulation/scenarios/example_scenario.yaml` | ✅ |
-| Doğrulama ve Test Stratejisi | `tests/verification_strategy.md` | ✅ |
+| Data ingestion pipeline drafts | `data-platform/ingestion/base_ingestor.py` | DONE |
+| Terrain analyzer | `data-platform/processing/terrain_analyzer.py` | DONE |
+| Crater candidate filtering + ranking | `mission_intelligence/scoring/scorer.py`, `hard_constraints.py` | DONE |
+| Domain models | `domain/crater/models.py`, `domain/environment/models.py`, `domain/mission/models.py` | DONE |
+| Digital Twin base infrastructure | `simulation/simulator_design.md` | DONE |
+| Scenario runner design | `simulation/simulator_design.md` §4 | DONE |
+| Example scenario YAML | `simulation/scenarios/example_scenario.yaml` | DONE |
+| Verification and Test Strategy | `tests/verification_strategy.md` | DONE |
 
-### Bekleyen Kalemler
+### Pending Items
 
-| Kalem | Bağımlılık | Öncelik |
+| Item | Dependency | Priority |
 |-------|-----------|---------|
-| ODE API gerçek bağlantısı (LOLAIngestor, ShadowCamIngestor tam impl.) | Ağ erişimi + API key | P-HIGH |
-| SPICE kernel entegrasyonu (aydınlanma modeli tam koşu) | TBD-TIME-001 (görev tarihi) | P-CRIT |
-| AC-VAL-001..004 aydınlanma doğrulaması (JPL/NASA GSFC karşılaştırması) | SPICE kernel | P-CRIT |
-| AC-VAL-005 çözünürlük raporu (80m vs 300m) | ODE + SPICE | P-HIGH |
-| SIL baseline koşusu (RT-001 ilk koşu) | Simülatör impl. tamamlanması | P-HIGH |
-| RR-002, RR-003, RR-004, RR-007 azaltma doğrulaması (P1-AC-06) | SIL hazır | P-HIGH |
+| ODE API real connection (LOLAIngestor, ShadowCamIngestor full impl.) | Network access + API key | P-HIGH |
+| SPICE kernel integration (illumination model full run) | TBD-TIME-001 (mission date) | P-CRIT |
+| AC-VAL-001..004 illumination validation (JPL/NASA GSFC comparison) | SPICE kernel | P-CRIT |
+| AC-VAL-005 resolution report (80m vs 300m) | ODE + SPICE | P-HIGH |
+| SIL baseline run (RT-001 first run) | Simulator impl. complete | P-HIGH |
+| RR-002, RR-003, RR-004, RR-007 mitigation verification (P1-AC-06) | SIL ready | P-HIGH |
 
-### Giriş Koşulları
+### Entry Conditions
 
-- ✅ P0 çıkış kriterleri büyük ölçüde karşılandı.
-- ✅ Domain modelleri ve ICD şemaları kullanılabilir.
+- P0 exit criteria largely met.
+- Domain models and ICD schemas available.
 
-### Çıkış Kriterleri
+### Exit Criteria
 
-| Kriter | Yöntem | Hedef |
+| Criterion | Method | Target |
 |--------|--------|-------|
-| P1-AC-01: Aydınlanma modeli JPL/NASA GSFC ile doğrulandı | Analysis | AC-VAL-001..004 |
-| P1-AC-02: HC filtreleme %100 doğruluk | SIL (100 test adayı) | Sıfır yanlış eleme |
-| P1-AC-03: Enerji-termal simülatör §10 profili ile ±TBD% | Analysis + SIL | TBD-THM-002 kapandıktan sonra |
-| P1-AC-04: Dijital ikiz SC-001 nominal koşu tamamlıyor | SIL (RT-001) | Waypoint ±1m, SoC ≥ %15 |
-| P1-AC-05: temporal_class karışma = sıfır | UT | %100 kapsam |
-| P1-AC-06: RR-002/003/004/007 azaltma doğrulandı | SIL | Her risk için azaltma gösterildi |
-| AC-VAL-005: Çözünürlük raporu teslim | Analysis | Fark analizi onaylandı |
+| P1-AC-01: Illumination model validated with JPL/NASA GSFC | Analysis | AC-VAL-001..004 |
+| P1-AC-02: HC filtering 100% accuracy | SIL (100 test candidates) | Zero false eliminations |
+| P1-AC-03: Energy-thermal simulator ±TBD% with §10 profile | Analysis + SIL | After TBD-THM-002 closed |
+| P1-AC-04: Digital twin completes SC-001 nominal run | SIL (RT-001) | Waypoint ±1m, SoC ≥ 15% |
+| P1-AC-05: temporal_class mixing = zero | UT | 100% coverage |
+| P1-AC-06: RR-002/003/004/007 mitigation verified | SIL | Mitigation shown for each risk |
+| AC-VAL-005: Resolution report delivered | Analysis | Difference analysis approved |
 
-### Kritik Bağımlılıklar
+### Critical Dependencies
 
-| Bağımlılık | TBD ID | Durum |
+| Dependency | TBD ID | Status |
 |-----------|--------|-------|
-| Görev başlangıç tarihi (SPICE için) | TBD-TIME-001 | P-CRIT ⏳ |
-| Araç termal model | TBD-THM-001/002 | P-CRIT ⏳ |
+| Mission start date (for SPICE) | TBD-TIME-001 | P-CRIT OPEN |
+| Vehicle thermal model | TBD-THM-001/002 | P-CRIT OPEN |
 
-### P1 → P2 Kapı TBD'leri
+### P1 → P2 Gate TBDs
 
-Aşağıdaki TBD'ler P1 kapısı açılmadan önce kapanmalıdır:
+The following TBDs must be closed before P1 gate opens:
 
-| TBD ID | Parametre | Öncelik |
+| TBD ID | Parameter | Priority |
 |--------|-----------|---------|
-| TBD-TIME-001 | Görev başlangıç tarihi (UTC) | P-CRIT |
-| TBD-THM-001 | Termal kütle + yalıtım konfigürasyonu | P-CRIT |
+| TBD-TIME-001 | Mission start date (UTC) | P-CRIT |
+| TBD-THM-001 | Thermal mass + insulation configuration | P-CRIT |
 
 ---
 
-## P2 — Otonomi Prototipi 🔄 DEVAM EDİYOR (Agent D)
+## P2 — Autonomy Prototype — IN PROGRESS (Agent D)
 
-**Durum:** Agent D, `feature/faz2-otonomi` branch'inde çalışıyor  
-**Dal:** feature/faz2-otonomi (ayrı branch)  
-**Kabul Kriterleri:** `tests/acceptance_criteria.md` P2-AC-01..08  
-**Tahmini Süre:** 4–8 hafta (P1 kapısı açıldıktan sonra)
+**Status:** Agent D working on `feature/faz2-otonomi` branch  
+**Branch:** feature/faz2-otonomi (separate branch)  
+**Acceptance Criteria:** `tests/acceptance_criteria.md` P2-AC-01..08  
+**Estimated Duration:** 4–8 weeks (after P1 gate opens)
 
-### Devam Eden Çalışmalar (Agent D)
+### Ongoing Work (Agent D)
 
-| Kalem | Modül | Durum |
+| Item | Module | Status |
 |-------|-------|-------|
-| Global planner (A* tabanlı rota) | `autonomy/global-planner/` | 🔄 |
-| Local planner (engel kaçınma) | `autonomy/local-planner/` | 🔄 |
-| FDIR implementasyonu | `safety/fdir/` | 🔄 |
-| Navigasyon + EKF sensör füzyonu | `vehicle/localization/` | 🔄 |
-| Mission executive | `autonomy/mission-executive/` | 🔄 |
+| Global planner (A*-based routing) | `autonomy/global-planner/` | IN PROGRESS |
+| Local planner (obstacle avoidance) | `autonomy/local-planner/` | IN PROGRESS |
+| FDIR implementation | `safety/fdir/` | IN PROGRESS |
+| Navigation + EKF sensor fusion | `vehicle/localization/` | IN PROGRESS |
+| Mission executive | `autonomy/mission-executive/` | IN PROGRESS |
 
-### Bekleyen Kalemler (P2 kapsamında)
+### Pending Items (P2 scope)
 
-| Kalem | Bağımlılık | Öncelik |
+| Item | Dependency | Priority |
 |-------|-----------|---------|
-| Haberleşme mimarisi (CCSDS impl.) | TBD-COM-001 | P-CRIT |
-| FreeRTOS görev önceliklendirme | §10 OBC seçimi | P-CRIT |
-| SIL regresyon suite ilk tam koşu (RT-001..006) | Tüm P2 modülleri hazır | P-HIGH |
-| CT-001..007 kritik test senaryoları | SIL hazır | P-HIGH |
-| HIL köprü tasarımı (SIL/HIL bridge) | §10 OBC arayüzü | P-MED |
+| Communication architecture (CCSDS impl.) | TBD-COM-001 | P-CRIT |
+| FreeRTOS task prioritisation | §10 OBC selection | P-CRIT |
+| SIL regression suite first full run (RT-001..006) | All P2 modules ready | P-HIGH |
+| CT-001..007 critical test scenarios | SIL ready | P-HIGH |
+| HIL bridge design (SIL/HIL bridge) | §10 OBC interface | P-MED |
 
-### Giriş Koşulları
+### Entry Conditions
 
-- P1 çıkış kriterleri tümü yeşil.
-- Aşağıdaki P-CRIT TBD'ler kapalı:
+- P1 exit criteria all green.
+- Following P-CRIT TBDs closed:
 
-| TBD ID | Parametre |
+| TBD ID | Parameter |
 |--------|-----------|
-| TBD-BAT-002 | Batarya kimyası |
-| TBD-SNS-001 | Sensör paketi |
-| TBD-SNS-002 | IMU gürültü parametreleri |
-| TBD-SNS-003 | Odometry hata parametreleri |
-| TBD-COM-001 | İletişim donanımı |
-| TBD-ENE-002 | HC-006 dönüş rezervi eşiği (Wh) |
+| TBD-BAT-002 | Battery chemistry |
+| TBD-SNS-001 | Sensor package |
+| TBD-SNS-002 | IMU noise parameters |
+| TBD-SNS-003 | Odometry error parameters |
+| TBD-COM-001 | Communication hardware |
+| TBD-ENE-002 | HC-006 return reserve threshold (Wh) |
 
-### Çıkış Kriterleri
+### Exit Criteria
 
-| Kriter | Yöntem | Hedef |
+| Criterion | Method | Target |
 |--------|--------|-------|
-| P2-AC-01: Global planner < 60s | SIL | %95 başarı |
-| P2-AC-02: Replanning < 30s | SIL | %95 başarı |
-| P2-AC-03: SC-002 (link kaybı) SIL geçiyor | SIL | Her iki senaryo |
-| P2-AC-04: SC-003 (enerji düşüşü) SIL geçiyor | SIL | FDIR 5s, Planner 30s |
-| P2-AC-05: SC-004 (lokalizasyon kaybı) SIL | SIL | Detection-Isolation-Recovery |
-| P2-AC-06: SC-006 (termal ihlal) SIL | SIL | RETURN_REQUIRED 5s |
-| P2-AC-07: 10 kritik senaryo × FDIR tepki | SIL (CT-001..007) | %100 uyum |
-| P2-AC-08: Power Mgmt → Planner akış yönü | SIL + Code review | Tek yönlü bağımlılık |
+| P2-AC-01: Global planner < 60s | SIL | 95% success |
+| P2-AC-02: Replanning < 30s | SIL | 95% success |
+| P2-AC-03: SC-002 (link loss) passes SIL | SIL | Both scenarios |
+| P2-AC-04: SC-003 (energy drop) passes SIL | SIL | FDIR 5s, Planner 30s |
+| P2-AC-05: SC-004 (localisation loss) SIL | SIL | Detection-Isolation-Recovery |
+| P2-AC-06: SC-006 (thermal violation) SIL | SIL | RETURN_REQUIRED 5s |
+| P2-AC-07: 10 critical scenarios × FDIR response | SIL (CT-001..007) | 100% compliance |
+| P2-AC-08: Power Mgmt → Planner flow direction | SIL + Code review | Unidirectional dependency |
 
-### P2 → P3 Kapı TBD'leri
+### P2 → P3 Gate TBDs
 
-| TBD ID | Parametre | Öncelik |
+| TBD ID | Parameter | Priority |
 |--------|-----------|---------|
-| TBD-BAT-002 | Batarya kimyası | P-CRIT |
-| TBD-SNS-001 | Sensör paketi | P-CRIT |
-| TBD-SNS-002 | IMU gürültü | P-CRIT |
-| TBD-SNS-003 | Odometry hata | P-CRIT |
-| TBD-COM-001 | İletişim donanımı | P-CRIT |
-| TBD-ENE-002 | HC-006 dönüş rezervi eşiği | P-CRIT |
+| TBD-BAT-002 | Battery chemistry | P-CRIT |
+| TBD-SNS-001 | Sensor package | P-CRIT |
+| TBD-SNS-002 | IMU noise | P-CRIT |
+| TBD-SNS-003 | Odometry error | P-CRIT |
+| TBD-COM-001 | Communication hardware | P-CRIT |
+| TBD-ENE-002 | HC-006 return reserve threshold | P-CRIT |
 
 ---
 
-## P3 — Araç Entegrasyonu 🔲 BAŞLAMADI
+## P3 — Vehicle Integration — NOT STARTED
 
-**Durum:** §10 araç verisi bekleniyor  
-**Dal:** feature/faz3-entegrasyon (henüz oluşturulmadı)  
-**Kabul Kriterleri:** `tests/acceptance_criteria.md` P3-AC-01..05  
-**Tahmini Süre:** 8–16 hafta (§10 ve P2 kapısı açıldıktan sonra)
+**Status:** Awaiting §10 vehicle data  
+**Branch:** feature/faz3-entegrasyon (not yet created)  
+**Acceptance Criteria:** `tests/acceptance_criteria.md` P3-AC-01..05  
+**Estimated Duration:** 8–16 weeks (after §10 and P2 gate opens)
 
-### Planlanan Çalışmalar
+### Planned Work
 
-| Kalem | Modül | Bağımlılık |
+| Item | Module | Dependency |
 |-------|-------|-----------|
-| Güç entegrasyonu (gerçek batarya + PDU) | `power/` | TBD-BAT-001/002 |
-| Termal entegrasyon (gerçek ısıtıcı + sensörler) | `thermal/` | TBD-THM-001/003 |
-| Lokalizasyon HIL (gerçek sensörler) | `vehicle/localization` | TBD-SNS-001/002/003 |
-| SIL/HIL köprü implementasyonu | `simulation/digital-twin/sil_hil_bridge` | §10 OBC arayüzü |
-| Landing GNC (ayrı tasarım) | `vehicle/landing-gnc/` | TBD-GNC-001 |
-| TVAC testleri (THM-004/005) | Termal vakum tesisi | TBD-THM-001/003 |
-| HIL regresyon suite (tüm RT + CT-001..007) | Gerçek OBC + sensörler | TBD-SNS-001 |
+| Power integration (real battery + PDU) | `power/` | TBD-BAT-001/002 |
+| Thermal integration (real heaters + sensors) | `thermal/` | TBD-THM-001/003 |
+| Localisation HIL (real sensors) | `vehicle/localization` | TBD-SNS-001/002/003 |
+| SIL/HIL bridge implementation | `simulation/digital-twin/sil_hil_bridge` | §10 OBC interface |
+| Landing GNC (separate design) | `vehicle/landing-gnc/` | TBD-GNC-001 |
+| TVAC tests (THM-004/005) | Thermal vacuum facility | TBD-THM-001/003 |
+| HIL regression suite (all RT + CT-001..007) | Real OBC + sensors | TBD-SNS-001 |
 
-### Giriş Koşulları
+### Entry Conditions
 
-- P2 çıkış kriterleri tümü yeşil.
-- §10 araç verisi dondurulmuş (tüm P-CRIT TBD'ler kapalı):
+- P2 exit criteria all green.
+- §10 vehicle data frozen (all P-CRIT TBDs closed):
 
-| TBD ID | Parametre |
+| TBD ID | Parameter |
 |--------|-----------|
-| TBD-BAT-001 | Batarya kapasitesi (Wh) |
-| TBD-BAT-002 | Batarya kimyası |
-| TBD-SNS-001 | Sensör paketi |
-| TBD-SNS-002 | IMU gürültü |
-| TBD-SNS-003 | Odometry hata |
-| TBD-THM-001 | Termal kütle + yalıtım |
-| TBD-COM-001 | İletişim donanımı |
-| TBD-GNC-001 | Landing GNC gereksinimleri |
-| TBD-ENE-002 | HC-006 dönüş rezervi eşiği |
-| TBD-TIME-001 | Görev başlangıç tarihi |
+| TBD-BAT-001 | Battery capacity (Wh) |
+| TBD-BAT-002 | Battery chemistry |
+| TBD-SNS-001 | Sensor package |
+| TBD-SNS-002 | IMU noise |
+| TBD-SNS-003 | Odometry error |
+| TBD-THM-001 | Thermal mass + insulation |
+| TBD-COM-001 | Communication hardware |
+| TBD-GNC-001 | Landing GNC requirements |
+| TBD-ENE-002 | HC-006 return reserve threshold |
+| TBD-TIME-001 | Mission start date |
 
-### Çıkış Kriterleri
+### Exit Criteria
 
-| Kriter | Yöntem | Hedef |
+| Criterion | Method | Target |
 |--------|--------|-------|
-| P3-AC-01: HIL lokalizasyon σ < 0.5m | HIL | Gerçek sensör altında |
-| P3-AC-02: HIL FDIR tepki < 50ms | HIL | 10 anomali tipi |
-| P3-AC-03: Landing GNC handover | HIL | σ_pos < bootstrap eşiği |
-| P3-AC-04: Tüm QAR-P1 maddeler HIL'de karşılandı | HIL | %100 |
-| P3-AC-05: SC-003/004/005/006 HIL geçiyor | HIL | Her senaryo |
-| THM-004/005 TVAC kalifikasyonu | TVAC | Min/Maks sıcaklık |
-| Dijital ikiz SoH degradasyon doğrulandı | HIL + Dijital İkiz | §3.3 metrikleri |
+| P3-AC-01: HIL localisation σ < 0.5m | HIL | Under real sensor |
+| P3-AC-02: HIL FDIR response < 50ms | HIL | 10 anomaly types |
+| P3-AC-03: Landing GNC handover | HIL | σ_pos < bootstrap threshold |
+| P3-AC-04: All QAR-P1 items met in HIL | HIL | 100% |
+| P3-AC-05: SC-003/004/005/006 pass HIL | HIL | Each scenario |
+| THM-004/005 TVAC qualification | TVAC | Min/Max temperature |
+| Digital twin SoH degradation verified | HIL + Digital Twin | §3.3 metrics |
 
 ---
 
-## TBD Kapı Haritası
+## TBD Gate Map
 
-TBD'lerin hangi faz kapılarını engellediği özet tablosu. Kaynak: `config/tbd_register.md`.
+Summary table of which phase gates each TBD blocks. Source: `config/tbd_register.md`.
 
-| TBD ID | Parametre | P1 Kapısı | P2 Kapısı | P3 Kapısı |
+| TBD ID | Parameter | P1 Gate | P2 Gate | P3 Gate |
 |--------|-----------|-----------|-----------|-----------|
-| TBD-BAT-001 | Batarya kapasitesi | — | — | ✖ BLOKE |
-| TBD-BAT-002 | Batarya kimyası | — | ✖ BLOKE | ✖ BLOKE |
-| TBD-SNS-001 | Sensör paketi | — | ✖ BLOKE | ✖ BLOKE |
-| TBD-SNS-002 | IMU gürültü | — | ✖ BLOKE | ✖ BLOKE |
-| TBD-SNS-003 | Odometry hata | — | ✖ BLOKE | ✖ BLOKE |
-| TBD-THM-001 | Termal kütle + yalıtım | ✖ BLOKE | ✖ BLOKE | ✖ BLOKE |
-| TBD-COM-001 | İletişim donanımı | — | ✖ BLOKE | ✖ BLOKE |
-| TBD-GNC-001 | Landing GNC | — | — | ✖ BLOKE |
-| TBD-ENE-002 | HC-006 dönüş rezervi | — | ✖ BLOKE | ✖ BLOKE |
-| TBD-TIME-001 | Görev başlangıç tarihi | ✖ BLOKE | — | ✖ BLOKE |
-| TBD-REPO-001 | lunar-navigator submodule | ✖ P0 bekleyen | — | — |
+| TBD-BAT-001 | Battery capacity | — | — | BLOCKS |
+| TBD-BAT-002 | Battery chemistry | — | BLOCKS | BLOCKS |
+| TBD-SNS-001 | Sensor package | — | BLOCKS | BLOCKS |
+| TBD-SNS-002 | IMU noise | — | BLOCKS | BLOCKS |
+| TBD-SNS-003 | Odometry error | — | BLOCKS | BLOCKS |
+| TBD-THM-001 | Thermal mass + insulation | BLOCKS | BLOCKS | BLOCKS |
+| TBD-COM-001 | Communication hardware | — | BLOCKS | BLOCKS |
+| TBD-GNC-001 | Landing GNC | — | — | BLOCKS |
+| TBD-ENE-002 | HC-006 return reserve | — | BLOCKS | BLOCKS |
+| TBD-TIME-001 | Mission start date | BLOCKS | — | BLOCKS |
+| TBD-REPO-001 | lunar-navigator submodule | P0 pending | — | — |
 
-**P1 kapısı açmak için minimum:** TBD-THM-001 + TBD-TIME-001  
-**P2 kapısı açmak için minimum:** 6 P-CRIT TBD (TBD-BAT-002, SNS-001/002/003, COM-001, ENE-002)  
-**P3 kapısı açmak için:** Tüm P-CRIT TBD'ler + §10 araç verisi dondurulmuş
+**Minimum to open P1 gate:** TBD-THM-001 + TBD-TIME-001  
+**Minimum to open P2 gate:** 6 P-CRIT TBDs (TBD-BAT-002, SNS-001/002/003, COM-001, ENE-002)  
+**To open P3 gate:** All P-CRIT TBDs + §10 vehicle data frozen
 
 ---
 
-## Risk–Yol Haritası Kesişimi
+## Risk–Roadmap Intersection
 
-Yüksek RPN risklerinin hangi fazda azaltıldığı:
+Which phase mitigates high-RPN risks:
 
-| Risk | RPN | Azaltma Fazı | Yöntem |
+| Risk | RPN | Mitigation Phase | Method |
 |------|-----|--------------|--------|
-| RR-003 (Termal model VIPER uyarısı) | 16 | P1 (Analysis) + P3 (TVAC) | §10 termal kütle ile simülatör kalibrasyon |
-| RR-002 (Dönüş rezervi belirsizliği) | 15 | P1-AC-06 (SIL), P3 (HIL) | Enerji tahmin hatası < %10 (CT-002) |
-| RR-004 (Link timeout uzun) | 12 | P2-AC-03 (SIL SC-002) | FI-006 CT-004 |
-| RR-007 (Lokalizasyon bootstrap) | 12 | P3-AC-03 (HIL) | Landing GNC handover testi |
-| RR-011 (DEM 80m çözünürlük sınırı) | 12 | P1-AC-02 (SIL), AC-VAL-005 | 80m altı engel local planner testi |
+| RR-003 (Thermal model VIPER warning) | 16 | P1 (Analysis) + P3 (TVAC) | Simulator calibration with §10 thermal mass |
+| RR-002 (Return reserve uncertainty) | 15 | P1-AC-06 (SIL), P3 (HIL) | Energy estimation error < 10% (CT-002) |
+| RR-004 (Link timeout long) | 12 | P2-AC-03 (SIL SC-002) | FI-006 CT-004 |
+| RR-007 (Localisation bootstrap) | 12 | P3-AC-03 (HIL) | Landing GNC handover test |
+| RR-011 (DEM 80m resolution limit) | 12 | P1-AC-02 (SIL), AC-VAL-005 | Sub-80m obstacle local planner test |
 
 ---
 
-## Faz Geçiş Kapıları Özeti
+## Phase Transition Gates Summary
 
-| Geçiş | Kapı Koşulları | Yetkili | Tahmini Tarih |
+| Transition | Gate Conditions | Authority | Estimated Date |
 |-------|----------------|---------|---------------|
-| Ön Aşama → P0 | ConOps + QAR + HC onaylandı | luna-ai-architecture | ✅ 2026-11-14 |
-| P0 → P1 | P0-AC-01..07 yeşil; TBD-REPO-001 kararı | luna-ai-architecture | ⏳ TBD |
-| P1 → P2 | P1-AC-01..06 + AC-VAL-001..005 yeşil; TBD-THM-001 + TBD-TIME-001 kapalı | luna-ai-architecture | ⏳ §10 sonrası |
-| P2 → P3 | P2-AC-01..08 yeşil; 6 P-CRIT TBD kapalı | luna-ai-architecture | ⏳ §10 sonrası |
-| P3 → Operasyonel | P3-AC-01..05 + TVAC + tüm P-CRIT TBD kapalı | Görev otoritesi | ⏳ §10 + P3 sonrası |
+| Pre-Phase → P0 | ConOps + QAR + HC approved | luna-ai-architecture | DONE 2026-11-14 |
+| P0 → P1 | P0-AC-01..07 green; TBD-REPO-001 decision | luna-ai-architecture | PENDING TBD |
+| P1 → P2 | P1-AC-01..06 + AC-VAL-001..005 green; TBD-THM-001 + TBD-TIME-001 closed | luna-ai-architecture | PENDING — after §10 |
+| P2 → P3 | P2-AC-01..08 green; 6 P-CRIT TBDs closed | luna-ai-architecture | PENDING — after §10 |
+| P3 → Operational | P3-AC-01..05 + TVAC + all P-CRIT TBDs closed | Mission authority | PENDING — after §10 + P3 |
 
 ---
 
-## Revizyon Geçmişi
+## Revision History
 
-| Versiyon | Tarih | Değişiklik |
+| Version | Date | Change |
 |----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — Agent C, C5 görevi; P0-P3 yol haritası, TBD kapı haritası |
+| 0.1 | 2026-11-14 | First draft — Agent C, C5 task; P0-P3 roadmap, TBD gate map |

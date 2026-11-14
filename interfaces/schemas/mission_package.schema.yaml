@@ -5,15 +5,15 @@
 #   - domain/mission/phase_state_machine.md
 #   - docs/adr/ADR-001..ADR-006
 # open_items:
-#   - safe_haven_candidates min sayısı TBD(source: §10 görev tasarımı)
-#   - return_condition sayısal eşikler TBD(source: §10)
+#   - safe_haven_candidates min count TBD(source: §10 mission design)
+#   - return_condition numerical thresholds TBD(source: §10)
 
 schema_version: "1.0.0"
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: "MissionPackage"
 description: >
-  Yer segmentinin araca gönderdiği görev paketi sözleşmesi.
-  Aktif hard constraint listesini, safe haven adaylarını ve dönüş koşulunu içerir.
+  Contract for the mission package sent from the ground segment to the vehicle.
+  Contains the active hard constraint list, safe haven candidates, and return condition.
 
 type: object
 
@@ -31,32 +31,32 @@ properties:
 
   schema_version:
     type: string
-    description: "Bu şemanın versiyonu."
+    description: "Version of this schema."
     pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
 
   package_id:
     type: string
-    description: "Görev paketini benzersiz olarak tanımlayan ID."
+    description: "ID uniquely identifying the mission package."
     minLength: 1
 
   version:
     type: string
-    description: "Bu görev paketinin versiyonu (yer operasyon merkezi iter)."
+    description: "Version of this mission package (incremented by ground operations centre)."
     pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
 
   created_utc:
     type: string
     format: date-time
-    description: "Paketin oluşturulma zamanı (UTC)."
+    description: "Package creation time (UTC)."
 
   valid_until_utc:
     type: string
     format: date-time
-    description: "Paketin geçerlilik süresi. Araç bu süreden sonra paketi reddeder."
+    description: "Package validity period. Vehicle rejects the package after this time."
 
   objectives:
     type: array
-    description: "Görev hedefleri. Her hedef ID ve öncelik içerir."
+    description: "Mission objectives. Each objective contains an ID and priority."
     minItems: 1
     items:
       type: object
@@ -71,9 +71,9 @@ properties:
   active_hard_constraints:
     type: array
     description: >
-      Bu görev paketi için etkin hard constraint ID listesi.
-      hard_constraints_catalog.yaml'dan seçilir. HC-XXX formatı zorunlu.
-      Planlayıcı bu listedeki kısıtları eleme aşamasında uygular (Uyum Notu 5).
+      List of active hard constraint IDs for this mission package.
+      Selected from hard_constraints_catalog.yaml. HC-XXX format required.
+      Planner applies constraints in this list at the elimination stage (Compliance Note 5).
     items:
       type: string
       pattern: "^HC-[0-9]{3}$"
@@ -83,8 +83,8 @@ properties:
   safe_haven_candidates:
     type: array
     description: >
-      Öncelik sırasına göre safe haven aday koordinatları.
-      Her aday HC-009..HC-015 kriterlerini karşılamalıdır.
+      Safe haven candidate coordinates in priority order.
+      Each candidate must meet HC-009..HC-015 criteria.
     minItems: 1
     items:
       type: object
@@ -102,32 +102,32 @@ properties:
   return_condition:
     type: object
     description: >
-      Araçın dönüş kararını tetikleyen koşullar. Araç bu koşullar karşılandığında
-      planlayıcı otomatik RETURN fazına geçer.
+      Conditions that trigger the vehicle's return decision. When these conditions are met,
+      the planner automatically transitions to RETURN phase.
     required: [trigger_type]
     properties:
       trigger_type:
         type: string
         enum:
           - reserve_threshold      # return_reserve_wh <= HC-006
-          - time_limit             # görev_süresi >= limit
-          - science_complete       # tüm hedefler tamamlandı
-          - emergency              # FDIR tetikledi
-          - ground_command         # yer komutu
+          - time_limit             # mission_duration >= limit
+          - science_complete       # all objectives completed
+          - emergency              # FDIR triggered
+          - ground_command         # ground command
       reserve_threshold_wh:
         type: number
-        description: "HC-006 eşiği (Power Mgmt belirler). TBD(source: §10)"
+        description: "HC-006 threshold (determined by Power Mgmt). TBD(source: §10)"
       time_limit_s:
         type: number
-        description: "Zaman bazlı dönüş koşulu (saniye)."
+        description: "Time-based return condition (seconds)."
 
   authority_level:
     type: string
     description: >
-      Bu paketin otorite seviyesi.
-      ground_approved: yer segmenti onaylı nominal ops.
-      autonomous: araç bağımsız karar verebilir (parametreler içinde).
-      emergency_autonomous: link kesilince FDIR kararları aktif.
+      Authority level of this package.
+      ground_approved: ground-segment-approved nominal ops.
+      autonomous: vehicle can make independent decisions (within parameters).
+      emergency_autonomous: FDIR decisions active when link is lost.
     enum:
       - ground_approved
       - autonomous
@@ -135,7 +135,7 @@ properties:
 
   contingency_plan:
     type: object
-    description: "Kriz senaryosu protokolleri (opsiyonel; docs/conops/CONOPS.md §kriz ile uyumlu)."
+    description: "Crisis scenario protocols (optional; aligned with docs/conops/CONOPS.md §crisis)."
     properties:
       link_loss_action:
         type: string
@@ -155,10 +155,10 @@ example:
   objectives:
     - objective_id: "OBJ-PSR-HAWORTH-01"
       priority: mandatory
-      description: "Haworth krateri PSR güney sektörü su buzu spektral analizi"
+      description: "Haworth crater PSR south sector water ice spectral analysis"
     - objective_id: "OBJ-REGOLITH-02"
       priority: high
-      description: "PSR sınır bölgesi regolith numune noktaları (3 nokta)"
+      description: "PSR boundary region regolith sample points (3 points)"
   active_hard_constraints:
     - HC-001
     - HC-003
@@ -178,13 +178,13 @@ example:
       lon_deg: 2.15
       priority_rank: 1
       evaluation_status: approved
-      notes: "10+ saat/sol aydınlanma; relay görüş açısı 22°"
+      notes: "10+ hrs/sol illumination; relay line-of-sight angle 22°"
     - candidate_id: "SH-CRATER-RIM-BETA"
       lat_deg: -87.65
       lon_deg: 3.80
       priority_rank: 2
       evaluation_status: provisional
-      notes: "HC-010 marjinal; kesinleştirme bekliyor"
+      notes: "HC-010 marginal; awaiting confirmation"
   return_condition:
     trigger_type: reserve_threshold
     reserve_threshold_wh: 95.0

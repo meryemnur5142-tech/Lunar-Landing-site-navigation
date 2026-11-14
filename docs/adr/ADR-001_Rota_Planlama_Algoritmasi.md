@@ -1,98 +1,98 @@
-# ADR-001: Rota Planlama Algoritması
+# ADR-001: Route Planning Algorithm
 
-**Durum:** Kabul Edildi  
-**Tarih:** 2026-11-14  
-**İlgili QAR:** PLAN-001, PLAN-002, PLAN-004, NAV-001
-
----
-
-## Bağlam
-
-LUNA-AI, Ay yüzeyinde PSR (Kalıcı Gölge Bölgesi) içeren kraterlere gidip dönmek zorundadır. Rota planlaması aşağıdaki kısıtlar altında çalışır:
-
-- **Enerji bütçesi:** Rota yalnızca geometrik optimum değil, enerji maliyetli (eğim, aydınlanma, motor gücü) olmalıdır. Yokuş çıkmak daha fazla enerji tüketir; yokuş aşağı rejenerasyon varsa modele dahil edilmelidir.
-- **Termal state:** Araç gölgeli bölgelerde uzun kalmak isteyebilir (soğutma) veya istemeyebilir (ısınma gereksinimi). Rota bu tercihi yansıtmalıdır.
-- **Kaynak kısıtı:** Araç üzerindeki işlemci gücü ve bellek sınırlıdır. Algoritmik karmaşıklık pratik çalışma süresi içinde kalmalıdır.
-- **Dinamik engel:** PSR içinde ve dışında önceden bilinmeyen engeller (kayalar, çukurlar) mevcuttur. Planlama hem global hem de lokal düzeyde çalışmalıdır.
-- **Replanning:** Yeni engel tespitinde < 30 saniye içinde yeniden planlama yapılmalıdır (PLAN-002).
+**Status:** Accepted
+**Date:** 2026-11-14
+**Related QAR:** PLAN-001, PLAN-002, PLAN-004, NAV-001
 
 ---
 
-## Değerlendirilen Alternatifler
+## Context
 
-### Alternatif 1: A* (A-Yıldız)
+LUNA-AI must travel to craters containing PSRs (Permanently Shadowed Regions) on the lunar surface and return. Route planning operates under the following constraints:
 
-**Artılar:**
-- Optimal çözüm garantisi (admissible heuristic ile)
-- Geniş literatür desteği; uzay görevlerinde kullanım geçmişi var
-- Statik harita üzerinde verimli; bellek yönetimi öngörülebilir
-- Heuristic fonksiyonuna enerji maliyeti ve termal tercih eklemek görece kolay (weighted A*)
-- Formal doğrulama kolaylaştıran deterministik yapı
-
-**Eksiler:**
-- Dinamik engellerde haritanın tamamı veya büyük bölümü yeniden planlanabilir
-- PSR içi yüksek çözünürlüklü harita ile bellek tüketimi artabilir
-- Çok boyutlu maliyet fonksiyonu (enerji + termal + mesafe) heuristic tasarımını karmaşıklaştırır
+- **Energy budget:** A route must not only be geometrically optimal but also energy-cost-aware (slope, illumination, motor power). Climbing a slope consumes more energy; if downhill regeneration is available it must be included in the model.
+- **Thermal state:** The vehicle may or may not want to stay in shadowed areas for extended periods (cooling or heating needs). The route must reflect this preference.
+- **Resource constraint:** The processor and memory on the vehicle are limited. Algorithmic complexity must remain within a practical running time.
+- **Dynamic obstacles:** Unknown obstacles (rocks, pits) exist both inside and outside the PSR. Planning must operate at both global and local levels.
+- **Replanning:** Replanning must be completed in < 30 seconds on new obstacle detection (PLAN-002).
 
 ---
 
-### Alternatif 2: D* Lite (Dinamik A*)
+## Alternatives Evaluated
 
-**Artılar:**
-- Dinamik engellerde inkremental replanning → sadece değişen kısımlar yeniden hesaplanır
-- A*'dan türetildiği için optimal çözüm korunur
-- Gerçek zamanlı değişen haritalarda belirgin verimlilik artışı
+### Alternative 1: A* (A-Star)
 
-**Eksiler:**
-- Referans implementasyonlar A*'dan daha az test edilmiş uzay ortamında
-- Durum güncelleme mekanizması enerji/termal ağırlıklı heuristic ile entegrasyonda ekstra tasarım gerektirir
-- Debug ve formal doğrulama A*'dan daha zor
+**Pros:**
+- Optimal solution guarantee (with admissible heuristic)
+- Wide literature support; proven use in space missions
+- Efficient on static maps; predictable memory management
+- Adding energy cost and thermal preference to the heuristic function is relatively straightforward (weighted A*)
+- Deterministic structure simplifying formal verification
 
----
-
-### Alternatif 3: RRT* (Rapidly-exploring Random Tree)
-
-**Artılar:**
-- Yüksek boyutlu durum uzaylarında (6-DOF araç) verimli
-- Non-holonomik kısıtları (araç dönüş yarıçapı) doğal olarak modelleyebilir
-
-**Eksiler:**
-- Stokastik yapı: aynı girdiyle farklı sonuç → deterministik gereksinim ihlali (FDIR-005 analog)
-- Optimal çözüm garantisi yalnızca asimptotik; pratik sürede optimal olmayabilir
-- Hesaplama maliyeti A* ve D*'dan tipik olarak yüksek; kaynak kısıtlı ortamda risk
-- Tekrarlanabilirlik ve formal doğrulama güçtür
+**Cons:**
+- With dynamic obstacles, the entire map or large portions may need replanning
+- With high-resolution PSR maps, memory consumption may increase
+- Multi-dimensional cost function (energy + thermal + distance) complicates heuristic design
 
 ---
 
-### Alternatif 4: Potential Field (Potansiyel Alan)
+### Alternative 2: D* Lite (Dynamic A*)
 
-**Artılar:**
-- Son derece hızlı ve hafif; gerçek zamanlı yerel engel kaçınma için uygun
-- Implementasyon basitliği; hata ayıklama kolay
+**Pros:**
+- Incremental replanning with dynamic obstacles → only changed portions are recalculated
+- Derived from A*, so optimal solution is preserved
+- Significant efficiency gain on real-time changing maps
 
-**Eksiler:**
-- Lokal minimum tuzakları: krater geçitlerinde veya dar koridorlarda takılabilir
-- Güvenli dönüş yolu garantisi yok; bu görev için kabul edilemez güvenlik riski (P1)
-- Global optimum garanti edilmez; uzun rotalarda enerji israfı
-
----
-
-## Karar
-
-**Hibrit mimari benimsenmiştir:**
-
-- **Global Planlama:** Weighted A* — enerji, termal tercih ve eğim maliyeti heuristic'e dahil edilmiş A* varyantı. Görev başında ve replanning gerektiğinde çalışır (< 60 s garantisi, PLAN-001).
-- **Yerel/Reaktif Planlama:** D* Lite tabanlı inkremental güncelleme — LiDAR/kamera'dan gelen yeni engel verisi geldiğinde sadece etkilenen alanı günceller (< 30 s replanning, PLAN-002).
-- **Kısa mesafe engel kaçınma:** Potential Field kullanılmaz; D* Lite lokal güncellemesi bu rolü üstlenir.
-
-**Gerekçe:** RRT* deterministik gereksinimi karşılamadığı için elendi. Potential Field lokal minimum riski nedeniyle güvenlik açısından kabul edilemez. A* ve D* Lite'ın hibrit kullanımı hem optimal global çözümü hem de dinamik verimliliği sağlar.
+**Cons:**
+- Reference implementations are less tested in the space environment than A*
+- State update mechanism requires extra design for integration with energy/thermal-weighted heuristic
+- Harder to debug and formally verify than A*
 
 ---
 
-## Sonuçlar ve Kısıtlar
+### Alternative 3: RRT* (Rapidly-exploring Random Tree)
 
-1. **Heuristic bakımı:** Enerji-ağırlıklı heuristic fonksiyonu donanım enerji parametreleri gelince (TBD-PWR) kalibre edilmelidir; başlangıçta konservatif (overestimate etmez) değerlerle devreye alınacaktır.
-2. **Harita çözünürlüğü:** Global harita çözünürlüğü (**TBD:** m/piksel — DEM verisi bekleniyor) bellek bütçesini belirleyecektir.
-3. **Yeniden planlama eşiği:** D* Lite güncelleme tetikleyicisi engel boyutu ve konum farkı üzerinden ayarlanmalıdır; çok sık tetiklemek işlemci yükünü artırır.
-4. **Simülasyon önce:** Her heuristic değişikliği dijital ikizde doğrulanmadan üretime alınamaz (Simülasyon Doğrulamadan Önce prensibi).
-5. **ICD bağımlılığı:** Planlayıcı, Güç Yönetiminden (ICD-001) ve Termal Yönetiminden (ICD-002) enerji/termal state alır; bu arayüzler kilitlenene kadar heuristic basit mesafe hedefleriyle çalışır.
+**Pros:**
+- Efficient in high-dimensional state spaces (6-DOF vehicle)
+- Can naturally model non-holonomic constraints (vehicle turn radius)
+
+**Cons:**
+- Stochastic structure: different result with same input → violates deterministic requirement (FDIR-005 analogue)
+- Optimal solution guarantee only asymptotic; may not be optimal in practical time
+- Computation cost typically higher than A* and D*; risk in resource-constrained environment
+- Reproducibility and formal verification are difficult
+
+---
+
+### Alternative 4: Potential Field
+
+**Pros:**
+- Extremely fast and lightweight; suitable for real-time local obstacle avoidance
+- Simple to implement; easy to debug
+
+**Cons:**
+- Local minimum traps: can get stuck at crater passages or narrow corridors
+- No guaranteed safe return path; unacceptable safety risk for this mission (P1)
+- Global optimum not guaranteed; energy waste on long routes
+
+---
+
+## Decision
+
+**A hybrid architecture has been adopted:**
+
+- **Global Planning:** Weighted A* — an A* variant with energy, thermal preference, and slope cost incorporated into the heuristic. Runs at mission start and when replanning is needed (< 60 s guarantee, PLAN-001).
+- **Local/Reactive Planning:** D* Lite-based incremental update — when new obstacle data arrives from LiDAR/camera, only the affected area is updated (< 30 s replanning, PLAN-002).
+- **Short-range obstacle avoidance:** Potential Field is not used; the D* Lite local update takes on this role.
+
+**Rationale:** RRT* was eliminated because it does not meet the deterministic requirement. Potential Field is unacceptable from a safety perspective due to local minimum risk. The hybrid use of A* and D* Lite provides both the optimal global solution and dynamic efficiency.
+
+---
+
+## Consequences and Constraints
+
+1. **Heuristic maintenance:** The energy-weighted heuristic function must be calibrated once the hardware energy parameters arrive (TBD-PWR); it will be initially deployed with conservative (non-overestimating) values.
+2. **Map resolution:** Global map resolution (**TBD:** m/pixel — DEM data pending) will determine the memory budget.
+3. **Replanning threshold:** The D* Lite update trigger must be tuned based on obstacle size and position difference; triggering too frequently increases processor load.
+4. **Simulation first:** Every heuristic change must be validated in the digital twin before going to production (Simulation Before Validation principle).
+5. **ICD dependency:** The planner receives energy/thermal state from Power Management (ICD-001) and Thermal Management (ICD-002); until these interfaces are locked, the heuristic will operate with simple distance targets.

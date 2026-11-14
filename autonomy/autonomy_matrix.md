@@ -3,137 +3,137 @@
 # depends_on: [interfaces/schemas/vehicle_command.schema.yaml, mission-intelligence/constraints/hard_constraints.py, docs/conops/]
 # open_items: [authority_level field alignment with vehicle_command.schema.yaml pending schema finalization, ACL timeout durations TBD(source: §10)]
 
-# Otonomi Matrisi — LUNA-AI v1.1
+# Autonomy Matrix — LUNA-AI v1.1
 
-## Amaç
+## Purpose
 
-Bu belge, LUNA-AI aracının hangi koşullarda hangi kararları bağımsız alacağını (OTN), yer onayı bekleneceğini (YER), işlemin o fazda yasak olduğunu (YAS) veya yalnızca FDIR abort senaryosunda devreye gireceğini (ACL) tanımlar.
+This document defines under what conditions the LUNA-AI vehicle takes decisions autonomously (OTN), awaits ground approval (GCA), that an operation is prohibited in that phase (YAS), or activates only in an FDIR abort scenario (ACL).
 
-**Önemli:** Görev fazları (CRUISE/LANDING/SURFACE_EXPLORATION/PSR_OPS/RETURN/SAFE_STATE) ile güvenlik durumları (NORMAL/CAUTION/RETURN_REQUIRED/SURVIVAL) AYRI eksenlerdir. Bu matris görev fazı eksenini kullanır.
+**Important:** Mission phases (CRUISE/LANDING/SURFACE_EXPLORATION/PSR_OPS/RETURN/SAFE_STATE) and safety states (NOMINAL/CAUTION/RETURN_REQUIRED/SURVIVAL) are SEPARATE axes. This matrix uses the mission phase axis.
 
 ---
 
-## Sembol Tanımları
+## Symbol Definitions
 
-| Sembol | Anlam | Açıklama |
+| Symbol | Meaning | Description |
 |--------|-------|----------|
-| **OTN** | Otonom | Araç kendi karar verir, yer onayı gerekmez |
-| **YER** | Yer Onaylı | Komut bekler; süre aşımında bekle veya safe haven'a yönel |
-| **YAS** | Yasak | O görev fazında bu karar türü uygulanamaz |
-| **ACL** | Acil-Otonom | Yalnızca FDIR abort senaryosunda; normal operasyonda YER veya YAS |
+| **OTN** | Autonomous | Vehicle decides independently, no ground approval required |
+| **GCA** | Ground-Control Approved | Awaits command; on timeout, wait or move to safe haven |
+| **YAS** | Prohibited | This decision type is not applicable in this mission phase |
+| **ACL** | Emergency-Autonomous | Only in FDIR abort scenario; GCA or YAS in normal operations |
 
 ---
 
-## Ana Matris — Normal Operasyon
+## Main Matrix — Normal Operations
 
-> **Not:** Hard constraints (HC-001..015) her durumda önce değerlendirilir. Matris, HC kümesi geçildikten sonraki otorite seviyesini gösterir.
+> **Note:** Hard constraints (HC-001..015) are always evaluated first. The matrix shows the authority level after the HC set is passed.
 
-| Görev Fazı | Rota Değişikliği | Bilimsel Hedef Terk | PSR Girişi | Safe Haven Değişikliği | Acil Dönüş | Bilim Yükü Açma/Kapama | Mod Değişikliği |
+| Mission Phase | Route Change | Science Target Abandon | PSR Entry | Safe Haven Change | Emergency Return | Science Payload On/Off | Mode Change |
 |------------|-----------------|---------------------|------------|----------------------|------------|------------------------|-----------------|
-| **CRUISE** | YAS | YAS | YAS | YAS | ACL | YAS | YER |
+| **CRUISE** | YAS | YAS | YAS | YAS | ACL | YAS | GCA |
 | **LANDING** | YAS | YAS | YAS | YAS | ACL | YAS | ACL |
-| **SURFACE_EXPLORATION** | OTN | OTN | YER | YER | ACL | OTN | OTN |
-| **PSR_OPS** | OTN¹ | YER | YAS² | YER³ | ACL | YER | OTN |
-| **RETURN** | OTN | YAS | YAS | YER | ACL | OTN | OTN |
-| **SAFE_STATE** | YAS | YAS | YAS | YER | ACL | YAS | YER |
+| **SURFACE_EXPLORATION** | OTN | OTN | GCA | GCA | ACL | OTN | OTN |
+| **PSR_OPS** | OTN¹ | GCA | YAS² | GCA³ | ACL | GCA | OTN |
+| **RETURN** | OTN | YAS | YAS | GCA | ACL | OTN | OTN |
+| **SAFE_STATE** | YAS | YAS | YAS | GCA | ACL | YAS | GCA |
 
-**Dipnotlar:**
+**Footnotes:**
 
-¹ PSR_OPS rota değişikliği: Yalnızca pre-approved PSR haritası sınırları içinde OTN; sınır dışına çıkış YER gerektirir.
+¹ PSR_OPS route change: OTN only within pre-approved PSR map boundaries; going outside boundaries requires GCA.
 
-² PSR girişi: Dönüş rezervi (HC-006) doğrulanmadan giriş yasaktır. SURFACE_EXPLORATION'dan PSR_OPS'a geçiş her zaman YER.
+² PSR entry: Entry prohibited without return reserve (HC-006) verification. Transition from SURFACE_EXPLORATION to PSR_OPS is always GCA.
 
-³ Safe haven değişikliği PSR içinde: Koordinatlar veya birincil güzergah güncellenemez (PSR içinde orbital harita güncellemesi mümkün değil). Yedek safe haven seçimi (SC-005 tetiklenirse) ACL.
+³ Safe haven change inside PSR: Coordinates or primary route cannot be updated (orbital map update not possible inside PSR). Backup safe haven selection (if SC-005 triggered) is ACL.
 
 ---
 
-## İletişim Kaybı Matrisi
+## Communication Loss Matrix
 
-Telemetri linki koptuğunda aynı karar türleri için otorite seviyeleri:
+Authority levels for the same decision types when telemetry link is lost:
 
-| Görev Fazı | Rota Değişikliği | Bilimsel Hedef Terk | PSR Girişi | Safe Haven Değişikliği | Acil Dönüş | Bilim Yükü Açma/Kapama | Mod Değişikliği |
+| Mission Phase | Route Change | Science Target Abandon | PSR Entry | Safe Haven Change | Emergency Return | Science Payload On/Off | Mode Change |
 |------------|-----------------|---------------------|------------|----------------------|------------|------------------------|-----------------|
 | **CRUISE** | YAS | YAS | YAS | YAS | ACL | YAS | ACL |
 | **LANDING** | YAS | YAS | YAS | YAS | ACL | YAS | ACL |
-| **SURFACE_EXPLORATION** | OTN | OTN | BEKLE⁴ | OTN⁵ | ACL | OTN | OTN |
+| **SURFACE_EXPLORATION** | OTN | OTN | WAIT⁴ | OTN⁵ | ACL | OTN | OTN |
 | **PSR_OPS** | OTN⁶ | ACL⁷ | YAS | ACL⁸ | ACL | ACL | OTN |
 | **RETURN** | OTN | YAS | YAS | OTN | ACL | OTN | OTN |
 | **SAFE_STATE** | YAS | YAS | YAS | ACL | ACL | YAS | ACL |
 
-**Dipnotlar (İletişim Kaybı):**
+**Footnotes (Communication Loss):**
 
-⁴ PSR girişi link kaybı sırasında: Araç bekler (pre-planned abort trigger yoksa). Bekleme süresi: TBD(source: §10 — link recovery window). Süre aşımında PSR girişi iptal, güvenli bekle.
+⁴ PSR entry during link loss: Vehicle waits (if no pre-planned abort trigger). Wait duration: TBD(source: §10 — link recovery window). On timeout, PSR entry cancelled, wait safely.
 
-⁵ Safe haven değişikliği (SURFACE_EXPLORATION, link yok): Pre-planned yedek safe haven listesinden OTN seçim. Listede yer yoksa mevcut koordinatta bekle.
+⁵ Safe haven change (SURFACE_EXPLORATION, no link): OTN selection from pre-planned backup safe haven list. If not in list, wait at current coordinates.
 
-⁶ PSR_OPS rota değişikliği (link yok): Pre-approved sınırlar içinde devam OTN. Enerji uyarısı tetiklenirse ACL dönüş.
+⁶ PSR_OPS route change (no link): Continue within pre-approved boundaries OTN. If energy warning triggered, ACL return.
 
-⁷ Bilimsel hedef terk (PSR, link yok + FDIR uyarı): ACL — dönüş önceliklidir.
+⁷ Science target abandon (PSR, no link + FDIR warning): ACL — return has priority.
 
-⁸ Safe haven değişikliği (PSR, link yok): Yalnızca enerji kritik + birincil rota tıkandıysa ACL yedek safe haven seçimi.
+⁸ Safe haven change (PSR, no link): ACL backup safe haven selection only if energy critical + primary route blocked.
 
-**Özel Durum: PSR içinde link koptu + enerji kritik:**
-→ ACL acil dönüş tetiklenir. FDIR → RETURN_REQUIRED geçişi → Power Mgmt dönüş rezervi onaylar → Planner rota üretir.
+**Special Case: Link lost inside PSR + energy critical:**
+→ ACL emergency return triggered. FDIR → RETURN_REQUIRED transition → Power Mgmt confirms return reserve → Planner generates route.
 
 ---
 
-## Pre-Planned Abort Trigger Listesi
+## Pre-Planned Abort Trigger List
 
-Aşağıdaki koşullardan herhangi biri gerçekleştiğinde araç yer onayı beklemeksizin belirtilen eylemi uygular:
+When any of the following conditions occur, the vehicle applies the specified action without waiting for ground approval:
 
-| Trigger ID | Koşul | Eylem | Faz |
+| Trigger ID | Condition | Action | Phase |
 |------------|-------|-------|-----|
-| ABT-001 | `return_reserve_wh < HC-006_threshold` | ACL acil dönüş başlat | PSR_OPS, SURFACE_EXPLORATION |
-| ABT-002 | `position_uncertainty_m > QAR-NAV-002_threshold` | Dur, landmark ara, başarısızsa dönüş | SURFACE_EXPLORATION, PSR_OPS |
-| ABT-003 | `thermal_margin_c < 0` | ACL ısıtıcı maks + dönüş değerlendirmesi | Tüm yüzey fazları |
-| ABT-004 | `link_timeout > TBD(source: §10)` AND faz=PSR_OPS AND `energy_critical=true` | ACL acil dönüş | PSR_OPS |
-| ABT-005 | `safe_haven_route_blocked=true` AND `backup_safe_haven=none` | SURVIVAL modu hazırlığı | Tüm yüzey fazları |
-| ABT-006 | `fdir_abort_flag=true` | ACL göreve göre eylem (§4 FDIR ağacı) | Tüm fazlar |
+| ABT-001 | `return_reserve_wh < HC-006_threshold` | ACL emergency return initiation | PSR_OPS, SURFACE_EXPLORATION |
+| ABT-002 | `position_uncertainty_m > QAR-NAV-002_threshold` | Stop, search landmark, return if unsuccessful | SURFACE_EXPLORATION, PSR_OPS |
+| ABT-003 | `thermal_margin_c < 0` | ACL max heater + return evaluation | All surface phases |
+| ABT-004 | `link_timeout > TBD(source: §10)` AND phase=PSR_OPS AND `energy_critical=true` | ACL emergency return | PSR_OPS |
+| ABT-005 | `safe_haven_route_blocked=true` AND `backup_safe_haven=none` | SURVIVAL mode preparation | All surface phases |
+| ABT-006 | `fdir_abort_flag=true` | ACL action per mission (§4 FDIR tree) | All phases |
 
 ---
 
-## Operatör Onayı Zorunlu Kararlar (YER Hücreleri)
+## Decisions Requiring Operator Approval (GCA Cells)
 
-Aşağıdaki kararlar her koşulda yer operatörü onayı gerektirir:
+The following decisions always require ground operator approval:
 
-1. **PSR girişi** (tüm fazlardan) — Dönüş rezervi, termal durum, haberleşme penceresi doğrulanmadan girilemez
-2. **Safe haven değişikliği** (SURFACE_EXPLORATION, PSR_OPS, RETURN, SAFE_STATE'de) — 7 kriter doğrulaması yer tarafı sorumluluğundadır
-3. **Bilimsel hedef terk** (PSR_OPS'ta) — Bilimsel öncelik değişikliği görev otoritesi kararıdır
-4. **Mod değişikliği** (CRUISE, SAFE_STATE'de) — Kritik faz geçişleri manuel onay gerektirir
-5. **PSR_OPS rota değişikliği** (sınır dışı) — Harita güncellemesi yer tarafı doğrulaması gerektirir
+1. **PSR entry** (from all phases) — Cannot enter without verifying return reserve, thermal status, communication window
+2. **Safe haven change** (in SURFACE_EXPLORATION, PSR_OPS, RETURN, SAFE_STATE) — 7-criteria validation is ground-side responsibility
+3. **Science target abandon** (in PSR_OPS) — Science priority change is mission authority decision
+4. **Mode change** (in CRUISE, SAFE_STATE) — Critical phase transitions require manual approval
+5. **PSR_OPS route change** (outside boundaries) — Map update requires ground-side validation
 
 ---
 
-## Bağlantı: vehicle_command.schema.yaml
+## Cross-Reference: vehicle_command.schema.yaml
 
-Bu matristeki otorite seviyeleri `interfaces/schemas/vehicle_command.schema.yaml` → `authority_level` alanıyla hizalıdır:
+Authority levels in this matrix are aligned with `interfaces/schemas/vehicle_command.schema.yaml` → `authority_level` field:
 - `OTN` → `authority_level: "autonomous"`
-- `YER` → `authority_level: "ground_approved"`
+- `GCA` → `authority_level: "ground_approved"`
 - `ACL` → `authority_level: "emergency_autonomous"`
-- `YAS` → komut gönderimi `authority_level` validasyonunda reddedilir
+- `YAS` → command submission rejected in `authority_level` validation
 
 ---
 
 ---
 
-## Görev Planlama Kararları — Yer Onayı Zorunlu (B1-EK)
+## Mission Planning Decisions — Ground Approval Required (B1-EK)
 
-Aşağıdaki kararlar, otonomi matrisi dışında ancak v1.2 entegrasyon kapsamında operatör onayı (YER) gerektiren ek karar türleridir:
+The following decisions, outside the autonomy matrix but within v1.2 integration scope, are additional decision types requiring operator approval (GCA):
 
-| Karar Türü | Otorite | Gerekçe |
+| Decision Type | Authority | Justification |
 |-----------|---------|---------|
-| **Site finder kararı** | YER | Nihai iniş bölgesi seçimi görev otoritesi kararıdır; algoritmik sıralama (site finder weighted score) girdi sağlar, karar vermez |
-| **"When to land" / iniş penceresi seçimi** | YER | Güneş/Dünya geometrisi pencere önerisi sunar; iniş zamanı seçimi insansız görev için dahi yer kontrolü onayı gerektirir |
-| **Çoklu bölge karşılaştırması / bölge seçimi** | YER | 2–5 bölge arasından nihai seçim görev otoritesi kararıdır |
-| **Geometri güncellemesi (tahmin iyileştirmesi)** | OTN | Hesaplama iyileştirmesi (JPL Horizons güncellemesi vb.) otonom olabilir; bölge veya zaman seçimi değiştirilmiyorsa onay gerekmez |
+| **Site finder decision** | GCA | Final landing region selection is a mission authority decision; algorithmic ranking (site finder weighted score) provides input, does not decide |
+| **"When to land" / landing window selection** | GCA | Sun/Earth geometry proposes a window; landing time selection requires ground control approval even for unmanned missions |
+| **Multi-region comparison / region selection** | GCA | Final selection from 2–5 regions is a mission authority decision |
+| **Geometry update (prediction improvement)** | OTN | Calculation improvement (JPL Horizons update etc.) can be autonomous; no approval required if region or time selection is not changed |
 
-**Önemli ayrım:** Site finder algoritması ve "when to land" analizi karar *önerisi* üretir. Nihai bölge-zaman seçimi her koşulda YER'dir. Geometrik hesaplama güncellemesi (örn. yeni ephemeris verisiyle yeniden hesaplama) ise OTN olabilir.
+**Important distinction:** Site finder algorithm and "when to land" analysis produce a decision *proposal*. Final region-time selection is always GCA. Geometric calculation update (e.g. recalculation with new ephemeris data) can be OTN.
 
 ---
 
-## Revizyon Geçmişi
+## Revision History
 
-| Versiyon | Tarih | Değişiklik |
+| Version | Date | Change |
 |----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — B1 görevi |
-| 0.2 | 2026-11-14 | B1-EK: Site finder, iniş penceresi, çoklu bölge karşılaştırması YER kararları eklendi |
+| 0.1 | 2026-11-14 | First draft — B1 task |
+| 0.2 | 2026-11-14 | B1-EK: Site finder, landing window, multi-region comparison GCA decisions added |

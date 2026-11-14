@@ -1,82 +1,81 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on: [mission-intelligence/constraints/hard_constraints.py, docs/qar/, simulation/scenarios/operational_scenarios.md, autonomy/autonomy_matrix.md]
-# open_items: [RPN eşik politikası TBD — hangi RPN'den yukarısı program riski sayılır, azaltma stratejileri §10 araç verisi geldikçe güncellenecek]
+# open_items: [RPN threshold policy TBD — above which RPN counts as programme risk; mitigation strategies will be updated as §10 vehicle data arrives]
 
-# Risk Kaydı — LUNA-AI v1.1
+# Risk Register — LUNA-AI v1.1
 
-## Amaç
+## Purpose
 
-Bu belge LUNA-AI sisteminin tanımlanmış teknik ve operasyonel risklerini, olasılık/etki değerlendirmelerini ve azaltma stratejilerini kayıt altına alır. Risk sahipleri ile izleme yöntemleri proje fazlarına göre güncellenir.
+This document records the identified technical and operational risks of the LUNA-AI system, their probability/impact assessments, and mitigation strategies. Risk owners and monitoring methods are updated per project phase.
 
-## Skorlama Skalası
+## Scoring Scale
 
-- **Olasılık (1-5):** 1=Çok düşük (<5%), 2=Düşük (5-20%), 3=Orta (20-40%), 4=Yüksek (40-60%), 5=Çok yüksek (>60%)
-- **Etki (1-5):** 1=İhmal edilebilir, 2=Küçük, 3=Orta (görev hedefi etkilenir), 4=Büyük (görev başarısı risk altında), 5=Kritik (güvenlik tehlikesi veya tam görev kaybı)
-- **RPN = Olasılık × Etki**
-
----
-
-## Risk Tablosu
-
-| ID | Risk Tanımı | Kaynak | Olasılık (1-5) | Etki (1-5) | RPN | Azaltma Stratejisi | İzleme Yöntemi | Sahip | Durum |
-|----|-------------|--------|----------------|------------|-----|-------------------|----------------|-------|-------|
-| RR-001 | Kaynak-kısıtlı planlayıcı hesap süresi aşımı | §6 A* algoritması | 3 | 3 | 9 | Hesap süresi aşımı için fallback: önceki geçerli rota veya sabit safe haven yönelimi. Zaman bütçesi < 30s replanning hedefi. Anytime algoritma yaklaşımı değerlendirilecek. | SIL performans testi: 1km² arazi, 100 senaryo. Replanning süresi histogramı. | autonomy/global-planner | AÇIK |
-| RR-002 | Belirsizlik altında dönüş rezervi yetersizliği | Tahmin hatası + mesafe birikimi | 3 | 5 | 15 | HC-006 worst-case (2σ) planlama zorunlu. Dönüş rezervi güncelleme periyodu optimize edilecek. Enerji tüketim modeli kalibrasyon testleri. | HIL enerji tüketim doğrulaması; worst-case senaryo SIL. σ_energy izleme. | power | AÇIK |
-| RR-003 | Termal model doğruluğu — VIPER parametresi | §6 uyarısı: VIPER verisi kullanıldıysa | 4 | 4 | 16 | §10 araç verisi geldiğinde termal model yeniden kalibre edilecek. TBD(source: §10 araç termal kütle + yalıtım). VIPER parametrelerinin hangi modüllerde kullanıldığı belgelenmeli. | P2: simülatör termal doğrulama; P3 HIL: gerçek araç termal ölçümü. Sapma eşiği: ±TBD%. | thermal | AÇIK |
-| RR-004 | İletişim kaybı süresi tahmini — blackout beklenden uzun | Lunar relay geometrisi, yer anten müsaitliği | 3 | 4 | 12 | Link budget hesabı §10 iletişim donanımına bağlı. TBD(source: §10). Pre-planned abort trigger süreleri muhafazakâr seçilecek. Blackout toleransı SC-002 senaryosuna göre tasarlanacak. | Trajectory simülasyonu ile link kesinti analizi. SC-002 SIL testi. | communication | AÇIK |
-| RR-005 | Belirsizlik eşik kalibrasyonu — QAR değerleri gerçek araçla uyumsuz | QAR-NAV-002 ve diğer QAR eşikleri | 3 | 3 | 9 | P1'de simülatör kalibrasyonu. P3 HIL'de gerçek sensör gürültüsü altında eşik revizyonu. Araç sensör paketi §10'dan geldikçe güncelleme. | HIL: lokalizasyon sigma ölçümü < 0.5m hedefi (P3 kabul kriteri). QAR eşik gözden geçirme toplantısı. | vehicle/localization | AÇIK |
-| RR-006 | PSR haritası çözünürlük yetersizliği — ShadowCam kalitesi beklenden düşük | ShadowCam/LOLA veri kalitesi | 2 | 4 | 8 | temporal_class=predicted ürünler için belirsizlik bandı genişletilir. DEM çözünürlük yeterliliği B5 §1 tablosuna göre değerlendirilir (> 20m/px eleme). Alternatif veri kaynağı (Kaguya, LRO) değerlendirilecek. | Veri kalite skoru izleme. P1: aydınlanma modeli ±TBD% doğrulama. | data-platform | AÇIK |
-| RR-007 | Lokalizasyon bootstrap hatası — iniş sonrası ilk konum kestirimi hatalı | İniş GNC → navigasyon handover | 3 | 4 | 12 | P3 kabul kriteri: Landing GNC → yüzey navigasyon handover doğrulanacak. Bootstrap belirsizliği σ başlangıç değeri muhafazakâr seçilecek. İlk landmark eşleşmesi öncelikli. | P3 HIL: iniş simülasyonu + lokalizasyon başlatma testi. σ_pos < eşik hedefi. | vehicle/localization | AÇIK |
-| RR-008 | Güç-termal döngü kararsızlığı — ısıtıcı yükü enerji bütçesini sürekli ihlal ediyor | Termal-enerji geri besleme döngüsü | 2 | 4 | 8 | Power Mgmt sahibi, Planner tüketici (Uyum Notu 3). Döngü kararlılığı: ısıtıcı talep güncelleme periyodu optimize edilecek. TBD(source: §10 ısıtıcı güç profili). Kararlılık analizi SIL'de yapılacak. | SIL: enerji-termal ko-simülasyon 24 saatlik görev. Kararsızlık tespiti için enerji bandı aşım sayacı. | power + thermal | AÇIK |
-| RR-009 | Araç donanım parametresi değişimi — §10 girdileri beklenen aralık dışı | §10 araç tasarım revizyonu | 3 | 3 | 9 | config/open_inputs.md'de bloke edici vs dondurulabilir girdiler ayrılmış. Parametre değişikliği impact analizi prosedürü oluşturulacak. TBD kaydı config/tbd_register.md'de takip edilir. | config/tbd_register.md düzenli güncelleme. §10 girdi değişikliğinde etkilenen modüllerin re-test listesi hazırlanacak. | luna-ai-architecture | AÇIK |
-| RR-010 | FDIR yanlış pozitif — sağlıklı sistemde abort tetikleniyor | FDIR eşik kalibrasyonu | 2 | 3 | 6 | FDIR eşik değerleri QAR doğrulama kapsamına dahil edilecek. Yanlış pozitif oranı SIL hata enjeksiyonu ile ölçülecek. Eşik ayarı muhafazakâr ama gereksiz abort'u engelleyecek şekilde tasarlanacak. | B4 Hata Enjeksiyonu Matrisi: 10 kritik senaryo × FDIR beklenen tepki = %100 uyum hedefi. FDIR yanlış pozitif oranı < TBD%. | safety/fdir | AÇIK |
-
-| RR-011 | Çözünürlük sınırı: 80m DEM / 300m site finder hücre — küçük engel gözden kaçması | 80m DEM → engel < 80m boyut; 300m site finder hücresi | 3 | 4 | 12 | Local planner 80m altı engelleri IMU/lidar ile gerçek zamanlı algılar. 300m site finder hücresi site sınırında ±150m belirsizlik kabul edilir; PSR sınır güveni hesabı buna göre. B5-EK §7.3 ile hizalı. | P1 simülatör: 80m altı engel enjeksiyonu, local planner tepkisi. | vehicle/perception | AÇIK |
-| RR-012 | Zaman aralığı sınırı: Repo yalnızca 2024–2035 geçerli; bu dışında görev | Ephemeris ve aydınlanma modeli geçerlilik aralığı | 1 | 3 | 3 | Görev tarihi 2024–2035 içinde kalmalı. Dışında kalıyorsa ephemeris ve aydınlanma hesapları TBD (farklı araç gerekebilir). `ephemeris_validity_range` şema alanı zorunlu. | config/open_inputs.md görev tarihi kısıtı. İzleme: görev tarihi onay kapısı. | luna-ai-architecture | AÇIK |
-| RR-013 | Observer height hassasiyeti: 1m yükseklik farkı en uzun geceyi yarıya indirebilir; operasyonel anten yüksekliği TBD | Araç yapısı tasarımı (§10) | 3 | 3 | 9 | SC-009 duyarlılık analizi P1'de tamamlanacak. Anten yüksekliği §10'dan dondurulunca horizon.py yeniden çalıştırılır. TBD-HEIGHT-001: observer_height_m (source: §10). | P1 Analysis: observer_height ±1m duyarlılık. §10 girdi dondurulunca yeniden hesaplama. | thermal + power | AÇIK |
-| RR-014 | Earth eclipse refraksiyon ihmalı: Repo bu etkiyi hesaplamaz; gerçek Dünya görünürlüğü marjinal durumlarda sapabilir | pipeline/ephem/ tasarım kararı | 2 | 3 | 6 | Marjinal Dünya görünürlük pencereleri (elevation < TBD°) `confidence: LOW` ile işaretlenir. Bu pencereler link planlama hesabında güvenli bant dışı tutulur. B5-EK §7.4 azaltma stratejisi. | P2 SIL: marjinal pencere testleri. AC-VAL-003 Dünya görünürlük doğrulaması (r≥0.993). | communication | AÇIK |
-| RR-015 | Site finder 300m çözünürlük: 80m DEM'den düşürülmüş; ince topografya kayıpları olabilir | Site finder pipeline çözünürlük seçimi | 2 | 3 | 6 | Site sınırı belirsizliği ±150m kabul edilir; sınırda kalan adaylar için 80m DEM yeniden değerlendirmesi gerekebilir. `terrain_resolution` şema alanı zorunlu. AC-VAL-005: 80m vs 300m fark raporu. | P1: 80m vs 300m site boundary karşılaştırması. AC-VAL-005 teslimi. | data-platform | AÇIK |
+- **Probability (1-5):** 1=Very low (<5%), 2=Low (5-20%), 3=Medium (20-40%), 4=High (40-60%), 5=Very high (>60%)
+- **Impact (1-5):** 1=Negligible, 2=Minor, 3=Moderate (mission objective affected), 4=Major (mission success at risk), 5=Critical (safety hazard or total mission loss)
+- **RPN = Probability × Impact**
 
 ---
 
-## RPN Önem Sıralaması
+## Risk Table
 
-| Sıra | ID | RPN | Açıklama |
-|------|----|-----|----------|
-| 1 | RR-003 | 16 | Termal model doğruluğu (VIPER uyarısı) |
-| 2 | RR-002 | 15 | Dönüş rezervi belirsizliği |
-| 3 | RR-004 | 12 | İletişim kaybı süresi |
-| 4 | RR-007 | 12 | Lokalizasyon bootstrap hatası |
-| 5 | RR-001 | 9 | Planlayıcı hesap süresi |
-| 6 | RR-005 | 9 | QAR eşik kalibrasyonu |
-| 7 | RR-009 | 9 | Donanım parametresi değişimi |
-| 8 | RR-006 | 8 | PSR haritası çözünürlük |
-| 9 | RR-008 | 8 | Güç-termal kararsızlık |
-| 10 | RR-010 | 6 | FDIR yanlış pozitif |
-
-| 11 | RR-011 | 12 | Çözünürlük sınırı: 80m DEM / 300m site finder |
-| 12 | RR-012 | 3 | Zaman aralığı sınırı (2024–2035) |
-| 13 | RR-013 | 9 | Observer height hassasiyeti |
-| 14 | RR-014 | 6 | Earth eclipse refraksiyon ihmalı |
-| 15 | RR-015 | 6 | Site finder 300m çözünürlük |
-
-**Yüksek öncelik eşiği (RPN ≥ 12):** RR-002, RR-003, RR-004, RR-007, RR-011 → P1 simülasyon aşamasında azaltma tamamlanmalı.
+| ID | Risk Description | Source | Probability (1-5) | Impact (1-5) | RPN | Mitigation Strategy | Monitoring Method | Owner | Status |
+|----|-----------------|--------|-------------------|-------------|-----|--------------------|--------------------|-------|--------|
+| RR-001 | Resource-constrained planner computation timeout | §6 A* algorithm | 3 | 3 | 9 | Fallback for computation timeout: previous valid route or fixed safe haven orientation. Time budget < 30 s replanning target. Anytime algorithm approach to be evaluated. | SIL performance test: 1 km² terrain, 100 scenarios. Replanning time histogram. | autonomy/global-planner | OPEN |
+| RR-002 | Insufficient return reserve under uncertainty | Estimation error + distance accumulation | 3 | 5 | 15 | HC-006 worst-case (2σ) planning mandatory. Return reserve update period to be optimised. Energy consumption model calibration tests. | HIL energy consumption validation; worst-case scenario SIL. σ_energy monitoring. | power | OPEN |
+| RR-003 | Thermal model accuracy — VIPER parameter | §6 warning: if VIPER data is used | 4 | 4 | 16 | Thermal model will be recalibrated when §10 vehicle data arrives. TBD(source: §10 vehicle thermal mass + insulation). Which modules use VIPER parameters must be documented. | P2: simulator thermal validation; P3 HIL: real vehicle thermal measurement. Deviation threshold: ±TBD%. | thermal | OPEN |
+| RR-004 | Communication loss duration estimate — blackout longer than expected | Lunar relay geometry, ground antenna availability | 3 | 4 | 12 | Link budget calculation depends on §10 communication hardware. TBD(source: §10). Pre-planned abort trigger durations to be selected conservatively. Blackout tolerance to be designed based on SC-002 scenario. | Trajectory simulation with link outage analysis. SC-002 SIL test. | communication | OPEN |
+| RR-005 | Uncertainty threshold calibration — QAR values incompatible with real vehicle | QAR-NAV-002 and other QAR thresholds | 3 | 3 | 9 | P1 simulator calibration. P3 HIL: threshold revision under real sensor noise. Update as vehicle sensor suite arrives from §10. | HIL: localisation sigma measurement < 0.5 m target (P3 acceptance criterion). QAR threshold review meeting. | vehicle/localization | OPEN |
+| RR-006 | PSR map resolution insufficient — ShadowCam quality lower than expected | ShadowCam/LOLA data quality | 2 | 4 | 8 | Uncertainty band widened for temporal_class=predicted products. DEM resolution adequacy evaluated per B5 §1 table (> 20 m/px elimination). Alternative data sources (Kaguya, LRO) to be evaluated. | Data quality score monitoring. P1: illumination model ±TBD% validation. | data-platform | OPEN |
+| RR-007 | Localisation bootstrap error — initial position estimate wrong after landing | Landing GNC → navigation handover | 3 | 4 | 12 | P3 acceptance criterion: Landing GNC → surface navigation handover to be validated. Bootstrap uncertainty σ initial value to be selected conservatively. First landmark match prioritised. | P3 HIL: landing simulation + localisation initialisation test. σ_pos < threshold target. | vehicle/localization | OPEN |
+| RR-008 | Power-thermal loop instability — heater load continuously violates energy budget | Thermal-energy feedback loop | 2 | 4 | 8 | Power Mgmt owner, Planner consumer (Compliance Note 3). Loop stability: heater demand update period to be optimised. TBD(source: §10 heater power profile). Stability analysis to be done in SIL. | SIL: energy-thermal co-simulation 24-hour mission. Energy band excess counter for instability detection. | power + thermal | OPEN |
+| RR-009 | Vehicle hardware parameter change — §10 inputs outside expected range | §10 vehicle design revision | 3 | 3 | 9 | Blocking vs. range-freezable inputs separated in config/open_inputs.md. Parameter change impact analysis procedure to be established. TBD register tracked in config/tbd_register.md. | config/tbd_register.md regular updates. §10 input change triggers re-test list for affected modules. | luna-ai-architecture | OPEN |
+| RR-010 | FDIR false positive — abort triggered in healthy system | FDIR threshold calibration | 2 | 3 | 6 | FDIR threshold values to be included in QAR validation scope. False positive rate to be measured with SIL fault injection. Threshold tuning to be conservative but prevent unnecessary aborts. | B4 Fault Injection Matrix: 10 critical scenarios × FDIR expected response = 100% compliance target. FDIR false positive rate < TBD%. | safety/fdir | OPEN |
+| RR-011 | Resolution limit: 80 m DEM / 300 m site finder cell — small obstacle missed | 80 m DEM → obstacle < 80 m size; 300 m site finder cell | 3 | 4 | 12 | Local planner detects sub-80 m obstacles in real time with IMU/lidar. 300 m site finder cell accepts ±150 m uncertainty at site boundary; PSR boundary confidence calculation adjusted accordingly. Aligned with B5-EK §7.3. | P1 simulator: sub-80 m obstacle injection, local planner response. | vehicle/perception | OPEN |
+| RR-012 | Time range limit: Repo valid only for 2024–2035; mission outside this range | Ephemeris and illumination model validity range | 1 | 3 | 3 | Mission date must remain within 2024–2035. If outside, ephemeris and illumination calculations TBD (a different tool may be needed). `ephemeris_validity_range` schema field is required. | config/open_inputs.md mission date constraint. Monitoring: mission date approval gate. | luna-ai-architecture | OPEN |
+| RR-013 | Observer height sensitivity: 1 m height difference can halve the longest night; operational antenna height TBD | Vehicle structural design (§10) | 3 | 3 | 9 | SC-009 sensitivity analysis to be completed in P1. horizon.py to be rerun once antenna height is frozen from §10. TBD-HEIGHT-001: observer_height_m (source: §10). | P1 Analysis: observer_height ±1 m sensitivity. Recalculation once §10 input is frozen. | thermal + power | OPEN |
+| RR-014 | Earth eclipse refraction ignored: Repo does not calculate this effect; real Earth visibility may deviate in marginal cases | pipeline/ephem/ design decision | 2 | 3 | 6 | Marginal Earth visibility windows (elevation < TBD°) flagged with `confidence: LOW`. These windows excluded from safe band in link planning calculation. B5-EK §7.4 mitigation strategy. | P2 SIL: marginal window tests. AC-VAL-003 Earth visibility validation (r≥0.993). | communication | OPEN |
+| RR-015 | Site finder 300 m resolution: downsampled from 80 m DEM; fine topography losses possible | Site finder pipeline resolution choice | 2 | 3 | 6 | Site boundary uncertainty ±150 m accepted; candidates on boundaries may need 80 m DEM re-evaluation. `terrain_resolution` schema field required. AC-VAL-005: 80 m vs 300 m difference report. | P1: 80 m vs 300 m site boundary comparison. AC-VAL-005 delivery. | data-platform | OPEN |
 
 ---
 
-## TBD Referansları Bu Belgede
+## RPN Ranking
 
-- RR-003: Termal model sapma eşiği `±TBD%` (source: §10 araç termal kütle + yalıtım)
-- RR-004: Link timeout süresi (source: §10 iletişim donanımı)
-- RR-008: Isıtıcı güç profili (source: §10)
-- RR-010: FDIR yanlış pozitif oranı hedefi (source: güvenilirlik analizi)
+| Rank | ID | RPN | Description |
+|------|----|-----|-------------|
+| 1 | RR-003 | 16 | Thermal model accuracy (VIPER warning) |
+| 2 | RR-002 | 15 | Return reserve uncertainty |
+| 3 | RR-004 | 12 | Communication loss duration |
+| 4 | RR-007 | 12 | Localisation bootstrap error |
+| 5 | RR-001 | 9 | Planner computation time |
+| 6 | RR-005 | 9 | QAR threshold calibration |
+| 7 | RR-009 | 9 | Hardware parameter change |
+| 8 | RR-006 | 8 | PSR map resolution |
+| 9 | RR-008 | 8 | Power-thermal instability |
+| 10 | RR-010 | 6 | FDIR false positive |
+
+| 11 | RR-011 | 12 | Resolution limit: 80 m DEM / 300 m site finder |
+| 12 | RR-012 | 3 | Time range limit (2024–2035) |
+| 13 | RR-013 | 9 | Observer height sensitivity |
+| 14 | RR-014 | 6 | Earth eclipse refraction ignored |
+| 15 | RR-015 | 6 | Site finder 300 m resolution |
+
+**High priority threshold (RPN ≥ 12):** RR-002, RR-003, RR-004, RR-007, RR-011 → mitigation must be completed in P1 simulation phase.
 
 ---
 
-## Revizyon Geçmişi
+## TBD References in This Document
 
-| Versiyon | Tarih | Değişiklik |
-|----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — B3 görevi, 10 risk, RPN sıralaması |
-| 0.2 | 2026-11-14 | B3-EK: RR-011..015 eklendi (çözünürlük sınırı, zaman aralığı, observer height, refraksiyon, site finder 300m) |
+- RR-003: Thermal model deviation threshold `±TBD%` (source: §10 vehicle thermal mass + insulation)
+- RR-004: Link timeout duration (source: §10 communication hardware)
+- RR-008: Heater power profile (source: §10)
+- RR-010: FDIR false positive rate target (source: reliability analysis)
+
+---
+
+## Revision History
+
+| Version | Date | Change |
+|---------|------|--------|
+| 0.1 | 2026-11-14 | Initial draft — B3 task, 10 risks, RPN ranking |
+| 0.2 | 2026-11-14 | B3-EK: RR-011..015 added (resolution limit, time range, observer height, refraction, site finder 300 m) |

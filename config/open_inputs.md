@@ -1,47 +1,47 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on: [mission-intelligence/constraints/hard_constraints.py, domain/environment/uncertainty_policy.md]
-# open_items: [Bloke edici girdiler §10 kaynak onayını bekliyor; varsayılan aralıklar P1'de test edilecek]
+# open_items: [Blocking inputs are awaiting §10 source approval; default ranges will be tested in P1]
 
-# Açık Girdi Sınıflandırması — LUNA-AI v1.1 (v1.0 §10)
+# Open Input Classification — LUNA-AI v1.1 (v1.0 §10)
 
-## Amaç
+## Purpose
 
-§10 araç donanım girdilerini iki kategoriye ayırır: P0/P1 aşamasında varsayılan aralıkla ilerlenebilecek olanlar ile kesinleşmeden ilerlenemeyen bloke edici girdiler.
-
----
-
-## Tablo 1 — Aralıkla Dondurulabilir (P0/P1 varsayımla ilerlenebilir)
-
-| Girdi | Varsayılan Aralık | Gerekçe | Etkilediği Modüller |
-|-------|-----------------|---------|-------------------|
-| Araç kütlesi | 100–300 kg | Lunar rover sınıfı (küçük-orta) | vehicle/mobility-control, power (enerji/kg tüketim) |
-| Batarya kapasitesi | 500–1500 Wh | Küçük-orta rover tipik aralığı | power, HC-006 (dönüş rezervi eşiği) |
-| Güneş paneli gücü | 300–800 W | Panel alanı ~1–2m² varsayımı | power, HC-009 (aydınlanma süresi yeterliliği) |
-| Maks tırmanma açısı | 20–30° | Tekerlekli rover tipik sınırı | HC-001 (eğim sınırı), HC-005, autonomy/global-planner |
-| Nominal gezinti hızı | 0.05–0.15 m/s | Lunar rover standart operasyon hızı | autonomy/global-planner (rota süresi tahmini) |
-| Isıtıcı güç tüketimi | 50–200 W | Tipik rover termal sistem | thermal, power bütçesi |
-| Observer height (anten/sensör) | 0.5–2.0 m | Tipik rover mast yüksekliği | communication (Dünya görünürlük), simulation/environment-model |
-
-**Kullanım kuralı:** Aralık uç değerleri worst-case senaryolarda kullanılır. P1 simülasyon sonuçları aralık dışı tutumlar ortaya koyarsa yeniden değerlendirme gerekir.
+Separates §10 vehicle hardware inputs into two categories: those where a default range can be used to proceed in P0/P1, and blocking inputs that cannot be advanced without being finalised.
 
 ---
 
-## Tablo 2 — Bloke Edici (Kesinleşmeden ilerlenemez)
+## Table 1 — Range-Freezable (can proceed with assumption in P0/P1)
 
-| Girdi | Neden Bloke Edici | Etkilediği Modüller | Beklenen Kaynak |
-|-------|-----------------|-------------------|-----------------|
-| Sensör paketi (tip, sayı, konfigürasyon) | Lokalizasyon algoritması seçimini belirler; EKF gürültü parametreleri sensöre bağımlıdır | vehicle/localization, vehicle/perception, FDIR eşikleri (QAR-NAV-002) | §10 araç tasarımı |
-| Batarya kimyası (Li-ion, Li-Po vb.) | Güvenli şarj/deşarj limitleri ve termal model (C/kapasite limiti, düşük sıcaklık kesimi) batarya kimyasına bağlıdır | power, thermal, HC-006, HC-007 | §10 |
-| Termal kütle + yalıtım konfigürasyonu | Karanlık toleransı hesabı (en uzun gece dayanımı) ve VIPER uyarısı: §10 gelene kadar VIPER parametresi kullanılıyorsa sapma riski | thermal, HC-007 (karanlık toleransı), SC-006 (termal ihlal) | §10 |
-| İletişim donanımı (anten tipi, bant genişliği, güç) | Link budget hesabı, haberleşme kesinti toleransı (SC-002, SC-007), pencere kalitesi | communication, HC-014, autonomy/autonomy_matrix.md | §10 |
-| İniş GNC gereksinimleri ve tasarımı | Landing GNC ayrı tasarım bileşeni; girdi gelmeden lokalizasyon handover testi (P3-AC-03) başlatılamaz | vehicle/landing-gnc, vehicle/localization | §10 |
-| Görev tarihi / başlangıç penceresi | Ephemeris geçerlilik aralığı (2024–2035); bu dışında kalan tarih için ortam modeli geçersiz | simulation/environment-model, apps/ground-control, SC-008 | Görev otoritesi + §10 |
+| Input | Default Range | Rationale | Affected Modules |
+|-------|--------------|-----------|-----------------|
+| Vehicle mass | 100–300 kg | Small-to-medium lunar rover class | vehicle/mobility-control, power (energy/kg consumption) |
+| Battery capacity | 500–1500 Wh | Typical small-to-medium rover range | power, HC-006 (return reserve threshold) |
+| Solar panel power | 300–800 W | Panel area ~1–2 m² assumption | power, HC-009 (illumination duration adequacy) |
+| Max climb angle | 20–30° | Typical wheeled rover limit | HC-001 (slope limit), HC-005, autonomy/global-planner |
+| Nominal traverse speed | 0.05–0.15 m/s | Lunar rover standard operating speed | autonomy/global-planner (route time estimation) |
+| Heater power consumption | 50–200 W | Typical rover thermal system | thermal, power budget |
+| Observer height (antenna/sensor) | 0.5–2.0 m | Typical rover mast height | communication (Earth visibility), simulation/environment-model |
+
+**Usage rule:** Range extremes are used in worst-case scenarios. If P1 simulation results reveal out-of-range behaviour, re-evaluation is required.
 
 ---
 
-## Revizyon Geçmişi
+## Table 2 — Blocking (cannot proceed without finalisation)
 
-| Versiyon | Tarih | Değişiklik |
-|----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — C3 görevi |
+| Input | Why Blocking | Affected Modules | Expected Source |
+|-------|-------------|-----------------|-----------------|
+| Sensor suite (type, count, configuration) | Determines localisation algorithm choice; EKF noise parameters are sensor-dependent | vehicle/localization, vehicle/perception, FDIR thresholds (QAR-NAV-002) | §10 vehicle design |
+| Battery chemistry (Li-ion, Li-Po, etc.) | Safe charge/discharge limits and thermal model (C-rate limit, low-temperature cutoff) depend on battery chemistry | power, thermal, HC-006, HC-007 | §10 |
+| Thermal mass + insulation configuration | Darkness tolerance calculation (longest night survivability) and VIPER warning: if VIPER parameters are used before §10 arrives, there is a divergence risk | thermal, HC-007 (darkness tolerance), SC-006 (thermal violation) | §10 |
+| Communication hardware (antenna type, bandwidth, power) | Link budget calculation, communication outage tolerance (SC-002, SC-007), window quality | communication, HC-014, autonomy/autonomy_matrix.md | §10 |
+| Landing GNC requirements and design | Landing GNC is a separate design component; localisation handover test (P3-AC-03) cannot start without this input | vehicle/landing-gnc, vehicle/localization | §10 |
+| Mission date / start window | Ephemeris validity range (2024–2035); environment model is invalid for dates outside this range | simulation/environment-model, apps/ground-control, SC-008 | Mission authority + §10 |
+
+---
+
+## Revision History
+
+| Version | Date | Change |
+|---------|------|--------|
+| 0.1 | 2026-11-14 | Initial draft — C3 task |

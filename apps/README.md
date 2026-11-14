@@ -1,9 +1,9 @@
 # apps/
 
-Kullanıcı arayüzleri ve servis katmanı: yer kontrol arayüzü, görev API'si, simülatör bağlantısı. Bkz. v1.0 §1.8.
+User interfaces and service layer: ground control UI, mission API, simulator connector. See v1.0 §1.8.
 
-## Alt Dizinler
+## Subdirectories
 
-- `ground-control/` — Yer kontrol istasyonu UI; site seçimi, telemetri görüntüleme, operatör onay arayüzü.
-- `mission-api/` — Görev komuta ve sorgulama REST/gRPC servisi; araç-yer veri köprüsü.
-- `simulator/` — Simülatör bağlantı katmanı; SIL koşuları için araç modeli arayüzü.
+- `ground-control/` — Ground control station UI; site selection, telemetry display, operator approval interface.
+- `mission-api/` — Mission command and query REST/gRPC service; vehicle-ground data bridge.
+- `simulator/` — Simulator connector layer; vehicle model interface for SIL runs.

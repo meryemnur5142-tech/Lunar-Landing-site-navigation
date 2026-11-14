@@ -1,94 +1,94 @@
-# ADR-002: Yer Segmenti Programlama Dili
+# ADR-002: Ground Segment Programming Language
 
-**Durum:** Kabul Edildi  
-**Tarih:** 2026-11-14  
-**İlgili Bileşenler:** Ground Segment — Bilimsel Analiz, Görev Tasarımı, Operatör Arayüzü
-
----
-
-## Bağlam
-
-Ground Segment aşağıdaki görevleri yerine getirir:
-
-- **GDAL tabanlı DEM (Digital Elevation Model) işleme:** Ay yüzey yükseklik verileri (örn. LOLA, MiniRF) yükleme, dönüştürme, analiz
-- **SPICE/SpiceyPy entegrasyonu:** NASA NAIF SPICE aracı kiti — orbital mekanik, aydınlanma analizi, güneş açısı hesaplama
-- **Bilimsel veri analizi:** Spektroskopi, termal haritalama, PSR kaynak tahmin modelleri
-- **Operatör arayüzü:** Web tabanlı veya masaüstü araç (görev planı görselleştirme, telemetri izleme)
-- **Gerçek zamanlı gereksinim yok:** Yer segmenti soft-realtime; saniyeler mertebesinde gecikme tolere edilir
+**Status:** Accepted
+**Date:** 2026-11-14
+**Related Components:** Ground Segment — Scientific Analysis, Mission Design, Operator Interface
 
 ---
 
-## Değerlendirilen Alternatifler
+## Context
 
-### Alternatif 1: Python
+The Ground Segment performs the following tasks:
 
-**Artılar:**
-- SpiceyPy resmi Python bağlayıcısıdır; tam SPICE desteği
-- GDAL/Rasterio Python ekosisteminde en olgun; kapsamlı dokümantasyon ve topluluk
-- NumPy, SciPy, Pandas: bilimsel hesaplama için endüstri standardı
-- Matplotlib, Plotly: görselleştirme
-- NASA/ESA görev analiz araçlarının büyük çoğunluğu Python'da; interoperability yüksek
-- Prototipleme hızı: hızlı iterasyon, küçük ekip için kritik avantaj
-- Mevcut astro-veri bilim ekibi Python yetkin (varsayım)
-
-**Eksiler:**
-- GIL (Global Interpreter Lock): CPU-yoğun paralel işlemde performans sorunu; multiprocessing ile aşılabilir ama karmaşıklık artar
-- Dinamik tip sistemi: büyük kod tabanında runtime hatalarına zemin hazırlar; tip ipuçları (mypy) ile kısmen azaltılır
-- Bellek yönetimi kontrolsüz; büyük DEM dosyalarında dikkatli bellek yönetimi gerekir
+- **GDAL-based DEM (Digital Elevation Model) processing:** Loading, converting, and analysing lunar surface elevation data (e.g. LOLA, MiniRF)
+- **SPICE/SpiceyPy integration:** NASA NAIF SPICE toolkit — orbital mechanics, illumination analysis, sun angle calculation
+- **Scientific data analysis:** Spectroscopy, thermal mapping, PSR resource estimation models
+- **Operator interface:** Web-based or desktop tool (mission plan visualisation, telemetry monitoring)
+- **No real-time requirement:** Ground segment is soft-realtime; delays in the order of seconds are tolerable
 
 ---
 
-### Alternatif 2: Go
+## Alternatives Evaluated
 
-**Artılar:**
-- Güçlü eşzamanlılık modeli (goroutines): telemetri akışı ve paralel veri işleme için uygun
-- Statik tip sistemi: derleme zamanı hata tespiti
-- Küçük binary boyutu; deployment kolaylığı
-- Hızlı derleme
+### Alternative 1: Python
 
-**Eksiler:**
-- **Kritik engel:** SpiceyPy / NAIF SPICE için Go bağlayıcısı bulunmuyor; CSPICE C kütüphanesi üzerinden CGO wrapper yazılması gerekir — bakımı zor, güvenlik riski
-- GDAL Go bağlayıcısı (go-gdal) olgunlaşmamış; büyük DEM işlemede test edilmemiş
-- Bilimsel hesaplama ekosistemi Python'a kıyasla son derece kısıtlı
+**Pros:**
+- SpiceyPy is the official Python binding; full SPICE support
+- GDAL/Rasterio most mature in the Python ecosystem; extensive documentation and community
+- NumPy, SciPy, Pandas: industry standard for scientific computing
+- Matplotlib, Plotly: visualisation
+- The majority of NASA/ESA mission analysis tools are in Python; interoperability is high
+- Prototyping speed: fast iteration, critical advantage for a small team
+- Existing astro-data-science team is Python-proficient (assumption)
 
----
-
-### Alternatif 3: Rust
-
-**Artılar:**
-- Bellek güvenliği garantisi (ownership/borrow checker): kritik sistemlerde güçlü avantaj
-- Yüksek performans; GIL yok
-- Statik tip sistemi, kapsamlı derleme zamanı kontrolü
-
-**Eksiler:**
-- **Kritik engel:** SpiceyPy eşdeğeri Rust binding'i yok; CSPICE FFI katmanı yazılması gerekir — önemli mühendislik maliyeti
-- GDAL Rust bağlayıcısı (gdal crate) gelişmekte ama olgunluk seviyesi Python/GDAL'ın çok altında
-- Öğrenme eğrisi: Ay yüzey görevi kadrosu için rust yetkinliği kısa sürede kazanmak zor
-- Bilimsel/veri analiz ekosistemi (plotting, stats) Python'a kıyasla yetersiz
+**Cons:**
+- GIL (Global Interpreter Lock): performance issue in CPU-intensive parallel processing; can be worked around with multiprocessing but adds complexity
+- Dynamic type system: prone to runtime errors in a large codebase; partly mitigated with type hints (mypy)
+- Uncontrolled memory management; careful memory handling needed with large DEM files
 
 ---
 
-## Karar
+### Alternative 2: Go
 
-**Python 3.11+ (tip ipuçlı, mypy ile)** seçilmiştir.
+**Pros:**
+- Strong concurrency model (goroutines): suitable for telemetry streaming and parallel data processing
+- Static type system: compile-time error detection
+- Small binary size; ease of deployment
+- Fast compilation
 
-**Gerekçe:**
-- SpiceyPy ve GDAL/Rasterio entegrasyonu doğrudan ve olgun Python ekosisteminde mevcuttur; Go ve Rust için kritik bağımlılık engeli aşılamaz kabul edilmiştir.
-- Yer segmentinin gerçek zamanlı kısıtı yoktur; Python performans eksiklikleri kabul edilebilir sınır içindedir.
-- NASA açık kaynak uzay görev araçlarının (GMAT, OpenSPIFe, Basilisk) Python entegrasyonları mevcut; ekosistem uyumluluğu korunur.
-- Küçük ekipte bilimsel üretkenlik kritik; Python prototipleme hızı rekabetsizdir.
-
-**Kod kalitesi garantileri:**
-- `mypy --strict` zorunlu (CI'da gate olarak)
-- `ruff` / `black` stil denetimi
-- Temel modüller için birim testi (%80 kapsam hedefi)
-- Büyük DEM işleme: `rasterio`'nun `windowed reading` API'si ile bellek pencereleme
+**Cons:**
+- **Critical blocker:** No Go binding for SpiceyPy / NAIF SPICE; writing a CGO wrapper over the CSPICE C library is required — hard to maintain, security risk
+- Go GDAL binding (go-gdal) is immature; not tested with large DEM processing
+- Scientific computing ecosystem is extremely limited compared to Python
 
 ---
 
-## Sonuçlar ve Kısıtlar
+### Alternative 3: Rust
 
-1. **Performans sınırı:** CPU yoğun rota analizi (büyük DEM üzerinde A* önizleme) için `multiprocessing` veya `Cython` eklentisi kullanılabilir; bu durum ortaya çıkana kadar saf Python tercih edilir.
-2. **API sürüm kilitleme:** SpiceyPy, GDAL ve bilimsel kütüphane sürümleri `requirements.txt` + `poetry.lock` ile sabitlenir; otomatik yükseltme yasak.
-3. **Uçuş segmentiyle dil sınırı:** Python kodu hiçbir zaman uçuş segmentine taşınamaz; yer-araç sınırı katı biçimde uygulanır.
-4. **Veri formatı bağımsızlığı:** Yer segmenti Python'a bağımlı olmayan dosya formatları (GeoTIFF, FITS, JSON/CBOR) üzerinden çalışır; başka bir dile geçiş halinde veri miraslanabilir.
+**Pros:**
+- Memory safety guarantee (ownership/borrow checker): strong advantage in critical systems
+- High performance; no GIL
+- Static type system, extensive compile-time checks
+
+**Cons:**
+- **Critical blocker:** No Rust binding equivalent to SpiceyPy; writing a CSPICE FFI layer is required — significant engineering cost
+- Rust GDAL binding (gdal crate) is developing but far below the maturity level of Python/GDAL
+- Learning curve: difficult to acquire Rust proficiency in a short time for a lunar surface mission team
+- Scientific/data analysis ecosystem (plotting, stats) is insufficient compared to Python
+
+---
+
+## Decision
+
+**Python 3.11+ (with type hints, using mypy)** has been selected.
+
+**Rationale:**
+- SpiceyPy and GDAL/Rasterio integration is directly available and mature in the Python ecosystem; the critical dependency blocker for Go and Rust is considered insurmountable.
+- The ground segment has no real-time constraint; Python performance shortfalls are within acceptable limits.
+- Python integrations are available for NASA open-source space mission tools (GMAT, OpenSPIFe, Basilisk); ecosystem compatibility is preserved.
+- In a small team, scientific productivity is critical; Python prototyping speed is unmatched.
+
+**Code quality guarantees:**
+- `mypy --strict` mandatory (gated in CI)
+- `ruff` / `black` style checking
+- Unit tests for core modules (80% coverage target)
+- Large DEM processing: memory windowing via `rasterio`'s `windowed reading` API
+
+---
+
+## Consequences and Constraints
+
+1. **Performance limit:** `multiprocessing` or a `Cython` extension may be used for CPU-intensive route analysis (A* preview on large DEM); pure Python is preferred until this need arises.
+2. **API version pinning:** SpiceyPy, GDAL, and scientific library versions are fixed with `requirements.txt` + `poetry.lock`; automatic upgrades are forbidden.
+3. **Language boundary with flight segment:** Python code can never be ported to the flight segment; the ground-vehicle boundary is strictly enforced.
+4. **Data format independence:** The ground segment operates on file formats that are not Python-dependent (GeoTIFF, FITS, JSON/CBOR); data is migratable in the event of a language change.

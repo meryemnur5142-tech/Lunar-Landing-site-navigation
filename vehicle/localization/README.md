@@ -1,14 +1,14 @@
 # Vehicle Localization
 
-**v1.0 Referans:** §4.6 Navigation & Mobility
+**v1.0 Reference:** §4.6 Navigation & Mobility
 
-EKF tabanlı konum kestirimi: IMU, LiDAR odometri, güneş açısı ve (varsa) yer referans ölçümü füzyonu.
+EKF-based position estimation: fusion of IMU, LiDAR odometry, sun angle, and (when available) ground reference measurements.
 
-## Uyum Notu 4
+## Compliance Note 4
 
-İniş GNC sistemi ve yüzey navigasyon sistemi ayrı tasarım alanlarıdır.
-Bu modül yalnızca yüzey görevini kapsar.
+The landing GNC system and the surface navigation system are separate design domains.
+This module covers the surface mission only.
 
-Traverse geçmişi yolu (traverse_path) planlayıcıya ICD-003 aracılığıyla iletilir;
-ham sensör verisi flight bilgisayarında tutulur, yer segmentine iletilmez.
-Bkz. `interfaces/nav_to_local_planner.schema.yaml` (ICD-003)
+The traverse history path (traverse_path) is forwarded to the planner via ICD-003;
+raw sensor data is kept on the flight computer and is not transmitted to the ground segment.
+See `interfaces/nav_to_local_planner.schema.yaml` (ICD-003)

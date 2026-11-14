@@ -1,28 +1,28 @@
 # status: draft
 # owner: Agent C
 # depends_on: [docs/architecture/ICD_TEMPLATES.md, docs/architecture/SAFETY_STATE_MACHINE.md, docs/adr/FMEA_KRITIK_MODULLER.md, autonomy/autonomy_matrix.md]
-# open_items: [ICD referansları ICD_TEMPLATES.md v1.0 ile tutarlı; TBD parametreler diyagramlarda not olarak işaretlendi]
+# open_items: [ICD references consistent with ICD_TEMPLATES.md v1.0; TBD parameters marked as notes in diagrams]
 
-# LUNA-AI PlantUML Diyagramları — v1.0
+# LUNA-AI PlantUML Diagrams — v1.0
 
-**Belge ID:** LUNA-AI-ARCH-004  
-**Versiyon:** 0.1-draft  
-**Tarih:** 2026-11-14  
-**Bağlı Belgeler:** LUNA-AI-ARCH-001 (Güvenlik Durum Makinesi), LUNA-AI-ARCH-002 (ICD Şablonları), LUNA-AI-FMEA-001
+**Document ID:** LUNA-AI-ARCH-004  
+**Version:** 0.1-draft  
+**Date:** 2026-11-14  
+**Related Documents:** LUNA-AI-ARCH-001 (Safety State Machine), LUNA-AI-ARCH-002 (ICD Templates), LUNA-AI-FMEA-001
 
 ---
 
-## Diyagram 1 — Bileşen Diyagramı
+## Diagram 1 — Component Diagram
 
-Tüm modüller, arayüzler ve segment grupları. Yer segmenti / uçuş segmenti / simülasyon paketleri ayrı. Her arayüz üzerinde ICD referansı.
+All modules, interfaces and segment groups. Ground segment / flight segment / simulation packages separated. ICD reference on each interface.
 
 ```plantuml
 @startuml LUNA-AI Component Diagram
 
 ' =====================================================
-' LUNA-AI Bileşen Diyagramı v1.0
-' Belge: LUNA-AI-ARCH-004
-' Bağlı: ICD-001..ICD-006 (LUNA-AI-ARCH-002)
+' LUNA-AI Component Diagram v1.0
+' Document: LUNA-AI-ARCH-004
+' Related: ICD-001..ICD-006 (LUNA-AI-ARCH-002)
 ' =====================================================
 
 skinparam componentStyle rectangle
@@ -34,134 +34,134 @@ skinparam component {
 }
 
 ' =====================================================
-' YER SEGMENTİ
+' GROUND SEGMENT
 ' =====================================================
-package "Yer Segmenti (Ground Segment)" #EAF7EA {
+package "Ground Segment" #EAF7EA {
 
-  package "Bilimsel Analiz & Görev Tasarımı" #D5F0D5 {
-    [Mission Intelligence\n(Hedef Puanlama &\nKısıt Kontrolü)] as MI
+  package "Scientific Analysis & Mission Design" #D5F0D5 {
+    [Mission Intelligence\n(Target Scoring &\nConstraint Check)] as MI
     [Ground Control UI\n(apps/ground-control)] as GC
-    [Data Platform\n(Telemetri İşleme &\nArşiv)] as DP
+    [Data Platform\n(Telemetry Processing &\nArchive)] as DP
   }
 
-  package "Görev Planlama Altyapısı" #D5F0D5 {
-    [Mission Planner\n(Rota & Kaynak Planlama)] as GMP
-    [Orbital Geometry\n(Güneş/Dünya Penceresi)] as OG
+  package "Mission Planning Infrastructure" #D5F0D5 {
+    [Mission Planner\n(Route & Resource Planning)] as GMP
+    [Orbital Geometry\n(Sun/Earth Window)] as OG
   }
 }
 
 ' =====================================================
-' UÇUŞ SEGMENTİ (Araç)
+' FLIGHT SEGMENT (Vehicle)
 ' =====================================================
-package "Uçuş Segmenti (Flight Segment — Araç)" #FFF3E0 {
+package "Flight Segment (Vehicle)" #FFF3E0 {
 
-  package "Otonomi & Yürütme" #FFE0B2 {
-    [Mission Executive\n(Görev Yürütücü)] as ME
-    [Global Planner\n(Rota Planlama)] as GP
-    [Local Planner\n(Engel Kaçınma)] as LP
-    [Replanner\n(Yeniden Planlama)] as RP
+  package "Autonomy & Execution" #FFE0B2 {
+    [Mission Executive] as ME
+    [Global Planner\n(Route Planning)] as GP
+    [Local Planner\n(Obstacle Avoidance)] as LP
+    [Replanner\n(Replanning)] as RP
   }
 
-  package "Algı & Navigasyon" #FFE0B2 {
+  package "Perception & Navigation" #FFE0B2 {
     [Localization\n(EKF + IMU + Landmark)] as LOC
-    [Terrain Analyzer\n(LiDAR + Kamera)] as TA
+    [Terrain Analyzer\n(LiDAR + Camera)] as TA
   }
 
-  package "Kaynak Yönetimi" #FFE0B2 {
-    [Power Management\n(SoC, Bütçe)] as PM
-    [Thermal Management\n(Isıtıcı Kontrolü)] as TM
+  package "Resource Management" #FFE0B2 {
+    [Power Management\n(SoC, Budget)] as PM
+    [Thermal Management\n(Heater Control)] as TM
   }
 
-  package "Güvenlik" #FFE0B2 {
-    [FDIR\n(Arıza Tespit & Kurtarma)] as FDIR
+  package "Safety" #FFE0B2 {
+    [FDIR\n(Fault Detection & Recovery)] as FDIR
     [Safety State Machine\n(NOMINAL/CAUTION/\nRETURN_REQUIRED/SURVIVAL)] as SSM
   }
 
-  package "Donanım Arayüzleri" #FFE0B2 {
-    [Motion Control\n(Motor Sürücüleri)] as MC
-    [Communication\n(RF Alıcı-Verici)] as COM
-    [OBC\n(Ana Bilgisayar)] as OBC
+  package "Hardware Interfaces" #FFE0B2 {
+    [Motion Control\n(Motor Drivers)] as MC
+    [Communication\n(RF Transceiver)] as COM
+    [OBC\n(Main Computer)] as OBC
   }
 }
 
 ' =====================================================
-' SİMÜLASYON & DOĞRULAMA SEGMENTİ
+' SIMULATION & VALIDATION SEGMENT
 ' =====================================================
-package "Simülasyon & Doğrulama (Simulation Segment)" #F3E5F5 {
-  [Digital Twin\n(Araç Simülasyonu)] as DT
-  [Environment Model\n(Ay Yüzey Ortamı)] as EM
-  [Scenario Runner\n(YAML Senaryo Motoru)] as SR
-  [Fault Injector\n(Hata Enjeksiyon)] as FI
+package "Simulation & Validation Segment" #F3E5F5 {
+  [Digital Twin\n(Vehicle Simulation)] as DT
+  [Environment Model\n(Lunar Surface Environment)] as EM
+  [Scenario Runner\n(YAML Scenario Engine)] as SR
+  [Fault Injector\n(Fault Injection)] as FI
   [SIL/HIL Bridge] as HIL
 }
 
 ' =====================================================
-' ARAYÜZLER (ICD referansları ile)
+' INTERFACES (with ICD references)
 ' =====================================================
 
-' ICD-001: Power Mgmt → Mission Planner (uçuşta) / Ground Planner (aşağı yansıma)
+' ICD-001: Power Mgmt → Mission Planner (flight) / Ground Planner (downlink reflection)
 PM -right-> ME : ICD-001\nenergy_state\n(1 Hz / 10 Hz CAUTION)
-PM -right-> GMP : ICD-001\nenergy_state\n(telemetri yansıması)
+PM -right-> GMP : ICD-001\nenergy_state\n(telemetry reflection)
 
 ' ICD-002: Thermal Mgmt → Mission Executive
 TM -right-> ME : ICD-002\nthermal_state\n(1 Hz / 10 Hz CAUTION)
 
 ' ICD-003: Navigation → Local Planner
-LOC -right-> LP : ICD-003\nvehicle_pose\n(≥10 Hz hareket)
+LOC -right-> LP : ICD-003\nvehicle_pose\n(>=10 Hz moving)
 LOC -right-> GP : ICD-003\nvehicle_pose\n(1 Hz nominal)
 
 ' ICD-004: FDIR → Mission Executive
 FDIR -right-> ME : ICD-004\nsafety_status\n(event-driven + 1 Hz)
-SSM --> FDIR : durum geçiş\nkararı
+SSM --> FDIR : state transition\ndecision
 
 ' ICD-005: Ground → Flight (Uplink — CCSDS TC)
 GMP -down-> COM : ICD-005\nTC Uplink\n(CCSDS)
-GC -down-> COM : ICD-005\nTC_IMMEDIATE\n(P1 Komut)
+GC -down-> COM : ICD-005\nTC_IMMEDIATE\n(P1 Command)
 
 ' ICD-006: Flight → Ground (Downlink — CCSDS TM)
 COM -up-> DP : ICD-006\nTM Downlink\n(CCSDS)
-COM -up-> GC : ICD-006\nTelemetri\n(1 Hz / 10 Hz)
+COM -up-> GC : ICD-006\nTelemetry\n(1 Hz / 10 Hz)
 
-' Araç iç bağlantılar
-ME --> GP : görev adımı\nuygula
-GP --> LP : waypoint\nlistesi
-LP --> MC : hareket\nkomutu
-TA --> LOC : nokta bulutu\n+ görüntü
-MC --> LOC : enkoder\ngeri beslemesi
-FDIR --> PM : güç kesim\nkomutu (SURVIVAL)
-FDIR --> TM : ısıtıcı öncelik\nkomut (CAUTION+)
-FDIR --> MC : dur komutu\n(RETURN_REQUIRED)
-FDIR --> COM : acil beacon\n(SURVIVAL)
-RP --> GP : yeni rota\nplanı
+' Vehicle internal connections
+ME --> GP : apply mission\nstep
+GP --> LP : waypoint\nlist
+LP --> MC : motion\ncommand
+TA --> LOC : point cloud\n+ image
+MC --> LOC : encoder\nfeedback
+FDIR --> PM : power shed\ncommand (SURVIVAL)
+FDIR --> TM : heater priority\ncommand (CAUTION+)
+FDIR --> MC : halt command\n(RETURN_REQUIRED)
+FDIR --> COM : emergency beacon\n(SURVIVAL)
+RP --> GP : new route\nplan
 
-' Simülasyon bağlantıları
-DT --> LOC : simüle\ntelemetri
-EM --> DT : ortam\nkoşulları
-SR --> FI : senaryo\nolayları
-FI --> DT : hata enjeksiyonu\n(sensör/motor/güç)
-HIL --> OBC : HIL\narayüzü
+' Simulation connections
+DT --> LOC : simulated\ntelemetry
+EM --> DT : environment\nconditions
+SR --> FI : scenario\nevents
+FI --> DT : fault injection\n(sensor/motor/power)
+HIL --> OBC : HIL\ninterface
 
-' Yer iç bağlantılar
-MI --> GMP : hedef sıralaması\n+ kısıt listesi
-OG --> GMP : pencere\nkısıtları
-DP --> MI : işlenmiş\ntelemetri
+' Ground internal connections
+MI --> GMP : target ranking\n+ constraint list
+OG --> GMP : window\nconstraints
+DP --> MI : processed\ntelemetry
 
 @enduml
 ```
 
 ---
 
-## Diyagram 2 — PSR Operasyon Sekans Diyagramı
+## Diagram 2 — PSR Operation Sequence Diagram
 
-PSR (Permanently Shadowed Region) giriş kararından bilimsel görev bitimine ve safe haven dönüşüne. Kritik mesaj alışverişleri, hata dalları, abort trigger'lar dahil.
+From PSR (Permanently Shadowed Region) entry decision to end of scientific mission and safe haven return. Including critical message exchanges, fault branches, abort triggers.
 
 ```plantuml
 @startuml LUNA-AI PSR Operation Sequence
 
 ' =====================================================
-' PSR Operasyon Sekans Diyagramı v1.0
-' Senaryo: PSR giriş kararı → bilimsel görev → dönüş
-' Bağlı: SC-003 (operational_scenarios.md), ICD-001..004
+' PSR Operation Sequence Diagram v1.0
+' Scenario: PSR entry decision → scientific mission → return
+' Related: SC-003 (operational_scenarios.md), ICD-001..004
 ' =====================================================
 
 skinparam sequenceArrowThickness 2
@@ -176,81 +176,81 @@ participant "Navigation" as NAV
 participant "FDIR" as FDIR
 participant "Mission\nExecutive" as ME
 
-== Faz: PSR Giriş Kararı ==
+== Phase: PSR Entry Decision ==
 
-GC -> MP : TC_PLAN_UPLOAD\nPSR waypoint + enerji bütçesi\n[ICD-005]
-MP -> PWR : PSR giriş için\nenerji rezerv sorgusu\n[ICD-001]
+GC -> MP : TC_PLAN_UPLOAD\nPSR waypoint + energy budget\n[ICD-005]
+MP -> PWR : energy reserve query\nfor PSR entry\n[ICD-001]
 PWR --> MP : energy_state\nsoc_percent=TBD%\nestimated_return_soc=TBD%\n[ICD-001]
-MP -> THM : termal durum\nsorgusu\n[ICD-002]
+MP -> THM : thermal state\nquery\n[ICD-002]
 THM --> MP : thermal_state\ncritical_component_ok=true\n[ICD-002]
-MP -> NAV : konum belirsizliği\nsorgusu\n[ICD-003]
+MP -> NAV : position uncertainty\nquery\n[ICD-003]
 NAV --> MP : vehicle_pose\nuncertainty_m < 0.5m\n[ICD-003]
 
-alt PSR Giriş Koşulları Sağlandı\n(SoC yeterli, termal ok, nav güvenilir)
+alt PSR Entry Conditions Met\n(SoC sufficient, thermal ok, nav reliable)
   MP -> ME : PSR_ENTRY_AUTHORIZED\nwaypoint_list, return_reserve_wh
-  ME -> FDIR : PSR giriş bildirimi\n(izleme artırıldı)
+  ME -> FDIR : PSR entry notification\n(monitoring increased)
   FDIR --> ME : safety_state=NOMINAL\nabort_signal=false\n[ICD-004]
-  ME -> GC : TC ACK — PSR giriş onaylandı\n[ICD-006]
-else PSR Giriş Koşulları Sağlanamadı
-  MP -> GC : PSR giriş reddedildi\n(sebep: SoC < eşik veya termal uyarı)\n[ICD-006]
-  note right of GC: Yeni pencere bekle\nveya plan revizyonu
+  ME -> GC : TC ACK — PSR entry authorised\n[ICD-006]
+else PSR Entry Conditions Not Met
+  MP -> GC : PSR entry rejected\n(reason: SoC < threshold or thermal warning)\n[ICD-006]
+  note right of GC: Wait for new window\nor plan revision
 end
 
-== Faz: PSR İçi Bilimsel Operasyon ==
+== Phase: In-PSR Scientific Operation ==
 
-ME -> NAV : bilimsel waypoint'e\nhareket başlat
-NAV -> FDIR : heartbeat\n(her 100 ms)\n[SAFETY_STATE_MACHINE]
-PWR -> FDIR : heartbeat + energy_state\n(her 500 ms)\n[ICD-001]
-THM -> FDIR : heartbeat + thermal_state\n(her 1 s)\n[ICD-002]
+ME -> NAV : begin movement\nto science waypoint
+NAV -> FDIR : heartbeat\n(every 100 ms)\n[SAFETY_STATE_MACHINE]
+PWR -> FDIR : heartbeat + energy_state\n(every 500 ms)\n[ICD-001]
+THM -> FDIR : heartbeat + thermal_state\n(every 1 s)\n[ICD-002]
 
-loop Bilimsel Veri Toplama Döngüsü
-  ME -> NAV : sonraki waypoint
-  NAV --> ME : waypoint ulaşıldı
-  ME -> ME : bilimsel sensör\naktifleştir
-  ME -> PWR : güç durumu kontrol\n(return_reserve_wh ≥ eşik?)
-  PWR --> ME : energy_state güncel\n[ICD-001]
+loop Science Data Collection Loop
+  ME -> NAV : next waypoint
+  NAV --> ME : waypoint reached
+  ME -> ME : activate\nscience sensor
+  ME -> PWR : power state check\n(return_reserve_wh >= threshold?)
+  PWR --> ME : energy_state updated\n[ICD-001]
 end
 
-== Abort Senaryoları (Hata Dalları) ==
+== Abort Scenarios (Fault Branches) ==
 
-group ABORT-1: HC-006 Dönüş Rezervi İhlali [ABT-001]
+group ABORT-1: HC-006 Return Reserve Violation [ABT-001]
   PWR -> FDIR : ANOMALY\nreturn_reserve_wh < HC-006_threshold\n[ICD-001 status=WARN]
   FDIR -> ME : safety_status\nsafety_state=RETURN_REQUIRED\nabort_signal=true\n[ICD-004]
-  ME -> NAV : TÜM OPERASYONLAR DONDURULDU\ndönüş rotası iste
-  note right of FDIR: abort_trigger=ABT-001\nHC-006 ihlali
-  ME -> GC : HC-006 ihlali bildirimi\nkonum + beklenen dönüş süresi\n[ICD-006]
+  ME -> NAV : ALL OPERATIONS FROZEN\nrequest return route
+  note right of FDIR: abort_trigger=ABT-001\nHC-006 violation
+  ME -> GC : HC-006 violation notification\nposition + expected return time\n[ICD-006]
 end
 
-group ABORT-2: Termal Kritik İhlali [SC-006]
+group ABORT-2: Thermal Critical Violation [SC-006]
   THM -> FDIR : ANOMALY\nthermal_mode=CRITICAL\n[ICD-002 status=ERROR]
   FDIR -> ME : safety_status\nsafety_state=RETURN_REQUIRED\nabort_signal=true\n[ICD-004]
-  FDIR -> THM : tüm ısıtıcılar MAX öncelik
-  ME -> NAV : acil dönüş rotası başlat
-  ME -> GC : termal kritik bildirimi\n[ICD-006]
+  FDIR -> THM : all heaters MAX priority
+  ME -> NAV : initiate emergency return route
+  ME -> GC : thermal critical notification\n[ICD-006]
 end
 
-group ABORT-3: Link Kaybı (PSR içi) [SC-002, ABT-004]
-  note over ME, FDIR: Link > TBD(source: §10) dakika kesik
-  FDIR -> ME : safety_status\nsafety_state=RETURN_REQUIRED\n(pre-planned ACL tetiklendi)\n[ICD-004]
-  ME -> NAV : pre-planned safe haven'a dön\n(yer onayı beklenmez — ACL)
+group ABORT-3: Link Loss (inside PSR) [SC-002, ABT-004]
+  note over ME, FDIR: Link > TBD(source: §10) minutes cut
+  FDIR -> ME : safety_status\nsafety_state=RETURN_REQUIRED\n(pre-planned ACL triggered)\n[ICD-004]
+  ME -> NAV : return to pre-planned safe haven\n(no ground approval awaited — ACL)
 end
 
-== Faz: Safe Haven Dönüşü ==
+== Phase: Safe Haven Return ==
 
-NAV -> ME : safe haven rotası\nhazır
-ME -> PWR : dönüş boyunca\nenerji koruma modu
-PWR -> THM : minimum ısıtıcı\ntalebi ilet
-ME -> GC : dönüş başladı\nETA: TBD dakika\n[ICD-006]
+NAV -> ME : safe haven route\nready
+ME -> PWR : energy conservation\nmode during return
+PWR -> THM : relay minimum heater\nrequest
+ME -> GC : return started\nETA: TBD minutes\n[ICD-006]
 
-loop Dönüş İzleme
-  PWR -> FDIR : return_reserve_wh güncellendi
-  NAV -> FDIR : konum + belirsizlik
+loop Return Monitoring
+  PWR -> FDIR : return_reserve_wh updated
+  NAV -> FDIR : position + uncertainty
   FDIR -> ME : safety_status (1 Hz)\n[ICD-004]
 end
 
-ME -> GC : safe haven ulaşıldı\n[ICD-006]
-GC -> MP : RETURN_REQUIRED → NOMINAL onayı\n[ICD-005 TC_CONDITIONAL]
-MP -> FDIR : yer onayı alındı
+ME -> GC : safe haven reached\n[ICD-006]
+GC -> MP : RETURN_REQUIRED → NOMINAL approval\n[ICD-005 TC_CONDITIONAL]
+MP -> FDIR : ground approval received
 FDIR -> ME : safety_state=NOMINAL\n[ICD-004]
 
 @enduml
@@ -258,17 +258,17 @@ FDIR -> ME : safety_state=NOMINAL\n[ICD-004]
 
 ---
 
-## Diyagram 3 — Arıza Yönetimi Sekans Diyagramı
+## Diagram 3 — Fault Management Sequence Diagram
 
-Senaryo: Lokalizasyon belirsizliği aşıldı → FDIR kararı → replanning → dönüş veya kurtarma. Bağlı: SC-004 (operational_scenarios.md).
+Scenario: Localisation uncertainty exceeded → FDIR decision → replanning → return or recovery. Related: SC-004 (operational_scenarios.md).
 
 ```plantuml
 @startuml LUNA-AI Fault Management Sequence
 
 ' =====================================================
-' Arıza Yönetimi Sekans Diyagramı v1.0
-' Senaryo: Lokalizasyon belirsizliği aşımı → FDIR → replanning → dönüş
-' Bağlı: SC-004, QAR-NAV-002, FMEA-RPN-NAV-001 (RPN:24)
+' Fault Management Sequence Diagram v1.0
+' Scenario: Localisation uncertainty exceeded → FDIR → replanning → return
+' Related: SC-004, QAR-NAV-002, FMEA-RPN-NAV-001 (RPN:24)
 ' =====================================================
 
 skinparam sequenceArrowThickness 2
@@ -283,79 +283,79 @@ participant "Global\nPlanner" as GP
 participant "Replanner" as RP
 participant "Ground\nControl" as GC
 
-== Detection: Lokalizasyon Belirsizliği Tespiti ==
+== Detection: Localisation Uncertainty Detected ==
 
-NAV -> NAV : EKF kovaryans izleme\nsürekli (10 Hz)
+NAV -> NAV : EKF covariance monitoring\ncontinuous (10 Hz)
 NAV -> LP : vehicle_pose\nuncertainty_m = 0.6m\n[ICD-003 status=DEGRADED]
-LP -> LP : uncertainty_m > 0.5m →\nengel yaklaşım hızını\nyarıya indir
+LP -> LP : uncertainty_m > 0.5m ->\nhalve obstacle\napproach speed
 
 NAV -> FDIR : ANOMALY EVENT\nuncertainty_m > QAR-NAV-002_threshold\n(> 1.0m)
 FDIR -> ME : safety_status\nsafety_state=CAUTION\nabort_signal=false\n[ICD-004]
-ME -> LP : DUR komutu\n(hareket durduruldu)
-ME -> GC : CAUTION bildirimi\nlokalizasyon belirsizlik aşımı\n[ICD-006]
+ME -> LP : HALT command\n(movement stopped)
+ME -> GC : CAUTION notification\nlocalisation uncertainty exceeded\n[ICD-006]
 
-== Isolation: Arızalı Sensör Tespiti ==
+== Isolation: Faulty Sensor Detection ==
 
-FDIR -> NAV : sensör izolasyon\ntesti başlat
-NAV -> NAV : IMU tutarsızlık testi
-NAV -> NAV : odometry / IMU\nkarşılaştırması
-NAV -> NAV : son landmark\neşleşme kalitesi
+FDIR -> NAV : begin sensor\nisolation test
+NAV -> NAV : IMU inconsistency test
+NAV -> NAV : odometry / IMU\ncomparison
+NAV -> NAV : last landmark\nmatch quality
 
-alt IMU Arızası Tespit Edildi
-  NAV -> FDIR : IMU_FAULT\n(hatalı sensör izole edildi)
-  FDIR -> NAV : IMU devre dışı\nordometry-only moda geç
-  note right of NAV: Degraded mode:\nordometry + visual landmark
-else Sensör Kombinasyonu Tutarsız
-  NAV -> FDIR : FUSION_ANOMALY\n(kaynak belirlenemedi)
-  note right of FDIR: En muhtemel: IMU drift\n(FMEA-RPN-NAV-001)
+alt IMU Fault Detected
+  NAV -> FDIR : IMU_FAULT\n(faulty sensor isolated)
+  FDIR -> NAV : IMU disabled\nswitch to odometry-only mode
+  note right of NAV : Degraded mode:\nodometry + visual landmark
+else Sensor Combination Inconsistent
+  NAV -> FDIR : FUSION_ANOMALY\n(source cannot be determined)
+  note right of FDIR : Most likely: IMU drift\n(FMEA-RPN-NAV-001)
 end
 
-== Recovery: Landmark Yeniden Lokalizasyon ==
+== Recovery: Landmark Relocalisation ==
 
-FDIR -> NAV : landmark arama\ngirişimi başlat (N deneme)
-loop Landmark Arama Döngüsü (maks N deneme — TBD)
-  NAV -> NAV : yerinde dön\norbital harita ile eşleştir
-  alt Landmark Eşleşmesi Başarılı
+FDIR -> NAV : begin landmark search\nattempt (N tries)
+loop Landmark Search Loop (max N attempts — TBD)
+  NAV -> NAV : rotate in place\nmatch against orbital map
+  alt Landmark Match Successful
     NAV -> FDIR : RECOVERY_SUCCESS\nuncertainty_m < 0.5m
     FDIR -> ME : safety_status\nsafety_state=NOMINAL\n[ICD-004]
-    ME -> LP : hareket devam\n(normal hız)
-    ME -> GC : recovery başarılı\n[ICD-006]
-  else Eşleşme Başarısız — Devam
-    NAV -> FDIR : LANDMARK_NO_MATCH\n(deneme i/N)
+    ME -> LP : resume movement\n(normal speed)
+    ME -> GC : recovery successful\n[ICD-006]
+  else Match Failed — Continue
+    NAV -> FDIR : LANDMARK_NO_MATCH\n(attempt i/N)
   end
 end
 
-== Recovery Başarısız → Replanning ==
+== Recovery Failed → Replanning ==
 
 FDIR -> ME : RECOVERY_FAILED\nsafety_state=RETURN_REQUIRED\nabort_signal=true\n[ICD-004]
-ME -> RP : replanning talebi\nmevcut konum (degraded σ_pos)\nhedef: safe haven
-RP -> GP : degraded nav modunda\nIMU-only güzergah üret
+ME -> RP : replanning request\ncurrent position (degraded sigma_pos)\ntarget: safe haven
+RP -> GP : generate IMU-only route\nin degraded nav mode
 
-alt PSR İçinde
-  GP -> ME : PSR çıkış rotası\n(enerji kritik kontrol)
-  ME -> FDIR : rota onay
-  FDIR -> ME : onaylandı
-  note right of FDIR: Degraded nav ile PSR çıkışı:\nhata birikimi kabul mesafesiyle sınırlandırıldı
+alt Inside PSR
+  GP -> ME : PSR exit route\n(energy critical check)
+  ME -> FDIR : route approval
+  FDIR -> ME : approved
+  note right of FDIR : PSR exit with degraded nav:\nerror accumulation bounded by acceptance distance
 else SURFACE_EXPLORATION
-  GP -> ME : pre-planned safe haven\nkoordinatlarına IMU-only rota
+  GP -> ME : IMU-only route to\npre-planned safe haven coordinates
 end
 
-ME -> LP : yeni rota uygula\n(degraded mode — düşük hız)
-ME -> GC : RETURN_REQUIRED\nsensör arızası + degraded nav\nbeklenen dönüş süresi\n[ICD-006]
+ME -> LP : apply new route\n(degraded mode — low speed)
+ME -> GC : RETURN_REQUIRED\nsensor fault + degraded nav\nexpected return time\n[ICD-006]
 
-== Dönüş ve Kurtarma ==
+== Return and Recovery ==
 
-LP -> ME : safe haven yaklaştı
-ME -> FDIR : safe haven ulaşımı
-FDIR -> GC : safe haven ulaşıldı\nyer onayı bekleniyor\n[ICD-006]
-GC -> ME : yer onayı\n(TC_CONDITIONAL)\n[ICD-005]
-FDIR -> ME : safety_state=NOMINAL\n(yer onaylı geçiş)\n[ICD-004]
+LP -> ME : approaching safe haven
+ME -> FDIR : safe haven arrival
+FDIR -> GC : safe haven reached\nawaiting ground approval\n[ICD-006]
+GC -> ME : ground approval\n(TC_CONDITIONAL)\n[ICD-005]
+FDIR -> ME : safety_state=NOMINAL\n(ground-approved transition)\n[ICD-004]
 
 note right of FDIR
-  Sensör kalibrasyonu:\n
-  - IMU yeniden kalibrasyon prosedürü
-  - Yer segmentinden parametre güncellemesi
-  - Yeni görev planı gelmeden operasyon yok
+  Sensor calibration:\n
+  - IMU recalibration procedure
+  - Parameter update from ground segment
+  - No operations until new mission plan received
 end note
 
 @enduml
@@ -363,16 +363,16 @@ end note
 
 ---
 
-## Diyagram 4 — Dağıtım Diyagramı
+## Diagram 4 — Deployment Diagram
 
-Araç üzerindeki donanım ve üzerlerinde çalışan yazılım bileşenleri. Yer segmenti sunucuları ve bağlantı tipi.
+Hardware on vehicle and software components running on them. Ground segment servers and connection type.
 
 ```plantuml
 @startuml LUNA-AI Deployment Diagram
 
 ' =====================================================
-' Dağıtım Diyagramı v1.0
-' Araç donanımı + yer segmenti sunucuları + bağlantı
+' Deployment Diagram v1.0
+' Vehicle hardware + ground segment servers + connections
 ' =====================================================
 
 skinparam nodeStyle rectangle
@@ -380,11 +380,11 @@ skinparam componentStyle rectangle
 skinparam backgroundColor #FAFAFA
 
 ' =====================================================
-' ARAÇ (Flight Hardware)
+' VEHICLE (Flight Hardware)
 ' =====================================================
-node "Araç (Rover)" as ROVER #FFE0B2 {
+node "Rover (Vehicle)" as ROVER #FFE0B2 {
 
-  node "Ana Bilgisayar (OBC)\n[FreeRTOS, COTS Rad-Hard CPU\nTBD-SNS-001]" as OBC #FFCC80 {
+  node "Main Computer (OBC)\n[FreeRTOS, COTS Rad-Hard CPU\nTBD-SNS-001]" as OBC #FFCC80 {
     component [FDIR Task\n(Priority: Highest)] as FDIR_SW
     component [Mission Executive] as ME_SW
     component [Global Planner] as GP_SW
@@ -395,122 +395,122 @@ node "Araç (Rover)" as ROVER #FFE0B2 {
     component [Communication Task] as COM_SW
   }
 
-  node "Navigasyon İşlemcisi\n[TBD — ayrı SoC veya OBC\nüzerinde ayrı core]" as NAV_CPU #FFCC80 {
+  node "Navigation Processor\n[TBD — separate SoC or separate\ncore on OBC]" as NAV_CPU #FFCC80 {
     component [EKF Localization] as EKF_SW
     component [Terrain Analyzer] as TA_SW
     component [Sensor Fusion] as SF_SW
   }
 
-  node "IMU Modülü\n[TBD-SNS-001/002]" as IMU_HW #FFD54F {
-    component [İvmeölçer + Jiroskop] as IMU_SENS
+  node "IMU Module\n[TBD-SNS-001/002]" as IMU_HW #FFD54F {
+    component [Accelerometer + Gyroscope] as IMU_SENS
   }
 
   node "LiDAR\n[TBD-SNS-001]" as LIDAR_HW #FFD54F {
-    component [Nokta Bulutu\nÜretici] as LIDAR_SW
+    component [Point Cloud\nGenerator] as LIDAR_SW
   }
 
-  node "Kamera Sistemi\n[TBD-SNS-001]" as CAM_HW #FFD54F {
-    component [Stereo Görüntü\nİşleme] as CAM_SW
+  node "Camera System\n[TBD-SNS-001]" as CAM_HW #FFD54F {
+    component [Stereo Image\nProcessing] as CAM_SW
   }
 
-  node "RF Modülü\n[TBD-COM-001]" as RF_HW #FFD54F {
-    component [Yüksek Kazançlı Anten\n(HGA)] as HGA
-    component [UHF Omni Anten\n(Yedek)] as UHF
+  node "RF Module\n[TBD-COM-001]" as RF_HW #FFD54F {
+    component [High Gain Antenna\n(HGA)] as HGA
+    component [UHF Omni Antenna\n(Backup)] as UHF
   }
 
-  node "Güç Sistemi\n[TBD-BAT-001/002, TBD-SOL-001]" as PWR_HW #FFD54F {
-    component [Güneş Paneli\n+ Şarj Regülatörü] as SOLAR
-    component [Batarya Modülü\n(Dual — TBD-RED-003)] as BAT
-    component [PDU\n(Çift Kanal)] as PDU
+  node "Power System\n[TBD-BAT-001/002, TBD-SOL-001]" as PWR_HW #FFD54F {
+    component [Solar Panel\n+ Charge Regulator] as SOLAR
+    component [Battery Module\n(Dual — TBD-RED-003)] as BAT
+    component [PDU\n(Dual Channel)] as PDU
   }
 
-  node "Termal Sistem\n[TBD-THM-001]" as THM_HW #FFD54F {
-    component [Isıtıcılar\n(Birincil + Fallback)] as HEATER
-    component [Sıcaklık Sensörleri\n(≥2 bağımsız/nokta)] as TEMP_SENS
+  node "Thermal System\n[TBD-THM-001]" as THM_HW #FFD54F {
+    component [Heaters\n(Primary + Fallback)] as HEATER
+    component [Temperature Sensors\n(>=2 independent/point)] as TEMP_SENS
   }
 
-  node "Hareket Sistemi" as MOT_HW #FFD54F {
-    component [Motor Sürücüleri\n(4+ tekerlekli)] as MOTOR_DRV
-    component [Tekerlek Enkoderleri] as ENC
+  node "Motion System" as MOT_HW #FFD54F {
+    component [Motor Drivers\n(4+ wheel)] as MOTOR_DRV
+    component [Wheel Encoders] as ENC
   }
 
-  node "Donanım Watchdog\n[Bağımsız HW Timer]" as HW_WD #EF9A9A {
+  node "Hardware Watchdog\n[Independent HW Timer]" as HW_WD #EF9A9A {
     component [FDIR HW Watchdog\n(25 ms kick)] as WD_HW
   }
 }
 
 ' =====================================================
-' YER SEGMENTİ
+' GROUND SEGMENT
 ' =====================================================
-node "Yer Kontrol Merkezi\n(Ground Segment Sunucu)" as GROUND #E8F5E9 {
+node "Ground Control Centre\n(Ground Segment Server)" as GROUND #E8F5E9 {
 
-  node "Görev Kontrol Sunucusu" as MCS #C8E6C9 {
+  node "Mission Control Server" as MCS #C8E6C9 {
     component [Ground Control UI\n(apps/ground-control)] as GC_UI
-    component [Mission Planner\n(Rota & Kaynak)] as GMP_SW
-    component [Mission Intelligence\n(Hedef & Kısıt)] as MI_SW
+    component [Mission Planner\n(Route & Resource)] as GMP_SW
+    component [Mission Intelligence\n(Target & Constraint)] as MI_SW
   }
 
-  node "Veri İşleme Sunucusu" as DPS #C8E6C9 {
-    component [Data Platform\n(İngestion + Catalog)] as DP_SW
-    component [Telemetri Arşivi] as TM_ARCH
-    component [Bilimsel Veri Deposu] as SCI_DATA
+  node "Data Processing Server" as DPS #C8E6C9 {
+    component [Data Platform\n(Ingestion + Catalog)] as DP_SW
+    component [Telemetry Archive] as TM_ARCH
+    component [Scientific Data Store] as SCI_DATA
   }
 
-  node "Simülasyon Sunucusu" as SIM_SRV #C8E6C9 {
+  node "Simulation Server" as SIM_SRV #C8E6C9 {
     component [Digital Twin] as DT_SW
     component [Environment Model] as EM_SW
     component [Scenario Runner] as SR_SW
     component [Fault Injector] as FI_SW
   }
 
-  node "Derin Uzay Ağı\n(DSN Anteni)" as DSN #A5D6A7 {
+  node "Deep Space Network\n(DSN Antenna)" as DSN #A5D6A7 {
     component [RF Uplink/Downlink\n(CCSDS)] as DSN_RF
   }
 }
 
 ' =====================================================
-' BAĞLANTILAR
+' CONNECTIONS
 ' =====================================================
 
-' Araç donanım bağlantıları
-OBC --> RF_HW : UART/SPI\nhaberleşme komutu
-OBC --> PWR_HW : I2C/CAN\ngüç kontrol
-OBC --> THM_HW : GPIO / I2C\nısıtıcı kontrol
-OBC --> MOT_HW : CAN Bus\nmotor komutu
+' Vehicle hardware connections
+OBC --> RF_HW : UART/SPI\ncommunication command
+OBC --> PWR_HW : I2C/CAN\npower control
+OBC --> THM_HW : GPIO / I2C\nheater control
+OBC --> MOT_HW : CAN Bus\nmotor command
 OBC --> HW_WD : FDIR HW kick\n(25 ms)
-NAV_CPU --> IMU_HW : SPI\nörnekleme (200+ Hz)
-NAV_CPU --> LIDAR_HW : Ethernet/PCIe\nnokta bulutu
-NAV_CPU --> CAM_HW : USB3/Ethernet\ngörüntü akışı
+NAV_CPU --> IMU_HW : SPI\nsampling (200+ Hz)
+NAV_CPU --> LIDAR_HW : Ethernet/PCIe\npoint cloud
+NAV_CPU --> CAM_HW : USB3/Ethernet\nimage stream
 OBC --> NAV_CPU : IPC / Shared Memory\nvehicle_pose [ICD-003]
 
-' Yer-araç bağlantısı
-DSN_RF --> RF_HW : CCSDS TC/TM\n(ICD-005 Uplink / ICD-006 Downlink)\n[TBD-COM-001: frekans, bant]
+' Ground-vehicle connection
+DSN_RF --> RF_HW : CCSDS TC/TM\n(ICD-005 Uplink / ICD-006 Downlink)\n[TBD-COM-001: frequency, band]
 
-' Yer iç bağlantılar
+' Ground internal connections
 GC_UI --> MCS : HTTP/gRPC
-GMP_SW --> MI_SW : hedef listesi
-DP_SW --> TM_ARCH : telemetri depo
-DSN_RF --> DP_SW : ham TM\nalım
-SIM_SRV --> DPS : simülasyon\ntelemetrisi
-SIM_SRV --> MCS : SIL test\narayüzü
+GMP_SW --> MI_SW : target list
+DP_SW --> TM_ARCH : telemetry store
+DSN_RF --> DP_SW : raw TM\nreception
+SIM_SRV --> DPS : simulation\ntelemetry
+SIM_SRV --> MCS : SIL test\ninterface
 
 @enduml
 ```
 
 ---
 
-## Diyagram 5 — Güvenlik Durum Makinesi
+## Diagram 5 — Safety State Machine
 
-Nominal / Caution / Return_Required / Survival. Geçiş koşulları ve guard ifadeleri. LUNA-AI-ARCH-001 ile tutarlı.
+Nominal / Caution / Return_Required / Survival. Transition conditions and guard expressions. Consistent with LUNA-AI-ARCH-001.
 
 ```plantuml
 @startuml LUNA-AI Safety State Machine
 
 ' =====================================================
-' Güvenlik Durum Makinesi v1.0
-' Belge: LUNA-AI-ARCH-004 (Diyagram 5)
-' Kaynak: LUNA-AI-ARCH-001 (SAFETY_STATE_MACHINE.md)
-' Bağlı: ADR-005, QAR FDIR-001/002/004/005
+' Safety State Machine v1.0
+' Document: LUNA-AI-ARCH-004 (Diagram 5)
+' Source: LUNA-AI-ARCH-001 (SAFETY_STATE_MACHINE.md)
+' Related: ADR-005, QAR FDIR-001/002/004/005
 ' =====================================================
 
 skinparam state {
@@ -535,110 +535,110 @@ skinparam state<<SURVIVAL>> {
   BorderColor #C0392B
 }
 
-' Başlangıç
+' Initial
 [*] --> NOMINAL : boot_complete\nAND subsystems_ok\nAND fdir_heartbeat_ok
 
 ' =====================================================
 ' NOMINAL
 ' =====================================================
 state NOMINAL<<NOMINAL>> {
-  NOMINAL : entry / tüm subsistemler izlemeye alındı
-  NOMINAL : do / tam keşif operasyonu; PSR girişine izin
-  NOMINAL : izlenen: SoC > eşik+marj, nav σ < 0.5m RMS
-  NOMINAL : izlenen: tüm bileşen sıcaklıkları nominal
-  NOMINAL : izlenen: link_timeout < uyarı eşiği
-  NOMINAL : izlenen: tüm FDIR heartbeat'leri zamanında
+  NOMINAL : entry / all subsystems placed under monitoring
+  NOMINAL : do / full exploration operation; PSR entry permitted
+  NOMINAL : monitored: SoC > threshold+margin, nav sigma < 0.5m RMS
+  NOMINAL : monitored: all component temperatures nominal
+  NOMINAL : monitored: link_timeout < warning threshold
+  NOMINAL : monitored: all FDIR heartbeats on time
 }
 
 ' =====================================================
 ' CAUTION
 ' =====================================================
 state CAUTION<<CAUTION>> {
-  CAUTION : entry / yer segmentine CAUTION flag gönder
-  CAUTION : do / mevcut operasyonu güvenli son noktaya tamamla
-  CAUTION : do / dönüş rotası hazır tut; yeni PSR girişi yasak
-  CAUTION : izlenen: SoC < %25 veya dönüş marjı < %20
-  CAUTION : izlenen: nav belirsizliği 0.5–1.0 m RMS
-  CAUTION : izlenen: bileşen sıcaklığı nominal limitin %80'i
+  CAUTION : entry / send CAUTION flag to ground segment
+  CAUTION : do / complete current operation to safe endpoint
+  CAUTION : do / keep return route ready; new PSR entry prohibited
+  CAUTION : monitored: SoC < 25% or return margin < 20%
+  CAUTION : monitored: nav uncertainty 0.5-1.0 m RMS
+  CAUTION : monitored: component temperature at 80% of nominal limit
 }
 
 ' =====================================================
 ' RETURN_REQUIRED
 ' =====================================================
 state RETURN_REQUIRED<<RETURN_REQUIRED>> {
-  RETURN_REQUIRED : entry / abort_signal=true → Mission Exec donduruldu
-  RETURN_REQUIRED : entry / bilimsel operasyon tamamen durduruldu
-  RETURN_REQUIRED : do / safe haven dönüş rotası aktif
-  RETURN_REQUIRED : do / navigasyon + FDIR tam çalışır
-  RETURN_REQUIRED : do / periyodik haberleşme girişimi devam
-  RETURN_REQUIRED : exit / safe_haven_ulaşıldı AND yer_onayı
+  RETURN_REQUIRED : entry / abort_signal=true -> Mission Exec frozen
+  RETURN_REQUIRED : entry / scientific operation fully stopped
+  RETURN_REQUIRED : do / safe haven return route active
+  RETURN_REQUIRED : do / navigation + FDIR fully operational
+  RETURN_REQUIRED : do / periodic communication attempts continue
+  RETURN_REQUIRED : exit / safe_haven_reached AND ground_approval
 }
 
 ' =====================================================
 ' SURVIVAL
 ' =====================================================
 state SURVIVAL<<SURVIVAL>> {
-  SURVIVAL : entry / tüm bilimsel sensörler kesildi
-  SURVIVAL : entry / yüksek güçlü haberleşme kesildi (beacon kalır)
-  SURVIVAL : entry / planlayıcı ve replanning durduruldu
-  SURVIVAL : do / navigasyon (IMU + dead-reckoning minimum)
-  SURVIVAL : do / FDIR çekirdek işlevi aktif
-  SURVIVAL : do / minimum ısıtıcı güç (pil koruma)
-  SURVIVAL : do / periyodik beacon yayını
+  SURVIVAL : entry / all science sensors shed
+  SURVIVAL : entry / high-power communication shed (beacon remains)
+  SURVIVAL : entry / planner and replanning stopped
+  SURVIVAL : do / navigation (IMU + dead-reckoning minimum)
+  SURVIVAL : do / FDIR core function active
+  SURVIVAL : do / minimum heater power (battery preservation)
+  SURVIVAL : do / periodic beacon broadcast
 }
 
 ' =====================================================
-' GEÇİŞLER — NOMINAL'den çıkış
+' TRANSITIONS — exit from NOMINAL
 ' =====================================================
-NOMINAL --> CAUTION : [SoC < %25\nOR dönüş_marjı < %20\nOR nav_belirsizlik 0.5-1.0m RMS\nOR bileşen_sıcaklık nominal_%80\nOR link_timeout > uyarı_eşiği (TBD)\nOR planner_heartbeat_gecikmeli]
+NOMINAL --> CAUTION : [SoC < 25%\nOR return_margin < 20%\nOR nav_uncertainty 0.5-1.0m RMS\nOR component_temp nominal_80%\nOR link_timeout > warning_threshold (TBD)\nOR planner_heartbeat_delayed]
 
-NOMINAL --> RETURN_REQUIRED : [SoC < %15\nOR link_timeout > kritik_eşik (TBD)\nOR nav_lokalizasyon_kayıp_timeout > TBD_s\nOR yer_komutu=TC_IMMEDIATE_RETURN\nOR termal_kritik AND lokal_müdahale_başarısız]
+NOMINAL --> RETURN_REQUIRED : [SoC < 15%\nOR link_timeout > critical_threshold (TBD)\nOR nav_localisation_loss_timeout > TBD_s\nOR ground_command=TC_IMMEDIATE_RETURN\nOR thermal_critical AND local_intervention_failed]
 
-NOMINAL --> SURVIVAL : [SoC < %10\nOR kritik_donanım_arızası\nOR hızlı_ısınma > TBD_derece/dak\nOR FDIR_self_watchdog_kaybı\nOR çoklu_eşzamanlı_P1_arıza]
-
-' =====================================================
-' GEÇİŞLER — CAUTION'dan çıkış
-' =====================================================
-CAUTION --> NOMINAL : [tüm_tetikleyiciler_temiz\nAND tüm_parametreler_nominal_aralıkta]
-
-CAUTION --> RETURN_REQUIRED : [SoC < %15\nOR link_timeout > kritik_eşik\nOR nav_recovery_başarısız\nOR termal_kritik\nOR yer_komutu=TC_IMMEDIATE_RETURN]
-
-CAUTION --> SURVIVAL : [SoC < %10\nOR kritik_donanım_arızası\nOR FDIR_self_watchdog_kaybı\nOR hızlı_ısınma > TBD]
+NOMINAL --> SURVIVAL : [SoC < 10%\nOR critical_hardware_fault\nOR rapid_heating > TBD_degrees/min\nOR FDIR_self_watchdog_loss\nOR multiple_simultaneous_P1_faults]
 
 ' =====================================================
-' GEÇİŞLER — RETURN_REQUIRED'dan çıkış
+' TRANSITIONS — exit from CAUTION
 ' =====================================================
-RETURN_REQUIRED --> SURVIVAL : [dönüş_sırasında_SURVIVAL_tetikleyicisi_aktif]
+CAUTION --> NOMINAL : [all_triggers_clear\nAND all_parameters_within_nominal_range]
 
-RETURN_REQUIRED --> NOMINAL : [safe_haven_ulaşıldı\nAND enerji_yeterli\nAND yer_segmenti_onayladı]\n{guard: yalnızca yer onayı ile}
+CAUTION --> RETURN_REQUIRED : [SoC < 15%\nOR link_timeout > critical_threshold\nOR nav_recovery_failed\nOR thermal_critical\nOR ground_command=TC_IMMEDIATE_RETURN]
+
+CAUTION --> SURVIVAL : [SoC < 10%\nOR critical_hardware_fault\nOR FDIR_self_watchdog_loss\nOR rapid_heating > TBD]
 
 ' =====================================================
-' GEÇİŞLER — SURVIVAL'dan çıkış
+' TRANSITIONS — exit from RETURN_REQUIRED
 ' =====================================================
-SURVIVAL --> RETURN_REQUIRED : [temel_sistem_kurtarıldı\nAND enerji > %10\nAND yer_segmenti_onayladı]\n{guard: yalnızca yer onayı ile}
+RETURN_REQUIRED --> SURVIVAL : [survival_trigger_active_during_return]
+
+RETURN_REQUIRED --> NOMINAL : [safe_haven_reached\nAND energy_sufficient\nAND ground_segment_approved]\n{guard: ground approval only}
+
+' =====================================================
+' TRANSITIONS — exit from SURVIVAL
+' =====================================================
+SURVIVAL --> RETURN_REQUIRED : [core_system_recovered\nAND energy > 10%\nAND ground_segment_approved]\n{guard: ground approval only}
 
 note right of SURVIVAL
-  SURVIVAL'dan doğrudan NOMINAL'e
-  geçiş YOKTUR.
-  Zorunlu: SURVIVAL → RETURN_REQUIRED → NOMINAL
-  Her ikisi de yer onayı gerektirir.
-  FDIR her durumda çalışmaya devam eder.
-  Donanım watchdog: 25 ms kick periyodu.
+  There is NO direct transition
+  from SURVIVAL to NOMINAL.
+  Mandatory: SURVIVAL -> RETURN_REQUIRED -> NOMINAL
+  Both require ground approval.
+  FDIR continues operating in all states.
+  Hardware watchdog: 25 ms kick period.
 end note
 
 note right of RETURN_REQUIRED
-  Mission Executive abort_signal=true
-  alınca tüm operasyonları dondurur.
-  Hareket Kontrolüne "dur" komutu gönderilir.
-  Bu kısıt yazılım mimarisinde zorunludur.
-  (ICD-004 — bloklu mesaj kuyruğu)
+  Mission Executive freezes all operations
+  when abort_signal=true is received.
+  "Halt" command sent to Motion Control.
+  This constraint is enforced in software architecture.
+  (ICD-004 — blocking message queue)
 end note
 
 note bottom of CAUTION
-  CAUTION → NOMINAL geçişi:
-  TÜM tetikleyiciler aynı anda temiz olmalı.
-  Histerezis: gürültü filtresi uygulanır
-  (10 ardışık ölçüm nominal aralıkta).
+  CAUTION -> NOMINAL transition:
+  ALL triggers must be clear simultaneously.
+  Hysteresis: noise filter applied
+  (10 consecutive measurements within nominal range).
 end note
 
 @enduml
@@ -646,20 +646,20 @@ end note
 
 ---
 
-## Diyagram Referans Tablosu
+## Diagram Reference Table
 
-| # | Diyagram | PlantUML Tipi | Kaynak Belgeler | Amaç |
+| # | Diagram | PlantUML Type | Source Documents | Purpose |
 |---|----------|--------------|-----------------|------|
-| 1 | Bileşen Diyagramı | Component | ICD-001..006, ADR-005 | Tüm modüller ve arayüzler; segment grupları |
-| 2 | PSR Operasyon Sekans | Sequence | SC-003, ICD-001..005, HC-006 | PSR giriş kararı → görev → dönüş; abort dalları |
-| 3 | Arıza Yönetimi Sekans | Sequence | SC-004, FMEA-RPN-NAV-001, QAR-NAV-002 | Lokalizasyon kaybı → FDIR → replanning → dönüş |
-| 4 | Dağıtım Diyagramı | Deployment | ADR-003, ICD-005/006, TBD-SNS/BAT/COM | Donanım düğümleri, yazılım dağıtımı, bağlantı tipleri |
-| 5 | Güvenlik Durum Makinesi | State | LUNA-AI-ARCH-001, ADR-005, QAR FDIR-001..005 | 4 güvenlik durumu, geçiş guard'ları, FDIR bağımsızlığı |
+| 1 | Component Diagram | Component | ICD-001..006, ADR-005 | All modules and interfaces; segment groups |
+| 2 | PSR Operation Sequence | Sequence | SC-003, ICD-001..005, HC-006 | PSR entry decision → mission → return; abort branches |
+| 3 | Fault Management Sequence | Sequence | SC-004, FMEA-RPN-NAV-001, QAR-NAV-002 | Localisation loss → FDIR → replanning → return |
+| 4 | Deployment Diagram | Deployment | ADR-003, ICD-005/006, TBD-SNS/BAT/COM | Hardware nodes, software deployment, connection types |
+| 5 | Safety State Machine | State | LUNA-AI-ARCH-001, ADR-005, QAR FDIR-001..005 | 4 safety states, transition guards, FDIR independence |
 
 ---
 
-## Revizyon Geçmişi
+## Revision History
 
-| Versiyon | Tarih | Değişiklik |
+| Version | Date | Change |
 |----------|-------|------------|
-| 0.1 | 2026-11-14 | İlk taslak — Agent C, C2 görevi; 5 diyagram |
+| 0.1 | 2026-11-14 | First draft — Agent C, C2 task; 5 diagrams |

@@ -5,15 +5,15 @@
 #   - domain/mission/constraints/hard_constraints_catalog.yaml
 #   - docs/architecture/SAFETY_STATE_MACHINE.md
 # open_items:
-#   - timeout_s varsayılan değerleri TBD(source: §10 araç yanıt süresi)
-#   - abort command parametre detayları TBD
+#   - timeout_s default values TBD(source: §10 vehicle response time)
+#   - abort command parameter details TBD
 
 schema_version: "1.0.0"
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: "VehicleCommand"
 description: >
-  Yer segmentinden araca veya FDIR'dan araca gönderilen komut sözleşmesi.
-  Her komut kimliği, tipi, otorite seviyesini ve zaman aşımını taşır.
+  Command contract sent from ground segment to vehicle, or from FDIR to vehicle.
+  Every command carries an ID, type, authority level and timeout.
 
 type: object
 
@@ -29,26 +29,26 @@ properties:
 
   schema_version:
     type: string
-    description: "Bu şemanın versiyonu."
+    description: "Version of this schema."
     pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
 
   command_id:
     type: string
-    description: "Komutu benzersiz olarak tanımlayan ID (UUID veya mission-seq)."
+    description: "ID uniquely identifying the command (UUID or mission-seq)."
     minLength: 1
 
   command_type:
     type: string
     description: >
-      Komut tipi.
-      route_change: güzergah güncelleme.
-      science_target_abandon: bilimsel hedeften vazgeçme.
-      psr_entry: PSR operasyonu başlat (HC checklist tamamlandıktan sonra).
-      safe_haven_change: safe haven koordinatı güncelle.
-      emergency_return: acil dönüş tetikle.
-      instrument_toggle: bilim aleti aç/kapat.
-      mode_change: güç modu değiştir.
-      abort: görev durdur ve güvenli konuma geç.
+      Command type.
+      route_change: route update.
+      science_target_abandon: abandon science objective.
+      psr_entry: start PSR operation (after HC checklist completed).
+      safe_haven_change: update safe haven coordinates.
+      emergency_return: trigger emergency return.
+      instrument_toggle: enable/disable science instrument.
+      mode_change: change power mode.
+      abort: stop mission and move to safe position.
     enum:
       - route_change
       - science_target_abandon
@@ -62,11 +62,11 @@ properties:
   authority_level:
     type: string
     description: >
-      Komutun otorite seviyesi.
-      ground_approved: yer operasyon merkezi onaylı; nominal ops.
-      autonomous: araç kendi karar alma çerçevesinde üretir.
-      emergency_autonomous: uplink kesilince FDIR tarafından üretilen kararlar.
-        Link kopukluğunda araç emergency_autonomous yetkisini otomatik devreye alır.
+      Authority level of the command.
+      ground_approved: ground operations centre approved; nominal ops.
+      autonomous: produced within vehicle's own decision-making framework.
+      emergency_autonomous: decisions produced by FDIR when uplink is lost.
+        Vehicle automatically activates emergency_autonomous authority on link loss.
     enum:
       - ground_approved
       - autonomous
@@ -75,34 +75,34 @@ properties:
   timestamp_utc:
     type: string
     format: date-time
-    description: "Komutun üretilme zamanı (UTC)."
+    description: "Command generation time (UTC)."
 
   timeout_s:
     type: number
     description: >
-      Komut zaman aşımı (saniye). Araç bu süre içinde komutu uygulayamazsa
-      reddeder ve önceki güvenli durumda kalır.
-      TBD(source: §10 araç yanıt süresi).
+      Command timeout (seconds). If vehicle cannot execute command within this period,
+      it rejects it and remains in previous safe state.
+      TBD(source: §10 vehicle response time).
     exclusiveMinimum: 0
 
   sequence_number:
     type: integer
-    description: "Komut sırası (opsiyonel). Yeniden oynatma tespitinde kullanılır."
+    description: "Command sequence number (optional). Used for replay detection."
     minimum: 0
 
   supersedes_command_id:
     type: string
-    description: "Bu komutun iptal ettiği önceki komut ID'si (opsiyonel)."
+    description: "Previous command ID that this command cancels (optional)."
 
   parameters:
     type: object
-    description: "Komuta özgü parametreler. command_type'a göre içerik değişir."
+    description: "Command-specific parameters. Content varies by command_type."
     properties:
 
       # route_change
       waypoints:
         type: array
-        description: "Yeni güzergah noktaları."
+        description: "New route waypoints."
         items:
           type: object
           required: [lat_deg, lon_deg]
@@ -114,7 +114,7 @@ properties:
       # safe_haven_change
       new_safe_haven:
         type: object
-        description: "Yeni safe haven koordinatı."
+        description: "New safe haven coordinates."
         properties:
           lat_deg:      { type: number }
           lon_deg:      { type: number }
@@ -123,7 +123,7 @@ properties:
       # instrument_toggle
       instrument_id:
         type: string
-        description: "Açılacak/kapatılacak araç ID'si."
+        description: "ID of instrument to enable/disable."
       instrument_state:
         type: string
         enum: [on, off, standby]
@@ -133,12 +133,12 @@ properties:
         type: string
         enum: [full_operation, science_restricted, traverse_only, survival]
 
-      # psr_entry — checklist referansı
+      # psr_entry — checklist reference
       psr_entry_checklist_complete:
         type: boolean
         description: >
-          phase_state_machine.md PSR_OPS giriş öncesi zorunlu kontrol listesinin
-          tamamlandığına dair onay. False ise psr_entry komutu reddedilir.
+          Confirmation that the mandatory checklist before PSR_OPS entry in
+          phase_state_machine.md has been completed. If false, psr_entry command is rejected.
 
       # abort
       abort_destination:

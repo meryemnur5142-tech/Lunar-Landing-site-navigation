@@ -1,20 +1,20 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on: [communication/, simulation/environment-model/]
-# open_items: [marjinal_elevation_threshold TBD-VIS-001, uncertainty_minutes metodolojisi TBD]
-# note: Bu şema geometrik Dünya görünürlüğünü tanımlar.
-#       §4.7 haberleşme link planlaması (veri hızı, kuyruk, pencere atama) AYRI şemadadır.
-#       İkisi UI'da birleştirilmez (DR-INT-003).
+# open_items: [marginal_elevation_threshold TBD-VIS-001, uncertainty_minutes methodology TBD]
+# note: This schema defines geometric Earth visibility.
+#       §4.7 communication link planning (data rate, queue, window assignment) is in a SEPARATE schema.
+#       The two are not merged in the UI (DR-INT-003).
 
 # Earth Visibility Schema
-# Communication Management <-> Environment Model <-> Ground Control UI sözleşmesi
+# Communication Management <-> Environment Model <-> Ground Control UI contract
 
 $schema: "https://json-schema.org/draft/2020-12"
 title: EarthVisibilityProduct
 description: >
-  Belirli bir konum ve zaman için geometrik Dünya görünürlük ürünü.
-  YALNIZCA geometrik görünürlük (ufukta görünür mü).
-  Link budget, veri hızı ve pencere atama bu şemada yer almaz.
+  Geometric Earth visibility product for a specific location and time.
+  GEOMETRIC VISIBILITY ONLY (is Earth visible on the horizon).
+  Link budget, data rate and window assignment are not included in this schema.
 
 type: object
 required:
@@ -32,74 +32,74 @@ required:
 properties:
   site_id:
     type: string
-    description: Site tanımlayıcısı
+    description: Site identifier
 
   observation_time_utc:
     type: string
     format: date-time
-    description: Gözlem zamanı (ISO 8601)
+    description: Observation time (ISO 8601)
 
   observer_height_m:
     type: number
     minimum: 0
     description: >
-      Anten/sensör mast yüksekliği (metre).
-      TBD-HEIGHT-001 — SC-009 observer height hassasiyeti ile hizalı.
+      Antenna/sensor mast height (metres).
+      TBD-HEIGHT-001 — aligned with SC-009 observer height sensitivity.
 
   earth_visible:
     type: boolean
-    description: Bu anda Dünya geometrik olarak ufkun üzerinde mi?
+    description: Is Earth currently geometrically above the horizon?
 
   earth_elevation_deg:
     type: number
     description: >
-      Dünya'nın yerel ufka göre yükseklik açısı (derece).
-      Negatif = ufkun altında.
+      Elevation angle of Earth relative to local horizon (degrees).
+      Negative = below horizon.
 
   next_change_utc:
     type: string
     format: date-time
-    description: Bir sonraki görünürlük değişim zamanı (görünür→görünmez veya tersi)
+    description: Time of next visibility change (visible→invisible or vice versa)
 
   longest_outage_hours:
     type: number
     minimum: 0
-    description: Bu konumdan hesaplanan en uzun iletişim kesintisi (saat) — SC-007 parametresi
+    description: Longest communication outage calculated from this location (hours) — SC-007 parameter
 
   uncertainty_minutes:
     type: integer
     minimum: 0
     description: >
-      Görünürlük değişim zamanı belirsizliği (dakika).
-      Earth eclipse refraksiyon ve horizon profil hassasiyeti dahildir (B5-EK §7.1).
+      Visibility change time uncertainty (minutes).
+      Includes Earth eclipse refraction and horizon profile sensitivity (B5-EK §7.1).
 
   confidence:
     type: string
     enum: [HIGH, LOW]
     description: >
-      LOW: earth_elevation_deg < TBD-VIS-001 eşiği (marjinal pencere).
-      B3-EK RR-014 ve B5-EK §7.1 ile hizalı.
+      LOW: earth_elevation_deg < TBD-VIS-001 threshold (marginal window).
+      Aligned with B3-EK RR-014 and B5-EK §7.1.
 
   temporal_class:
     type: string
     enum: [historical, predicted]
     description: >
-      historical: gözlem zamanı geçmiş — kesin geometri.
-      predicted: gözlem zamanı gelecek — hesaplanan geometri, belirsizlik payı uygulanır.
-      B5-EK §7.2 politikası.
+      historical: observation time is past — exact geometry.
+      predicted: observation time is future — calculated geometry, uncertainty margin applied.
+      B5-EK §7.2 policy.
 
   terrain_resolution:
     type: string
     enum: ["80m", "300m", "2700m"]
     description: >
-      Horizon hesabında kullanılan DEM çözünürlüğü.
-      ZORUNLU alan — gizlenmez (DR-INT-004). B3-EK RR-011/RR-015 ile hizalı.
+      DEM resolution used in horizon calculation.
+      MANDATORY field — not hidden (DR-INT-004). Aligned with B3-EK RR-011/RR-015.
 
   ephemeris_validity_range:
     type: object
     description: >
-      Bu hesabın geçerli olduğu zaman aralığı.
-      ZORUNLU alan — gizlenmez (DR-INT-004). RR-012: repo yalnızca 2024–2035 geçerli.
+      Time range for which this calculation is valid.
+      MANDATORY field — not hidden (DR-INT-004). RR-012: repo valid for 2024–2035 only.
     required: [start_utc, end_utc]
     properties:
       start_utc:
@@ -111,7 +111,7 @@ properties:
 
   source:
     type: string
-    description: Hesaplama kaynağı (örn. "repo:pipeline/ephem/")
+    description: Calculation source (e.g. "repo:pipeline/ephem/")
     example: "repo:pipeline/ephem/"
 
 additionalProperties: false
