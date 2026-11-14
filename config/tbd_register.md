@@ -46,26 +46,41 @@ Tüm `TBD(source: §10)` ve ilgili belirsiz parametreleri tek yerde toplar. §10
 | TBD-REPO-001 | lunar-navigator entegrasyon yöntemi (submodule vs referans dizin) | — | Proje kararı | infrastructure/repo_placement.md, DR-INT-001 | P-MED |
 | TBD-REPO-002 | GPU ray-marching flight segment bridge mimarisi | — | P2 tasarım kararı | apps/ground-control, infrastructure/repo_placement.md | P-LOW |
 | TBD-VIS-001 | Marjinal Dünya görünürlük elevation eşiği (°) | — | Ortam modeli analizi | domain/environment/uncertainty_policy.md §7.1, communication/ | P-HIGH |
-| TBD-SIM-001 | Regolith yoğunluğu ve zemin tipi (tekerlek-toprak etkileşim modeli) | — | §10 arazi modeli + jeoloji analizi | simulation/simulator_design.md §1.1, §1.4, §2.3 | P-HIGH |
-| TBD-SIM-002 | DEM dosyası ve çözünürlüğü (m/px) | — | §10 bölge seçimi + LRO LOLA | simulation/simulator_design.md §1.1, example_scenario.yaml | P-HIGH |
-| TBD-SIM-003 | Toz kaplama kaybı faktörü α_dust (panel verimi kaybı) | — | §10 ortam analizi | simulation/simulator_design.md §1.2, §2.4 | P-MED |
-| TBD-SIM-004 | Ay yüzeyi albedo (bölgeye özgü) | — | §10 jeoloji + LRO gözlem | simulation/simulator_design.md §1.3 | P-MED |
-| TBD-SIM-005 | Regolith termal inersi (J m⁻² K⁻¹ s⁻½) | — | §10 jeoloji analizi | simulation/simulator_design.md §1.3 | P-MED |
-| TBD-SIM-006 | OBC + nav işlemci nominal güç tüketimi (W) | — | §10 güç bütçesi | simulation/simulator_design.md §2.1 | P-HIGH |
-| TBD-SIM-007 | Motor sürücüleri nominal güç tüketimi (W, hareket halinde) | — | §10 güç bütçesi | simulation/simulator_design.md §2.1 | P-HIGH |
-| TBD-SIM-008 | Isıtıcılar nominal güç tüketimi (W) | — | §10 termal bütçe | simulation/simulator_design.md §2.1 | P-HIGH |
-| TBD-SIM-009 | Haberleşme modülü güç tüketimi (W, HGA aktif) | — | §10 güç bütçesi | simulation/simulator_design.md §2.1 | P-HIGH |
-| TBD-SIM-010 | Bilimsel sensörler güç tüketimi (W) | — | §10 güç bütçesi | simulation/simulator_design.md §2.1 | P-MED |
-| TBD-SIM-011 | CI pipeline senaryo çalıştırma timeout (dakika) | — | §10 CI altyapısı kapasitesi | simulation/simulator_design.md §5.3 | P-LOW |
-| TBD-SIM-012 | Nominal senaryo maksimum süre (s) | — | §10 görev profili | simulation/simulator_design.md §5.3, example_scenario.yaml | P-HIGH |
-| TBD-RED-001 | İkinci IMU modülü ekleme (kütle/hacim) | — | §10 yapı + sensör alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-HIGH |
-| TBD-RED-002 | Üçlü OBC (triple voting) fizibilite | — | §10 yapı + güç bütçesi | docs/architecture/redundancy_matrix.md TBD listesi | P-MED |
-| TBD-RED-003 | İkinci batarya modülü boyutlandırması | TBD-BAT-001/002 bağımlı | §10 enerji alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-CRIT |
-| TBD-RED-004 | UHF omni anten boyutu ve frekans bandı | TBD-COM-001 bağımlı | §10 iletişim + yapı alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-HIGH |
-| TBD-RED-005 | Motor sürücü redundancy seviyesi (triple) | — | §10 hareket alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-MED |
-| TBD-RED-006 | Termal fallback ısıtıcı güç kapasitesi (W) | TBD-THM-001 bağımlı | §10 termal alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-HIGH |
-| TBD-RED-007 | Yedek güneş paneli veya alternatif enerji kaynağı | TBD-SOL-001 bağımlı | §10 yapı + enerji alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-MED |
-| TBD-RED-008 | PDU yedeklilik detayı (güç hattı yönlendirme topolojisi) | — | §10 araç mühendisliği | docs/architecture/redundancy_matrix.md TBD listesi | P-MED |
+| TBD-NAV-002 | EKF süreç gürültüsü kovaryansı Q (IMU) | — | §10 algı alt sistemi (TBD-SNS-002 sonrası) | vehicle/localization/navigation_architecture.md §1.3 | P-HIGH |
+| TBD-NAV-003 | EKF ölçüm gürültüsü kovaryansı R (odometri/VO) | — | §10 algı alt sistemi (TBD-SNS-003 sonrası) | vehicle/localization/navigation_architecture.md §1.3 | P-HIGH |
+| TBD-NAV-004 | LiDAR menzil ve çözünürlük özellikleri | — | §10 algı alt sistemi | vehicle/localization/navigation_architecture.md §3, autonomy/ | P-CRIT |
+| TBD-NAV-005 | Görsel odometri özellik çıkarma parametreleri | — | §10 algı alt sistemi | vehicle/localization/navigation_architecture.md §1.1 | P-HIGH |
+| TBD-NAV-006 | Güneş sensörü doğruluk özellikleri | — | §10 algı alt sistemi | vehicle/localization/navigation_architecture.md §1.1 | P-MED |
+| TBD-NAV-007 | Orbital DEM çözünürlüğü ve güncelleme frekansı | — | Orbital misyon verisi | vehicle/localization/navigation_architecture.md §4.1 | P-HIGH |
+| TBD-NAV-008 | PSR navigasyonu son bilinen iyi konumdan max mesafe | — | §10 araç güç modeli | vehicle/localization/navigation_architecture.md §3.3 | P-HIGH |
+| TBD-FDIR-001 | IMU/VO çapraz kontrol tutarsızlık eşiği (σ_imu_vo_diff) | — | §10 algı alt sistemi | safety/fdir_implementation.md §1.1, safety/fdir_decision_tree.md | P-HIGH |
+| TBD-FDIR-002 | Tekerlek encoder vs komut sapma eşiği (motor sıkışma tespiti) | — | §10 hareket alt sistemi | safety/fdir_implementation.md §2.1, safety/fdir_decision_tree.md | P-HIGH |
+| TBD-FDIR-003 | Batarya SoC sapma anomali eşiği | — | §10 enerji alt sistemi | safety/fdir_implementation.md §3.1 | P-HIGH |
+| TBD-FDIR-004 | Hücre dengesizlik eşiği (mV fark) | — | §10 enerji alt sistemi | safety/fdir_implementation.md §3.1 | P-HIGH |
+| TBD-FDIR-005 | FDIR ana döngü frekansı (Hz); donanım bağımlı | — | §10 OBC/RTOS konfigürasyonu | safety/fdir_implementation.md §6.2, docs/architecture/SAFETY_STATE_MACHINE.md §3 | P-HIGH |
+| TBD-FDIR-006 | İletişim kaybı link_timeout eşiği (s); TBD-COM-002 ile örtüşür | — | §10 iletişim alt sistemi | safety/fdir_implementation.md §4.1, safety/fdir_decision_tree.md | P-HIGH |
+| TBD-FDIR-007 | Lokalizasyon kaybı pozisyon belirsizlik eşiği (m) | 2.0 m (QAR-NAV-004 referans) | §10 algı alt sistemi | safety/fdir_implementation.md §5.1 | P-HIGH |
+| TBD-FDIR-008 | Lokalizasyon recovery bekleme süresi (s) | — | §10 görev parametresi | safety/fdir_implementation.md §5.3, safety/fdir_decision_tree.md | P-HIGH |
+| TBD-PLAN-001 | Weighted A* heuristik ağırlık faktörü (w) | 1.0–3.0 | §10 hesap bütçesi + QAR-PLAN-001 | autonomy/mission_planner.md §1.3, autonomy/global_planner_pseudocode.py | P-MED |
+| TBD-PLAN-002 | Maksimum lokal replanning iterasyon sayısı | — | §10 OBC hesap kapasitesi | autonomy/mission_planner.md §3.2 | P-MED |
+| TBD-PLAN-003 | Arazi tipine göre enerji tüketim modeli (Wh/m) | — | §10 enerji + hareket modeli | autonomy/mission_planner.md §2.3, autonomy/global_planner_pseudocode.py | P-HIGH |
+| TBD-PLAN-004 | Termal maliyet katsayısı (cost fonksiyonu) | — | §10 termal model | autonomy/mission_planner.md §2.3, autonomy/global_planner_pseudocode.py | P-MED |
+| TBD-PLAN-005 | Risk maliyet katsayısı (eğim, engel yakınlığı) | — | §10 arazi veri | autonomy/mission_planner.md §2.3, autonomy/global_planner_pseudocode.py | P-MED |
+| TBD-PLAN-006 | Safe haven minimum aydınlanma eşiği (saat) | — | Orbital mekanik sim (SHV-001) | autonomy/mission_planner.md §5.2, HC-009 | P-HIGH |
+| TBD-PLAN-007 | Safe haven minimum yeniden şarj kapasitesi (Wh/sol) | — | §10 enerji + orbital | autonomy/mission_planner.md §5.2, HC-011 | P-HIGH |
+| TBD-PLAN-008 | İletişim kaybı bekleme süresi — planlayıcı davranışı (s) | — | §10 iletişim alt sistemi (TBD-COM-002) | autonomy/mission_planner.md §6.3 | P-HIGH |
+| TBD-PLAN-009 | Bilim zamanlayıcı öncelik ağırlıkları | — | Bilim ekibi öncelik kararı | autonomy/mission_planner.md §7.3, autonomy/global_planner_pseudocode.py | P-MED |
+| TBD-COM-004 | Frekans bandı seçimi (X-band vs Ka-band) | X-band önerilen | §10 güç/kütle bütçesi + DSN erişim planı | communication/comm_architecture.md §1.1, communication/link_budget_template.yaml | P-CRIT |
+| TBD-COM-005 | TX gücü (W) | — | §10 güç alt sistemi | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-006 | HGA kazancı (dBi) | DSN 34m ~68 dBi tipik (yer tarafı) | §10 yapı alt sistemi (araç anteni) | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-007 | Hedef link marjı (dB) | ≥ 3 dB önerilir | §10 iletişim alt sistemi + link budget | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-008 | Uplink komut veri hızı (bps) | — | §10 iletişim alt sistemi | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-009 | Downlink telemetri veri hızı (bps) | QAR-COM-002 (≤ 10 s periyot) ile boyutlanır | §10 iletişim alt sistemi | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-010 | Downlink bilim verisi veri hızı (bps) | — | §10 bilim paketi + iletişim | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-MED |
+| TBD-COM-011 | SCLK-UTC drift toleransı (ms) | — | §10 OBC osilatör özellikleri | communication/comm_architecture.md §6.2 | P-HIGH |
+| TBD-COM-012 | UTC senkronizasyon frekansı (her link penceresi / günde X kez) | Her link penceresinde | §10 görev operasyon planı | communication/comm_architecture.md §6.2 | P-MED |
+| TBD-COM-013 | Güney kutbu Dünya blackout max süresi (saat) | — | Orbital mekanik sim (SPICE DE440) | communication/comm_architecture.md §2.3, earth_visibility_windows.schema.yaml | P-HIGH |
+| TBD-COM-014 | Komut kimlik doğrulama mekanizması detayları (anahtar yönetimi) | HMAC-SHA256 önerilir | §10 güvenlik analizi | communication/comm_architecture.md §7.2 | P-MED |
 
 ---
 
@@ -95,6 +110,8 @@ Aşağıdaki TBD'ler kapanmadan P1 → P2 geçiş kapısı açılamaz:
 | TBD-GNC-001 | Landing GNC gereksinimleri |
 | TBD-ENE-002 | HC-006 dönüş rezervi eşiği |
 | TBD-TIME-001 | Görev başlangıç tarihi |
+| TBD-NAV-004 | LiDAR menzil ve çözünürlük özellikleri |
+| TBD-COM-004 | Frekans bandı seçimi (X-band vs Ka-band) |
 
 ---
 
@@ -103,4 +120,5 @@ Aşağıdaki TBD'ler kapanmadan P1 → P2 geçiş kapısı açılamaz:
 | Versiyon | Tarih | Değişiklik |
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — C3 görevi, 24 TBD kaydı |
-| 0.2 | 2026-11-14 | Agent C: +20 TBD (TBD-SIM-001..012, TBD-RED-001..008) — C3 simülatör tasarımı ve C1 yedeklilik matrisi |
+| 0.2 | 2026-11-14 | Agent D (D1-D2-D3): NAV-002..008, FDIR-001..008, PLAN-001..009 eklendi (25 yeni kayıt) |
+| 0.3 | 2026-11-14 | Agent D (D4): COM-004..014 eklendi (11 yeni kayıt) |
