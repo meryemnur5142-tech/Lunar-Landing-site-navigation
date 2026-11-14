@@ -1,0 +1,313 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on:
+#   - docs/conops/CONOPS.md
+#   - docs/qar/QAR_TABLE.md
+#   - docs/adr/ADR-001..ADR-006
+# open_items:
+#   - HC-001 threshold TBD(source: §10)
+#   - HC-002 threshold TBD(source: §10)
+#   - HC-004 threshold TBD(source: §10)
+#   - HC-005 threshold TBD(source: §10)
+#   - HC-006 threshold TBD(source: §10)
+#   - HC-007 threshold TBD(source: §10 thermal model)
+#   - HC-008 threshold TBD(source: §10)
+#   - HC-009..HC-015 safe_haven thresholds TBD(source: §10)
+
+schema_version: "1.0.0"
+catalog_id: "luna-ai-hard-constraints-v1.1"
+classification_note: >
+  Hard constraints are evaluated first (pass/fail elimination).
+  No multi-criteria ranking score may override a hard constraint violation.
+  Ref: Uyum Notu 5.
+
+constraints:
+
+  # ── Arazi / İniş Kısıtları ──────────────────────────────────────────────────
+
+  - id: HC-001
+    name: "Maksimum İniş Alanı Eğimi"
+    parameter: max_slope_deg
+    operator: lte
+    threshold: 15.0  # TBD(source: §10) — araç devrilme stabilitesi
+    unit: deg
+    classification: hard
+    source: "v1.0 §4.1, QAR-MOB-001"
+    applies_to_phases:
+      - landing
+    verification_method: analysis
+    rationale: "Araç devrilme riski — kurtarma mümkün değil"
+
+  - id: HC-002
+    name: "Maksimum Yüzey Pürüzlülüğü RMS"
+    parameter: surface_roughness_rms_m
+    operator: lte
+    threshold: 0.30  # TBD(source: §10) — iniş bacak tasarım limiti
+    unit: m
+    classification: hard
+    source: "v1.0 §4.1, QAR-LND-002"
+    applies_to_phases:
+      - landing
+    verification_method: simulation_and_test
+    rationale: "İniş bacak hasar riski — görev kaybı"
+
+  - id: HC-003
+    name: "Maksimum Kaya / Engel Yoğunluğu"
+    parameter: obstacle_fraction
+    operator: lte
+    threshold: 0.20
+    unit: "fraction (0-1)"
+    classification: hard
+    source: "v1.0 §4.3, QAR-LND-003"
+    applies_to_phases:
+      - landing
+      - surface_exploration
+    verification_method: analysis
+    rationale: "Kaya kaçınma algoritması garantisi dışında kalır"
+
+  - id: HC-004
+    name: "Minimum İniş Elipsi Düzlüğü"
+    parameter: slope_variance_deg2
+    operator: lte
+    threshold: null  # TBD(source: §10) — eğim varyansı; düzgün olmayan alanlar elenir
+    unit: "deg^2"
+    classification: hard
+    source: "v1.0 §4.1"
+    applies_to_phases:
+      - landing
+    verification_method: analysis
+    rationale: "İniş elipsi içi düzgünsüzlük iniş GNC hata bütçesini aşar"
+
+  - id: HC-005
+    name: "Araç Erişilebilirlik Çevre Profil Eğimi"
+    parameter: approach_slope_deg
+    operator: lte
+    threshold: null  # TBD(source: §10) — ≤ araç maks tırmanma açısı
+    unit: deg
+    classification: hard
+    source: "v1.0 §4.3, QAR-MOB-002"
+    applies_to_phases:
+      - surface_exploration
+      - psr_ops
+    verification_method: simulation
+    rationale: "Araç sıkışma riski — kurtarma imkânsız"
+
+  # ── Enerji / Termal Kısıtları ────────────────────────────────────────────────
+
+  - id: HC-006
+    name: "Minimum Dönüş Enerji Rezervi"
+    parameter: return_reserve_wh
+    operator: gte
+    threshold: null  # TBD(source: §10) — Power Mgmt hesaplar, planlayıcı uygular
+    unit: Wh
+    classification: hard
+    source: "Uyum Notu 3; safety/safety_budget.md §2"
+    applies_to_phases:
+      - surface_exploration
+      - psr_ops
+      - return
+    verification_method: analysis_and_simulation
+    rationale: >
+      Power Management modülü hesaplar ve planlayıcıya bildirir.
+      Planlayıcı hard constraint olarak uygular — asla bağımsız hesaplamaz.
+      Araç dönüş enerjisi yetersizse görev kaybı.
+    computed_by: power_management_module
+    consumed_by: planner_as_hard_constraint
+
+  - id: HC-007
+    name: "Minimum Güvenli Karanlık Tolerans Marjı"
+    parameter: thermal_margin_c
+    operator: gte
+    threshold: null  # TBD(source: §10 thermal model) — VIPER 50s evrensel değil
+    unit: degC
+    classification: hard
+    source: "v1.0 §5.3, Uyum Notu 3"
+    applies_to_phases:
+      - psr_ops
+      - return
+      - safe_state
+    verification_method: thermal_analysis
+    rationale: "Termal marj sıfırın altına düşerse batarya/bileşen hasarı kalıcı; araç-bağımlı model"
+    note: "VIPER 50s toleransı buraya birebir aktarılmaz — araç termal modeli §10'dan alınır"
+
+  - id: HC-008
+    name: "PSR Girişinde Minimum Batarya SoC"
+    parameter: battery_soc_pct
+    operator: gte
+    threshold: null  # TBD(source: §10)
+    unit: "percent"
+    classification: hard
+    source: "v1.0 §5.2, QAR-PWR-001"
+    applies_to_phases:
+      - psr_ops
+    verification_method: test_and_analysis
+    rationale: "PSR içinde yeterli enerji yoksa haberleşme + ısıtma kesilir"
+
+  # ── Safe Haven Kısıtları — 7 Kriter (Uyum Notu 2) ──────────────────────────
+
+  - id: HC-009
+    name: "Minimum Kesintisiz Aydınlanma Süresi"
+    parameter: continuous_illumination_hr
+    operator: gte
+    threshold: null  # TBD(source: §10)
+    unit: hours
+    classification: hard
+    safe_haven_criterion: 1
+    safe_haven_criterion_name: "kesintisiz_aydinlanma"
+    source: "v1.0 §6.1, Uyum Notu 2"
+    applies_to_phases:
+      - safe_state
+    verification_method: orbital_analysis
+    rationale: "Şarj penceresi yetersizse safe haven geçersizdir"
+
+  - id: HC-010
+    name: "Maksimum Kabul Edilebilir Karanlık Aralığı"
+    parameter: max_darkness_interval_hr
+    operator: lte
+    threshold: null  # TBD(source: §10)
+    unit: hours
+    classification: hard
+    safe_haven_criterion: 2
+    safe_haven_criterion_name: "karanlik_araligi"
+    source: "v1.0 §6.2, Uyum Notu 2"
+    applies_to_phases:
+      - safe_state
+    verification_method: orbital_analysis
+    rationale: "Karanlık tolerans aşılırsa termal survival tehlikeye girer"
+
+  - id: HC-011
+    name: "Yeniden Şarj Olanağı"
+    parameter: recharge_capacity_wh_per_sol
+    operator: gte
+    threshold: null  # TBD(source: §10) — illumination_hr × panel_efficiency >= threshold
+    unit: "Wh/sol"
+    classification: hard
+    safe_haven_criterion: 3
+    safe_haven_criterion_name: "yeniden_sarj"
+    source: "v1.0 §6.3, Uyum Notu 2"
+    applies_to_phases:
+      - safe_state
+    verification_method: analysis
+    rationale: "Şarj olanağı yoksa safe haven sürdürülemez"
+    formula: "illumination_hr * panel_efficiency_wh_per_hr >= threshold"
+
+  - id: HC-012
+    name: "Dönüş Enerjisi Yeterliliği"
+    parameter: return_energy_budget_wh
+    operator: gte
+    threshold: "distance_m * energy_per_m_wh + uncertainty_margin_wh"  # formül; sayısal değerler §10
+    unit: Wh
+    classification: hard
+    safe_haven_criterion: 4
+    safe_haven_criterion_name: "donus_enerjisi"
+    source: "v1.0 §6.4, Uyum Notu 2; HC-006 ile örtüşür"
+    applies_to_phases:
+      - return
+      - safe_state
+    verification_method: simulation
+    rationale: "Safe haven→başlangıç mesafesi × tüketim ≤ rezerv; aksi hâlde araç dönemez"
+
+  - id: HC-013
+    name: "Termal Güvenlik (Safe Haven)"
+    parameter:
+      - surface_temp_c
+      - solar_angle_deg
+    operator: within_limits
+    threshold: null  # TBD(source: §10) — güneş açısı ve yüzey sıcaklığı limitleri
+    unit: "degC, deg"
+    classification: hard
+    safe_haven_criterion: 5
+    safe_haven_criterion_name: "termal_guvenlik"
+    source: "v1.0 §6.5, Uyum Notu 2"
+    applies_to_phases:
+      - safe_state
+    verification_method: thermal_analysis
+    rationale: "Termal limit aşılırsa bileşen arızası kaçınılmaz"
+
+  - id: HC-014
+    name: "Haberleşme Görüş Olanağı"
+    parameter:
+      - comm_visibility_deg
+      - comm_window_min_per_sol
+    operator: gte
+    threshold: null  # TBD(source: §10) — ≥ X° veya ≥ Y dk/sol
+    unit: "deg or min/sol"
+    classification: hard
+    safe_haven_criterion: 6
+    safe_haven_criterion_name: "haberleme"
+    source: "v1.0 §6.6, Uyum Notu 2"
+    applies_to_phases:
+      - cruise
+      - landing
+      - surface_exploration
+      - psr_ops
+      - return
+      - safe_state
+    verification_method: link_analysis
+    rationale: "Haberleşme kesilirse yer müdahalesi mümkün değil; otonom kararlar kısıtlanır"
+
+  - id: HC-015
+    name: "Acil Erişim Mesafesi"
+    parameter: emergency_route_distance_m
+    operator: lte
+    threshold: null  # TBD(source: §10)
+    unit: m
+    classification: hard
+    safe_haven_criterion: 7
+    safe_haven_criterion_name: "acil_erisim"
+    source: "v1.0 §6.7, Uyum Notu 2"
+    applies_to_phases:
+      - surface_exploration
+      - psr_ops
+      - return
+    verification_method: simulation
+    rationale: "Acil erişim imkânı olmayan safe haven, kriz senaryolarında işlevsizdir"
+
+  # ── Site Finder Metrikleri — Ek Hard Constraint'ler (A1-EK) ─────────────────
+  # Kaynak: daniel27-space/lunar-navigator site finder modülü
+  # Uyum Notu 5: Site finder siralama skoru (agirlikli toplam) guvenlik karari vermez.
+  # Siralama yalnizca HC gecen adaylara uygulanir.
+
+  - id: HC-016
+    name: "Site Finder Minimum Güneş Oranı"
+    parameter: site_sun_fraction
+    operator: gte
+    threshold: null  # TBD(source: §10) — lunar-navigator site finder metric
+    unit: "fraction (0-1)"
+    classification: hard
+    source: "lunar-navigator site finder; Uyum Notu 5"
+    applies_to_phases:
+      - surface_exploration
+      - safe_state
+    verification_method: orbital_analysis
+    rationale: "Güneş oranı eşiğin altında kalırsa şarj yetersiz — safe haven geçersiz"
+    note: "Site finder sıralaması güvenlik kararı vermez. Bu HC eleme içindir."
+
+  - id: HC-017
+    name: "Site Finder Minimum Dünya Görünürlük Oranı"
+    parameter: site_earth_fraction
+    operator: gte
+    threshold: null  # TBD(source: §10) — lunar-navigator earth_fraction metric
+    unit: "fraction (0-1)"
+    classification: hard
+    source: "lunar-navigator site finder; Uyum Notu 5"
+    applies_to_phases:
+      - surface_exploration
+      - safe_state
+    verification_method: orbital_analysis
+    rationale: "Dünya görünürlüğü eşiğin altındaysa haberleşme riski — HC-014 ile örtüşür"
+    note: "Ağırlıklı toplam tek başına güvenlik kararı veremez. Bu HC eleme içindir."
+
+  - id: HC-018
+    name: "İniş Zamanı Dünya Görünürlük Penceresi Doğrulaması"
+    parameter: earth_visibility_confirmed
+    operator: eq
+    threshold: true
+    unit: bool
+    classification: hard
+    source: "interfaces/schemas/earth_visibility_windows.schema.yaml; lunar-navigator pipeline/ephem/"
+    applies_to_phases:
+      - landing
+    verification_method: link_analysis
+    rationale: "İniş zamanında Dünya görünürlüğü doğrulanmamışsa iniş abort riski"
+    note: "earth_visibility_windows.schema.yaml earth_visible alanından beslenir"

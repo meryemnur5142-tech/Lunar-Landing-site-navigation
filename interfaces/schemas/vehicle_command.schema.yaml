@@ -1,0 +1,159 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on:
+#   - domain/mission/phase_state_machine.md
+#   - domain/mission/constraints/hard_constraints_catalog.yaml
+#   - docs/architecture/SAFETY_STATE_MACHINE.md
+# open_items:
+#   - timeout_s varsayılan değerleri TBD(source: §10 araç yanıt süresi)
+#   - abort command parametre detayları TBD
+
+schema_version: "1.0.0"
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "VehicleCommand"
+description: >
+  Yer segmentinden araca veya FDIR'dan araca gönderilen komut sözleşmesi.
+  Her komut kimliği, tipi, otorite seviyesini ve zaman aşımını taşır.
+
+type: object
+
+required:
+  - schema_version
+  - command_id
+  - command_type
+  - authority_level
+  - timestamp_utc
+  - timeout_s
+
+properties:
+
+  schema_version:
+    type: string
+    description: "Bu şemanın versiyonu."
+    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+
+  command_id:
+    type: string
+    description: "Komutu benzersiz olarak tanımlayan ID (UUID veya mission-seq)."
+    minLength: 1
+
+  command_type:
+    type: string
+    description: >
+      Komut tipi.
+      route_change: güzergah güncelleme.
+      science_target_abandon: bilimsel hedeften vazgeçme.
+      psr_entry: PSR operasyonu başlat (HC checklist tamamlandıktan sonra).
+      safe_haven_change: safe haven koordinatı güncelle.
+      emergency_return: acil dönüş tetikle.
+      instrument_toggle: bilim aleti aç/kapat.
+      mode_change: güç modu değiştir.
+      abort: görev durdur ve güvenli konuma geç.
+    enum:
+      - route_change
+      - science_target_abandon
+      - psr_entry
+      - safe_haven_change
+      - emergency_return
+      - instrument_toggle
+      - mode_change
+      - abort
+
+  authority_level:
+    type: string
+    description: >
+      Komutun otorite seviyesi.
+      ground_approved: yer operasyon merkezi onaylı; nominal ops.
+      autonomous: araç kendi karar alma çerçevesinde üretir.
+      emergency_autonomous: uplink kesilince FDIR tarafından üretilen kararlar.
+        Link kopukluğunda araç emergency_autonomous yetkisini otomatik devreye alır.
+    enum:
+      - ground_approved
+      - autonomous
+      - emergency_autonomous
+
+  timestamp_utc:
+    type: string
+    format: date-time
+    description: "Komutun üretilme zamanı (UTC)."
+
+  timeout_s:
+    type: number
+    description: >
+      Komut zaman aşımı (saniye). Araç bu süre içinde komutu uygulayamazsa
+      reddeder ve önceki güvenli durumda kalır.
+      TBD(source: §10 araç yanıt süresi).
+    exclusiveMinimum: 0
+
+  sequence_number:
+    type: integer
+    description: "Komut sırası (opsiyonel). Yeniden oynatma tespitinde kullanılır."
+    minimum: 0
+
+  supersedes_command_id:
+    type: string
+    description: "Bu komutun iptal ettiği önceki komut ID'si (opsiyonel)."
+
+  parameters:
+    type: object
+    description: "Komuta özgü parametreler. command_type'a göre içerik değişir."
+    properties:
+
+      # route_change
+      waypoints:
+        type: array
+        description: "Yeni güzergah noktaları."
+        items:
+          type: object
+          required: [lat_deg, lon_deg]
+          properties:
+            lat_deg: { type: number }
+            lon_deg: { type: number }
+            alt_m:   { type: number }
+
+      # safe_haven_change
+      new_safe_haven:
+        type: object
+        description: "Yeni safe haven koordinatı."
+        properties:
+          lat_deg:      { type: number }
+          lon_deg:      { type: number }
+          candidate_id: { type: string }
+
+      # instrument_toggle
+      instrument_id:
+        type: string
+        description: "Açılacak/kapatılacak araç ID'si."
+      instrument_state:
+        type: string
+        enum: [on, off, standby]
+
+      # mode_change
+      target_power_mode:
+        type: string
+        enum: [full_operation, science_restricted, traverse_only, survival]
+
+      # psr_entry — checklist referansı
+      psr_entry_checklist_complete:
+        type: boolean
+        description: >
+          phase_state_machine.md PSR_OPS giriş öncesi zorunlu kontrol listesinin
+          tamamlandığına dair onay. False ise psr_entry komutu reddedilir.
+
+      # abort
+      abort_destination:
+        type: string
+        enum: [safe_haven_primary, safe_haven_secondary, landing_site, hold_in_place]
+
+additionalProperties: false
+
+example:
+  schema_version: "1.0.0"
+  command_id: "CMD-20261005-142201-PSR"
+  command_type: psr_entry
+  authority_level: ground_approved
+  timestamp_utc: "2026-10-05T14:22:01Z"
+  timeout_s: 120
+  sequence_number: 47
+  parameters:
+    psr_entry_checklist_complete: true

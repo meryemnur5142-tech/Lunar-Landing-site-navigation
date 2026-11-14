@@ -1,0 +1,147 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on:
+#   - interfaces/schemas/earth_visibility_windows.schema.yaml
+#   - interfaces/schemas/resource_state.schema.yaml
+#   - domain/mission/constraints/hard_constraints_catalog.yaml  (HC-018)
+#   - domain/mission/phase_state_machine.md  (LANDING faz giriş koşulları)
+# open_items:
+#   - recommended_window hesaplama modeli TBD(source: §10 araç GNC kabiliyeti)
+#   - confidence eşiği TBD — hangi güven seviyesi altında iniş reddedilir
+
+schema_version: "1.0.0"
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "LandingWindowProduct"
+description: >
+  İniş zamanı öneri ürünü.
+  Kaynak: daniel27-space/lunar-navigator "when-to-land" modülü (7/14/30 gün).
+  HC-018 iniş zamanı hard constraint doğrulamasının girdisidir.
+  Bu ürün phase_state_machine.md LANDING faz giriş koşulu
+  "landing_window_validated: true" ve "earth_visibility_confirmed: true"
+  için referans alınır.
+
+type: object
+
+required:
+  - schema_version
+  - product_id
+  - recommended_window_start
+  - recommended_window_end
+  - confidence
+  - basis
+  - earth_visibility_confirmed
+  - source
+
+properties:
+
+  schema_version:
+    type: string
+    description: "Bu şemanın versiyonu."
+    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+
+  product_id:
+    type: string
+    description: "Ürün tanımlayıcısı."
+    minLength: 1
+
+  generated_utc:
+    type: string
+    format: date-time
+    description: "Bu öneri ürününün üretildiği zaman (UTC)."
+
+  recommended_window_start:
+    type: string
+    format: date-time
+    description: "Önerilen iniş penceresi başlangıcı (UTC)."
+
+  recommended_window_end:
+    type: string
+    format: date-time
+    description: "Önerilen iniş penceresi sonu (UTC)."
+
+  confidence:
+    type: number
+    description: >
+      Öneri güven skoru [0.0, 1.0].
+      1.0 = tüm kriterler tam karşılanıyor; 0.0 = hiçbir uygun pencere yok.
+      Planlayıcı confidence < eşik ise iniş reddeder (eşik TBD).
+    minimum: 0.0
+    maximum: 1.0
+
+  basis:
+    type: array
+    description: >
+      Bu önerinin dayandığı kriterler.
+      Olası değerler: sun_coverage, earth_visibility, thermal, fuel_budget.
+    items:
+      type: string
+      enum:
+        - sun_coverage
+        - earth_visibility
+        - thermal
+        - fuel_budget
+    minItems: 1
+    uniqueItems: true
+
+  earth_visibility_confirmed:
+    type: boolean
+    description: >
+      Önerilen pencerede Dünya görünürlüğü doğrulandı mı?
+      HC-018 hard constraint için zorunlu doğrulama alanı.
+      false ise LANDING faz geçişi reddedilir.
+
+  source:
+    type: string
+    description: "Veri kaynağı. Beklenen: 'lunar-navigator/when-to-land'"
+    minLength: 1
+
+  analysis_horizon_days:
+    type: integer
+    description: "Analizin baktığı ileriye dönük gün sayısı. Repo: 7, 14 veya 30 gün."
+    enum: [7, 14, 30]
+
+  alternative_windows:
+    type: array
+    description: "Önerilen pencere dışında değerlendirilen alternatif pencereler (opsiyonel)."
+    items:
+      type: object
+      required: [start_utc, end_utc, confidence, earth_visible]
+      properties:
+        start_utc:    { type: string, format: date-time }
+        end_utc:      { type: string, format: date-time }
+        confidence:   { type: number, minimum: 0.0, maximum: 1.0 }
+        earth_visible:{ type: boolean }
+        notes:        { type: string }
+
+  ephemeris_validity_range:
+    type: object
+    description: "Bu tahminin dayandığı efemeris aralığı."
+    properties:
+      start: { type: string, format: date }
+      end:   { type: string, format: date }
+
+additionalProperties: false
+
+example:
+  schema_version: "1.0.0"
+  product_id: "LWPROD-2026-10-01-30D"
+  generated_utc: "2026-10-01T06:00:00Z"
+  recommended_window_start: "2026-10-05T10:00:00Z"
+  recommended_window_end: "2026-10-05T14:00:00Z"
+  confidence: 0.91
+  basis:
+    - sun_coverage
+    - earth_visibility
+    - thermal
+  earth_visibility_confirmed: true
+  source: "lunar-navigator/when-to-land"
+  analysis_horizon_days: 30
+  ephemeris_validity_range:
+    start: "2024-01-01"
+    end: "2035-12-31"
+  alternative_windows:
+    - start_utc: "2026-10-12T08:00:00Z"
+      end_utc:   "2026-10-12T12:00:00Z"
+      confidence: 0.74
+      earth_visible: true
+      notes: "Daha düşük güneş açısı; termal marj azalmış"

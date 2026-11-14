@@ -1,0 +1,176 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on:
+#   - interfaces/schemas/environment_product.schema.yaml  (terrain_resolution, ephemeris_validity_range)
+#   - domain/mission/constraints/hard_constraints_catalog.yaml  (HC-016, HC-017)
+# open_items:
+#   - max_regions sayısı 5 (repo 2-3'ten genişletildi; üst limit TBD)
+#   - eşik değerleri HC-016/HC-017'den alınır, TBD(source: §10)
+
+schema_version: "1.0.0"
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "MultiSiteGeometryProduct"
+description: >
+  Birden fazla bölgenin güneş/Dünya/gece/kesinti metriklerini karşılaştıran ürün.
+  Kaynak: daniel27-space/lunar-navigator çoklu bölge karşılaştırma modülü (repo: 2-3 bölge → LUNA-AI: 5 bölge).
+  Bu ürün HC-016/HC-017 hard constraint eleme sonrası sıralama girdisi olarak kullanılır.
+  Uyum Notu 5: Bu ürünün metrikleri doğrudan güvenlik kararı vermez.
+
+type: object
+
+required:
+  - schema_version
+  - analysis_epoch_start_utc
+  - analysis_epoch_end_utc
+  - analysis_duration_days
+  - terrain_resolution
+  - regions
+  - source
+
+properties:
+
+  schema_version:
+    type: string
+    description: "Bu şemanın versiyonu."
+    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+
+  analysis_epoch_start_utc:
+    type: string
+    format: date-time
+    description: "Analiz başlangıç zamanı (UTC)."
+
+  analysis_epoch_end_utc:
+    type: string
+    format: date-time
+    description: "Analiz bitiş zamanı (UTC)."
+
+  analysis_duration_days:
+    type: integer
+    description: "Analiz süresi (gün). Repo referans: 60 gün."
+    minimum: 1
+
+  terrain_resolution:
+    type: string
+    description: "Arazi çözünürlüğü. Repo site finder: 300m."
+    enum: ["80m", "300m", "2700m"]
+
+  ephemeris_validity_range:
+    type: object
+    description: "Bu analizin geçerli efemeris aralığı."
+    properties:
+      start: { type: string, format: date }
+      end:   { type: string, format: date }
+
+  regions:
+    type: array
+    description: >
+      Karşılaştırılan bölgeler. Repo: 2-3; LUNA-AI: 5 bölgeye genişletildi.
+      Her bölge için güneş oranı, Dünya oranı, en uzun gece, en uzun kesinti hesaplandı.
+    minItems: 1
+    maxItems: 5
+    items:
+      type: object
+      required:
+        - region_id
+        - lat_deg
+        - lon_deg
+        - sun_fraction
+        - earth_fraction
+        - longest_night_hours
+        - longest_outage_hours
+        - hc016_pass
+        - hc017_pass
+      properties:
+        region_id:
+          type: string
+          description: "Bölge tanımlayıcısı."
+
+        lat_deg:
+          type: number
+          minimum: -90
+          maximum: 90
+
+        lon_deg:
+          type: number
+          minimum: -180
+          maximum: 180
+
+        sun_fraction:
+          type: number
+          description: "Analiz periyodunda güneş görünürlük oranı [0,1]."
+          minimum: 0.0
+          maximum: 1.0
+
+        earth_fraction:
+          type: number
+          description: "Analiz periyodunda Dünya görünürlük oranı [0,1]."
+          minimum: 0.0
+          maximum: 1.0
+
+        longest_night_hours:
+          type: number
+          description: "Analiz periyodundaki en uzun gece süresi (saat). HC-010 ile ilişkili."
+          minimum: 0.0
+
+        longest_outage_hours:
+          type: number
+          description: "Analiz periyodundaki en uzun haberleşme kesintisi (saat). HC-014 ile ilişkili."
+          minimum: 0.0
+
+        hc016_pass:
+          type: boolean
+          description: "HC-016 (min güneş oranı) eleme sonucu. false → bölge elenmiş."
+
+        hc017_pass:
+          type: boolean
+          description: "HC-017 (min Dünya görünürlük oranı) eleme sonucu. false → bölge elenmiş."
+
+        ranking_score:
+          type: number
+          description: >
+            Çok kriterli sıralama skoru (opsiyonel). Yalnızca HC geçen bölgelere uygulanır.
+            Uyum Notu 5: Bu skor tek başına güvenlik kararı vermez.
+          minimum: 0.0
+          maximum: 1.0
+
+        notes:
+          type: string
+
+  source:
+    type: string
+    description: "Veri kaynağı."
+    minLength: 1
+
+additionalProperties: false
+
+example:
+  schema_version: "1.0.0"
+  analysis_epoch_start_utc: "2026-10-01T00:00:00Z"
+  analysis_epoch_end_utc: "2026-11-30T00:00:00Z"
+  analysis_duration_days: 60
+  terrain_resolution: "300m"
+  ephemeris_validity_range:
+    start: "2024-01-01"
+    end: "2035-12-31"
+  source: "lunar-navigator multi-site comparator (expanded 2→5 regions)"
+  regions:
+    - region_id: "HAWORTH-RIDGE-A"
+      lat_deg: -87.42
+      lon_deg: 2.15
+      sun_fraction: 0.82
+      earth_fraction: 0.71
+      longest_night_hours: 72.3
+      longest_outage_hours: 18.5
+      hc016_pass: true
+      hc017_pass: true
+      ranking_score: 0.78
+    - region_id: "NOBILE-RIM-B"
+      lat_deg: -85.1
+      lon_deg: 58.3
+      sun_fraction: 0.61
+      earth_fraction: 0.44
+      longest_night_hours: 110.0
+      longest_outage_hours: 42.0
+      hc016_pass: false
+      hc017_pass: false
+      notes: "HC-016 ve HC-017 başarısız; bölge elendi"

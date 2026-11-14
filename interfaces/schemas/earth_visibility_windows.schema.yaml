@@ -1,0 +1,107 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on:
+#   - domain/mission/constraints/hard_constraints_catalog.yaml  (HC-014, HC-017, HC-018)
+#   - safety/safety_budget.md  (§6 max_communication_outage_hours)
+# open_items:
+#   - uncertainty_minutes araç donanım gecikmesine bağlı TBD(source: §10)
+#   - longest_outage_duration_hours operasyonel eşik §10 donanım verisiyle belirlenecek
+
+schema_version: "1.0.0"
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "EarthVisibilityWindows"
+description: >
+  Araçtan Dünya görünürlük penceresi verisi.
+  Kaynak: daniel27-space/lunar-navigator pipeline/ephem/ (SPICE DE440).
+  Bu veri HC-014 ve HC-018 hard constraint kontrolünde, A4 safety_budget §6'da kullanılır.
+  Uyum Notu 6: "Dünya ufukta görünür mü" (bu şema) ≠ haberleşme link planlaması (§4.7).
+  Görünürlük gerekli koşuldur; link kalitesi, iletim hızı ayrı değerlendirilir.
+
+type: object
+
+required:
+  - schema_version
+  - timestamp_utc
+  - earth_visible
+  - next_change_time
+  - longest_outage_duration_hours
+  - uncertainty_minutes
+  - source
+
+properties:
+
+  schema_version:
+    type: string
+    description: "Bu şemanın versiyonu."
+    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+
+  timestamp_utc:
+    type: string
+    format: date-time
+    description: "Bu görünürlük tahmininin üretildiği zaman (UTC)."
+
+  earth_visible:
+    type: boolean
+    description: >
+      Anlık Dünya görünürlüğü. true = Dünya ufukta / üstünde görünür.
+      HC-018 iniş zamanı doğrulamasında kullanılır.
+
+  next_change_time:
+    type: string
+    format: date-time
+    description: "Sonraki görünürlük değişikliği zamanı (UTC). Planlayıcı pencere hesabında kullanır."
+
+  longest_outage_duration_hours:
+    type: number
+    description: >
+      Yaklaşan 60 günlük penceredeki en uzun haberleşme kesintisi (saat).
+      Kaynak: lunar-navigator 60-gün güneş/Dünya penceresi analizi,
+      "longest night/communication gap" metriği.
+      safety_budget.md §6 max_communication_outage_hours ile karşılaştırılır.
+      TBD(source: §10 — operasyonel eşik donanım verisine bağlı).
+    minimum: 0.0
+
+  uncertainty_minutes:
+    type: integer
+    description: >
+      Görünürlük sınırı tahmin belirsizliği (dakika).
+      Kaynak: lunar-navigator efemeris hassasiyeti.
+      TBD(source: §10 araç donanım gecikmesi + anten açısı toleransı).
+    minimum: 0
+
+  source:
+    type: string
+    description: "Veri kaynağı. Beklenen: 'lunar-navigator/pipeline/ephem/ SPICE DE440'"
+    minLength: 1
+
+  visibility_windows_next_7days:
+    type: array
+    description: "Yaklaşan 7 günlük görünürlük pencereleri listesi (opsiyonel; planlama kolaylığı)."
+    items:
+      type: object
+      required: [start_utc, end_utc, duration_hours]
+      properties:
+        start_utc:      { type: string, format: date-time }
+        end_utc:        { type: string, format: date-time }
+        duration_hours: { type: number, minimum: 0 }
+
+  ephemeris_validity_range:
+    type: object
+    description: "Bu tahminin geçerli olduğu efemeris aralığı."
+    properties:
+      start: { type: string, format: date }
+      end:   { type: string, format: date }
+
+additionalProperties: false
+
+example:
+  schema_version: "1.0.0"
+  timestamp_utc: "2026-10-05T12:00:00Z"
+  earth_visible: true
+  next_change_time: "2026-10-06T03:17:00Z"
+  longest_outage_duration_hours: 11.4
+  uncertainty_minutes: 8
+  source: "lunar-navigator/pipeline/ephem/ SPICE DE440"
+  ephemeris_validity_range:
+    start: "2024-01-01"
+    end: "2035-12-31"

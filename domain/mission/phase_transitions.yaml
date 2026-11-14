@@ -1,0 +1,210 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on:
+#   - domain/mission/phase_state_machine.md
+#   - domain/mission/constraints/hard_constraints_catalog.yaml
+#   - interfaces/schemas/resource_state.schema.yaml
+#   - interfaces/schemas/vehicle_command.schema.yaml
+# open_items:
+#   - SURFACE_EXPLORATION->PSR_OPS authority: B1 otonomi matrisine bagli TBD
+#   - CRUISE->LANDING guard kosullari GNC arayzune bagli TBD(source: §10)
+
+schema_version: "1.0.0"
+description: >
+  LUNA-AI görev fazı geçiş tablosu.
+  Uyum Notu 1: Yalnızca görev fazı eksenini tanımlar.
+  Güvenlik durumları (normal/caution/return_required/survival) bu dosyada tanımlanmaz.
+
+phases:
+  - id: CRUISE
+    description: "Yörüngede iniş öncesi"
+  - id: LANDING
+    description: "İniş GNC aktif, yüzey teması öncesi"
+  - id: SURFACE_EXPLORATION
+    description: "Nominal yüzey keşfi, PSR dışı"
+  - id: PSR_OPS
+    description: "PSR içi operasyon"
+  - id: RETURN
+    description: "Safe haven'a aktif dönüş"
+  - id: SAFE_STATE
+    description: "Şarj/termal toparlanma; haberleşme bekleme"
+
+transitions:
+
+  # ── CRUISE ────────────────────────────────────────────────────────────────
+
+  - id: T-001
+    from: CRUISE
+    to: LANDING
+    trigger: landing_corridor_approved
+    guard_conditions:
+      - "landing_candidate.hc001_pass == true"
+      - "landing_candidate.hc002_pass == true"
+      - "landing_candidate.hc003_pass == true"
+      - "resource_state.comm_visibility_deg >= HC-014.threshold"
+    authority: ground_approved
+    notes: "GNC iniş moduna geçiş; TBD(source: §10 GNC arayüzü)"
+
+  # ── LANDING ───────────────────────────────────────────────────────────────
+
+  - id: T-002
+    from: LANDING
+    to: SURFACE_EXPLORATION
+    trigger: surface_contact_confirmed
+    guard_conditions:
+      - "vehicle_pose.surface_contact == true"
+      - "vehicle_pose.stability_nominal == true"
+      - "landing_site.hc001_pass == true"
+      - "landing_site.hc002_pass == true"
+      - "landing_site.hc003_pass == true"
+      - "landing_site.hc004_pass == true"
+      - "landing_site.hc005_pass == true"
+      - "landing_window_product.landing_window_validated == true"   # A3-EK: lunar-navigator when-to-land ciktisi
+      - "earth_visibility_windows.earth_visibility_confirmed == true"  # A3-EK: HC-018 gereksimi
+    authority: ground_approved
+    notes: "Sistem sağlık kontrolü nominal. İniş kısıtları post-landing doğrulama. A3-EK: landing_window ve earth_visibility onayı zorunlu."
+
+  - id: T-003
+    from: LANDING
+    to: SAFE_STATE
+    trigger: post_landing_safe_mode
+    guard_conditions:
+      - "vehicle_pose.surface_contact == true"
+      - "safe_haven_loaded == true"
+    authority: autonomous
+    notes: "İniş sonrası geçici safe state; sistem kontrolü için."
+
+  # ── SURFACE_EXPLORATION ───────────────────────────────────────────────────
+
+  - id: T-004
+    from: SURFACE_EXPLORATION
+    to: PSR_OPS
+    trigger: psr_entry_approved
+    guard_conditions:
+      - "resource_state.return_reserve_wh >= HC-006.threshold"           # Madde 1: dönüş rezervi
+      - "resource_state.thermal_margin_c >= HC-007.threshold"             # Madde 2: termal marj
+      - "comm_window_ok == true OR pre_planned_abort_trigger_set == true" # Madde 3: haberleşme
+      - "vehicle_pose.position_uncertainty_m <= QAR-NAV-002.target"       # Madde 4: lokalizasyon
+      - "science_target_approved == true"                                  # Madde 5: bilimsel hedef
+      - "safe_haven_backup_loaded == true"                                 # Madde 6: yedek safe haven
+    authority: ground_approved  # TBD: autonomous seçeneği B1 otonomi matrisine bağlı
+    notes: "6 madde checklist: phase_state_machine.md §4.3.1. Araç vehicle_command.psr_entry_checklist_complete: true bekler."
+
+  - id: T-005
+    from: SURFACE_EXPLORATION
+    to: RETURN
+    trigger: return_condition_met
+    guard_conditions:
+      - "resource_state.return_reserve_wh <= (HC-006.threshold * 1.1) OR ground_return_command == true OR fdir_trigger == true"
+    authority: autonomous
+    notes: "%10 erken uyarı eşiği. FDIR tetiklemesinde emergency_autonomous."
+
+  - id: T-006
+    from: SURFACE_EXPLORATION
+    to: SAFE_STATE
+    trigger: charge_or_thermal_required
+    guard_conditions:
+      - "resource_state.state_of_charge_pct <= charge_threshold_pct OR resource_state.thermal_margin_c <= thermal_warning_threshold_c"
+      - "safe_haven_reachable == true"
+    authority: autonomous
+    notes: "Şarj veya termal toparlanma gereksinimi."
+
+  # ── PSR_OPS ───────────────────────────────────────────────────────────────
+
+  - id: T-007
+    from: PSR_OPS
+    to: RETURN
+    trigger: return_condition_met
+    guard_conditions:
+      - "resource_state.return_reserve_wh <= (HC-006.threshold * 1.1) OR science_objectives_complete == true OR emergency_return_command == true OR fdir_trigger == true"
+    authority: autonomous
+    notes: >
+      Birincil çıkış yolu. Dönüş rezervi erken uyarı eşiğine ulaştığında planlayıcı
+      görevi bırakır ve RETURN'e geçer. FDIR tetiklemesinde emergency_autonomous.
+
+  - id: T-008
+    from: PSR_OPS
+    to: SAFE_STATE
+    trigger: emergency_survival_trigger
+    guard_conditions:
+      - "resource_state.power_mode == survival"
+      - "resource_state.return_reserve_wh < HC-006.threshold"
+      - "nearest_safe_haven_reachable == true"
+    authority: emergency_autonomous
+    notes: "Yalnızca FDIR. Dönüş enerjisi yetersiz + survival modu. En yakın safe haven'a yönelir."
+
+  # ── RETURN ────────────────────────────────────────────────────────────────
+
+  - id: T-009
+    from: RETURN
+    to: SAFE_STATE
+    trigger: safe_haven_reached
+    guard_conditions:
+      - "distance_to_safe_haven_m <= HC-015.threshold"
+      - "safe_haven_hc009_pass == true"
+      - "safe_haven_hc010_pass == true"
+      - "safe_haven_hc011_pass == true"
+      - "safe_haven_hc013_pass == true"
+      - "safe_haven_hc014_pass == true"
+    authority: autonomous
+    notes: "Safe haven kriterleri onay listesi (HC-009..HC-015 kapsamı)."
+
+  - id: T-010
+    from: RETURN
+    to: SURFACE_EXPLORATION
+    trigger: return_cancelled_by_ground
+    guard_conditions:
+      - "ground_command_authority == ground_approved"
+      - "resource_state.return_reserve_wh >= (HC-006.threshold * 1.5)"
+      - "resource_state.thermal_margin_c >= HC-007.threshold"
+    authority: ground_approved
+    notes: "İstisnai durum: yer segmenti dönüşü iptal eder. %150 rezerv marjı zorunlu."
+
+  # ── SAFE_STATE ────────────────────────────────────────────────────────────
+
+  - id: T-011
+    from: SAFE_STATE
+    to: SURFACE_EXPLORATION
+    trigger: recovery_complete_and_mission_resumed
+    guard_conditions:
+      - "resource_state.state_of_charge_pct >= hc008_threshold_pct"
+      - "resource_state.thermal_margin_c >= HC-007.threshold"
+      - "new_mission_package_received == true"
+      - "resource_state.comm_visibility_deg >= HC-014.threshold"
+    authority: ground_approved
+    notes: "Yeni görev paketi (mission_package.schema.yaml) alındıktan sonra geçiş."
+
+  - id: T-012
+    from: SAFE_STATE
+    to: LANDING
+    trigger: mission_abort_ground_command
+    guard_conditions:
+      - "ground_command_authority == ground_approved"
+      - "mission_abort_flag == true"
+    authority: ground_approved
+    notes: "Yalnızca görev iptali senaryosunda. İniş alanına geri dönüş."
+
+# ── Acil Geçişler (herhangi bir fazdan) ──────────────────────────────────────
+
+emergency_transitions:
+
+  - id: ET-001
+    from: any
+    to: RETURN
+    trigger: fdir_emergency_return
+    guard_conditions:
+      - "safety_state IN [RETURN_REQUIRED]"
+      - "resource_state.return_reserve_wh >= HC-006.threshold"
+    authority: emergency_autonomous
+    notes: "Güvenlik durumu RETURN_REQUIRED + yeterli enerji → acil RETURN."
+
+  - id: ET-002
+    from: any
+    to: SAFE_STATE
+    trigger: fdir_survival_to_safe_haven
+    guard_conditions:
+      - "safety_state == SURVIVAL"
+      - "resource_state.return_reserve_wh < HC-006.threshold"
+      - "nearest_safe_haven_reachable == true"
+    authority: emergency_autonomous
+    notes: "Dönüş enerjisi yetersiz + SURVIVAL → en yakın safe haven."
