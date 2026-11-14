@@ -1,0 +1,126 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on:
+#   - domain/mission/constraints/hard_constraints_catalog.yaml  (HC-006, HC-007, HC-008)
+#   - safety/safety_budget.md
+# open_items:
+#   - return_reserve_wh hesaplama modeli TBD(source: §10 Power Mgmt araç parametreleri)
+#   - thermal_margin_c kritik bileşen listesi TBD(source: §10)
+
+schema_version: "1.0.0"
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "ResourceState"
+description: >
+  Araç enerji ve termal durum sözleşmesi.
+  Power Management modülü bu mesajı üretir; planlayıcı hard constraint olarak tüketir.
+  Uyum Notu 3: Planlayıcı return_reserve_wh değerini bağımsız hesaplamaz.
+
+type: object
+
+required:
+  - schema_version
+  - timestamp_sclk
+  - state_of_charge_pct
+  - available_energy_wh
+  - return_reserve_wh
+  - uncertainty_available_wh
+  - power_mode
+  - thermal_margin_c
+
+properties:
+
+  schema_version:
+    type: string
+    description: "Bu şemanın versiyonu."
+    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+
+  timestamp_sclk:
+    type: number
+    description: "Spacecraft Clock (SCLK) zaman damgası — saniye cinsinden."
+    minimum: 0
+
+  timestamp_utc:
+    type: string
+    format: date-time
+    description: "UTC eşdeğeri (opsiyonel; loglama kolaylığı)."
+
+  state_of_charge_pct:
+    type: number
+    description: "Batarya doluluk oranı (%). HC-008 ile karşılaştırılır."
+    minimum: 0.0
+    maximum: 100.0
+
+  available_energy_wh:
+    type: number
+    description: "Anlık kullanılabilir enerji (Wh). Toplam kapasite eksi rezerv."
+    minimum: 0.0
+
+  return_reserve_wh:
+    type: number
+    description: >
+      Dönüş için ayrılmış enerji rezervi (Wh).
+      Power Management modülü hesaplar ve bu alanda bildirir.
+      Planlayıcı bu değeri HC-006 hard constraint olarak uygular.
+      Planlayıcı bütçeyi asla bağımsız hesaplamaz. Uyum Notu 3.
+    minimum: 0.0
+
+  uncertainty_available_wh:
+    type: number
+    description: >
+      Kullanılabilir enerji tahmin belirsizliği (1σ, Wh).
+      Planlayıcı konservatif marj hesabında kullanır.
+      Null kabul edilmez; bilinmiyorsa -1 ile işaretlenir.
+    not:
+      type: "null"
+
+  power_mode:
+    type: string
+    description: >
+      Aktif güç modu. Planlayıcı ve FDIR bu moda göre davranır.
+      full_operation: tüm sistemler aktif.
+      science_restricted: bilim araçları kısıtlı.
+      traverse_only: sadece seyir, bilim devre dışı.
+      survival: minimum güç, sadece kritik sistem.
+    enum:
+      - full_operation
+      - science_restricted
+      - traverse_only
+      - survival
+
+  thermal_margin_c:
+    type: number
+    description: >
+      Kritik bileşenlerde en düşük termal marj (°C).
+      thermal_margin_c = min(T_limit_c[i] - T_current_c[i]) for i in {batarya, ana_bilgisayar, motor_suruculeri}.
+      HC-007 ile karşılaştırılır.
+
+  heater_power_w:
+    type: number
+    description: "Aktif ısıtıcı toplam gücü (W). Dönüş rezervi hesabına dahil edilir."
+    minimum: 0.0
+
+  solar_panel_output_w:
+    type: number
+    description: "Anlık güneş paneli çıktısı (W). safe_state şarj hesabında kullanılır."
+    minimum: 0.0
+
+  estimated_range_reserve_m:
+    type: number
+    description: "return_reserve_wh'e karşılık gelen tahmini menzil (m). Navigation sağlar."
+    minimum: 0.0
+
+additionalProperties: false
+
+example:
+  schema_version: "1.0.0"
+  timestamp_sclk: 812345678.0
+  timestamp_utc: "2026-10-05T14:22:00Z"
+  state_of_charge_pct: 72.3
+  available_energy_wh: 185.0
+  return_reserve_wh: 95.0
+  uncertainty_available_wh: 8.5
+  power_mode: "full_operation"
+  thermal_margin_c: 12.4
+  heater_power_w: 6.0
+  solar_panel_output_w: 42.0
+  estimated_range_reserve_m: 1200.0

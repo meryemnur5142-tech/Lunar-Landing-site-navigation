@@ -1,0 +1,144 @@
+# status: draft
+# owner: luna-ai-architecture
+# depends_on: [docs/conops/CONOPS.md §4.2, docs/conops/CONOPS.md §6, domain/mission/constraints/hard_constraints_catalog.yaml]
+# open_items: [resolution_m araç sensör kabiliyetine bağlı TBD(source: §10)]
+
+schema_version: "1.0.0"
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "EnvironmentProduct"
+description: >
+  Çevresel veri ürününü (arazi, termal, aydınlanma, PSR sınır, navigasyon haritası vb.)
+  tanımlayan sözleşme. Tüm environment verisi bu şemayı karşılamalıdır.
+
+type: object
+
+required:
+  - product_id
+  - product_type
+  - source
+  - timestamp_utc
+  - coordinate_reference_system
+  - resolution_m
+  - quality_score
+  - uncertainty_1sigma
+  - temporal_class
+  - processing_version
+  - lineage
+  - schema_version
+
+properties:
+
+  schema_version:
+    type: string
+    description: "Bu şemanın versiyonu. VERSIONING.md kurallarına göre güncellenir."
+    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+
+  product_id:
+    type: string
+    description: "Ürünü benzersiz olarak tanımlayan UUID veya mission-specific ID."
+    minLength: 1
+
+  product_type:
+    type: string
+    description: "Ürün tipi. Tanımlı değerler genişletilebilir (MINOR bump gerektirir)."
+    enum:
+      - terrain_slope
+      - terrain_roughness
+      - obstacle_map
+      - illumination_map
+      - psr_boundary
+      - thermal_map
+      - navigation_map
+      - hazard_map
+
+  source:
+    type: string
+    description: "Veri kaynağı (örn. 'LRO/LROC', 'synthetic_sim_v2', 'onboard_lidar')."
+    minLength: 1
+
+  timestamp_utc:
+    type: string
+    format: date-time
+    description: "Verinin geçerlilik zaman damgası (ISO-8601, UTC). Tarihsel veriler için gözlem zamanı."
+
+  coordinate_reference_system:
+    type: string
+    description: "Koordinat referans sistemi. Örn: 'MOON_ME_DE421', 'LOLA_POLAR_STEREO_N'."
+    minLength: 1
+
+  resolution_m:
+    type: number
+    description: "Uzamsal çözünürlük (metre/piksel). Araç sensör kabiliyetine bağlı — TBD(source: §10)."
+    exclusiveMinimum: 0
+
+  quality_score:
+    type: number
+    description: "Veri kalite skoru [0.0, 1.0]. 0=kullanılamaz, 1=mükemmel."
+    minimum: 0.0
+    maximum: 1.0
+
+  uncertainty_1sigma:
+    type: number
+    description: >
+      1σ belirsizlik değeri. Null kabul edilmez — ölçüm yoksa veya bilinmiyorsa -1 ile işaretlenir.
+      Negatif değer belirsizliğin bilinmediğini gösterir; planlayıcı konservatif marj uygular.
+    not:
+      type: "null"
+
+  temporal_class:
+    type: string
+    description: >
+      Zamansal sınıf. 'historical' = geçmiş gözlem (gerçekleşmiş, sabit),
+      'predicted' = gelecek tahmin (modelden üretilmiş, güncellenir).
+      v1.0 §4.2 ve §6 aydınlanma ayrımını destekler. Asla karıştırılmaz.
+    enum:
+      - historical
+      - predicted
+
+  processing_version:
+    type: string
+    description: "Veriyi üreten işlem boru hattının versiyonu. Tekrarlanabilirlik için zorunlu."
+    minLength: 1
+
+  lineage:
+    type: string
+    description: "Veri kökeni açıklaması — hangi ham veriden, hangi işlemle türetildi."
+    minLength: 1
+
+  coverage_extent:
+    type: object
+    description: "Coğrafi kapsam (opsiyonel)."
+    properties:
+      min_lat_deg: { type: number }
+      max_lat_deg: { type: number }
+      min_lon_deg: { type: number }
+      max_lon_deg: { type: number }
+
+  validity_window:
+    type: object
+    description: "Verinin geçerli olduğu zaman aralığı (predicted ürünler için zorunlu)."
+    properties:
+      start_utc: { type: string, format: date-time }
+      end_utc:   { type: string, format: date-time }
+
+additionalProperties: false
+
+# ── Doldurulmuş Örnek — PSR Sınır Ürünü ────────────────────────────────────
+example:
+  schema_version: "1.0.0"
+  product_id: "PSR-BOUNDARY-HAWORTH-20260901T000000Z"
+  product_type: "psr_boundary"
+  source: "LRO/LROC_NAC"
+  timestamp_utc: "2026-09-01T00:00:00Z"
+  coordinate_reference_system: "LOLA_POLAR_STEREO_S"
+  resolution_m: 2.0
+  quality_score: 0.87
+  uncertainty_1sigma: 3.5          # 1σ sınır belirsizliği metre cinsinden
+  temporal_class: "historical"      # Geçmiş LRO gözleminden türetildi
+  processing_version: "psr_pipeline_v2.1.0"
+  lineage: "LRO/LROC NAC 2024-2026 arası 48 geçişin mosaiklenmesi; eşik: ortalama aydınlanma < 0.1%"
+  coverage_extent:
+    min_lat_deg: -88.0
+    max_lat_deg: -86.0
+    min_lon_deg: -5.0
+    max_lon_deg: 10.0
