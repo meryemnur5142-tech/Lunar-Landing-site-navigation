@@ -59,8 +59,10 @@ transitions:
       - "landing_site.hc003_pass == true"
       - "landing_site.hc004_pass == true"
       - "landing_site.hc005_pass == true"
+      - "landing_window_product.landing_window_validated == true"   # A3-EK: lunar-navigator when-to-land ciktisi
+      - "earth_visibility_windows.earth_visibility_confirmed == true"  # A3-EK: HC-018 gereksimi
     authority: ground_approved
-    notes: "Sistem sağlık kontrolü nominal. İniş kısıtları post-landing doğrulama."
+    notes: "Sistem sağlık kontrolü nominal. İniş kısıtları post-landing doğrulama. A3-EK: landing_window ve earth_visibility onayı zorunlu."
 
   - id: T-003
     from: LANDING

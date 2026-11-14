@@ -94,6 +94,8 @@ PSR_OPS ──► (dönüş koşulu) ──► RETURN ──► SAFE_STATE
 - Yüzey teması ve stabilite onaylandı
 - Tüm HC-001..HC-005 iniş alanı kontrolü geçti
 - Sistem sağlık kontrolü nominal
+- `landing_window_validated: true` (kaynak: `interfaces/schemas/landing_window_product.schema.yaml` — lunar-navigator "when-to-land" çıktısı)
+- `earth_visibility_confirmed: true` (kaynak: `interfaces/schemas/earth_visibility_windows.schema.yaml`) — HC-018 gereksinimi
 
 **Girişte zorunlu kontrol:**
 - GNC iniş algoritması aktif
