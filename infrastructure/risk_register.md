@@ -32,6 +32,12 @@ Bu belge LUNA-AI sisteminin tanımlanmış teknik ve operasyonel risklerini, ola
 | RR-009 | Araç donanım parametresi değişimi — §10 girdileri beklenen aralık dışı | §10 araç tasarım revizyonu | 3 | 3 | 9 | config/open_inputs.md'de bloke edici vs dondurulabilir girdiler ayrılmış. Parametre değişikliği impact analizi prosedürü oluşturulacak. TBD kaydı config/tbd_register.md'de takip edilir. | config/tbd_register.md düzenli güncelleme. §10 girdi değişikliğinde etkilenen modüllerin re-test listesi hazırlanacak. | luna-ai-architecture | AÇIK |
 | RR-010 | FDIR yanlış pozitif — sağlıklı sistemde abort tetikleniyor | FDIR eşik kalibrasyonu | 2 | 3 | 6 | FDIR eşik değerleri QAR doğrulama kapsamına dahil edilecek. Yanlış pozitif oranı SIL hata enjeksiyonu ile ölçülecek. Eşik ayarı muhafazakâr ama gereksiz abort'u engelleyecek şekilde tasarlanacak. | B4 Hata Enjeksiyonu Matrisi: 10 kritik senaryo × FDIR beklenen tepki = %100 uyum hedefi. FDIR yanlış pozitif oranı < TBD%. | safety/fdir | AÇIK |
 
+| RR-011 | Çözünürlük sınırı: 80m DEM / 300m site finder hücre — küçük engel gözden kaçması | 80m DEM → engel < 80m boyut; 300m site finder hücresi | 3 | 4 | 12 | Local planner 80m altı engelleri IMU/lidar ile gerçek zamanlı algılar. 300m site finder hücresi site sınırında ±150m belirsizlik kabul edilir; PSR sınır güveni hesabı buna göre. B5-EK §7.3 ile hizalı. | P1 simülatör: 80m altı engel enjeksiyonu, local planner tepkisi. | vehicle/perception | AÇIK |
+| RR-012 | Zaman aralığı sınırı: Repo yalnızca 2024–2035 geçerli; bu dışında görev | Ephemeris ve aydınlanma modeli geçerlilik aralığı | 1 | 3 | 3 | Görev tarihi 2024–2035 içinde kalmalı. Dışında kalıyorsa ephemeris ve aydınlanma hesapları TBD (farklı araç gerekebilir). `ephemeris_validity_range` şema alanı zorunlu. | config/open_inputs.md görev tarihi kısıtı. İzleme: görev tarihi onay kapısı. | luna-ai-architecture | AÇIK |
+| RR-013 | Observer height hassasiyeti: 1m yükseklik farkı en uzun geceyi yarıya indirebilir; operasyonel anten yüksekliği TBD | Araç yapısı tasarımı (§10) | 3 | 3 | 9 | SC-009 duyarlılık analizi P1'de tamamlanacak. Anten yüksekliği §10'dan dondurulunca horizon.py yeniden çalıştırılır. TBD-HEIGHT-001: observer_height_m (source: §10). | P1 Analysis: observer_height ±1m duyarlılık. §10 girdi dondurulunca yeniden hesaplama. | thermal + power | AÇIK |
+| RR-014 | Earth eclipse refraksiyon ihmalı: Repo bu etkiyi hesaplamaz; gerçek Dünya görünürlüğü marjinal durumlarda sapabilir | pipeline/ephem/ tasarım kararı | 2 | 3 | 6 | Marjinal Dünya görünürlük pencereleri (elevation < TBD°) `confidence: LOW` ile işaretlenir. Bu pencereler link planlama hesabında güvenli bant dışı tutulur. B5-EK §7.4 azaltma stratejisi. | P2 SIL: marjinal pencere testleri. AC-VAL-003 Dünya görünürlük doğrulaması (r≥0.993). | communication | AÇIK |
+| RR-015 | Site finder 300m çözünürlük: 80m DEM'den düşürülmüş; ince topografya kayıpları olabilir | Site finder pipeline çözünürlük seçimi | 2 | 3 | 6 | Site sınırı belirsizliği ±150m kabul edilir; sınırda kalan adaylar için 80m DEM yeniden değerlendirmesi gerekebilir. `terrain_resolution` şema alanı zorunlu. AC-VAL-005: 80m vs 300m fark raporu. | P1: 80m vs 300m site boundary karşılaştırması. AC-VAL-005 teslimi. | data-platform | AÇIK |
+
 ---
 
 ## RPN Önem Sıralaması
@@ -49,7 +55,13 @@ Bu belge LUNA-AI sisteminin tanımlanmış teknik ve operasyonel risklerini, ola
 | 9 | RR-008 | 8 | Güç-termal kararsızlık |
 | 10 | RR-010 | 6 | FDIR yanlış pozitif |
 
-**Yüksek öncelik eşiği (RPN ≥ 12):** RR-002, RR-003, RR-004, RR-007 → P1 simülasyon aşamasında azaltma tamamlanmalı.
+| 11 | RR-011 | 12 | Çözünürlük sınırı: 80m DEM / 300m site finder |
+| 12 | RR-012 | 3 | Zaman aralığı sınırı (2024–2035) |
+| 13 | RR-013 | 9 | Observer height hassasiyeti |
+| 14 | RR-014 | 6 | Earth eclipse refraksiyon ihmalı |
+| 15 | RR-015 | 6 | Site finder 300m çözünürlük |
+
+**Yüksek öncelik eşiği (RPN ≥ 12):** RR-002, RR-003, RR-004, RR-007, RR-011 → P1 simülasyon aşamasında azaltma tamamlanmalı.
 
 ---
 
@@ -67,3 +79,4 @@ Bu belge LUNA-AI sisteminin tanımlanmış teknik ve operasyonel risklerini, ola
 | Versiyon | Tarih | Değişiklik |
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — B3 görevi, 10 risk, RPN sıralaması |
+| 0.2 | 2026-11-14 | B3-EK: RR-011..015 eklendi (çözünürlük sınırı, zaman aralığı, observer height, refraksiyon, site finder 300m) |
