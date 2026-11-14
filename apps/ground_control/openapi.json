@@ -1,0 +1,564 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LUNA-AI Ground Control API",
+    "description": "REST API for the LUNA-AI lunar landing site evaluation system. Provides hard-constraint filtering, multi-criteria scoring, and mission status endpoints for the ground control UI.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health Check",
+        "description": "Service liveness check.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates": {
+      "get": {
+        "tags": [
+          "Candidates"
+        ],
+        "summary": "List Candidates",
+        "description": "Run the evaluation pipeline on the built-in estimated candidates.",
+        "operationId": "list_candidates_api_v1_candidates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/constraints": {
+      "get": {
+        "tags": [
+          "Candidates"
+        ],
+        "summary": "List Constraints",
+        "description": "Return the active hard constraint definitions.",
+        "operationId": "list_constraints_api_v1_constraints_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConstraintResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Constraints Api V1 Constraints Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evaluate": {
+      "post": {
+        "tags": [
+          "Evaluate"
+        ],
+        "summary": "Evaluate Candidates",
+        "description": "Evaluate a caller-supplied list of landing site candidates.\n\nThe pipeline runs hard-constraint filtering followed by weighted\nmulti-criteria scoring. Returns ranked survivors and rejection details.",
+        "operationId": "evaluate_candidates_api_v1_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mission/status": {
+      "get": {
+        "tags": [
+          "Mission"
+        ],
+        "summary": "Mission Status",
+        "description": "Return current mission phase and safety state.\n\nPhase and safety state are static placeholders until the flight segment\ntelemetry interface (ICD-001/002) is wired up. The UI can poll this\nendpoint and render the phase state machine display.",
+        "operationId": "mission_status_api_v1_mission_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CandidateInput": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "crater_name": {
+            "type": "string",
+            "title": "Crater Name"
+          },
+          "center_lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Center Lat"
+          },
+          "center_lon": {
+            "type": "number",
+            "maximum": 360.0,
+            "minimum": 0.0,
+            "title": "Center Lon"
+          },
+          "diameter_km": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Diameter Km"
+          },
+          "max_slope_deg": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Max Slope Deg"
+          },
+          "roughness_rms_m": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Roughness Rms M"
+          },
+          "rock_abundance": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Rock Abundance"
+          },
+          "psr_access_fraction": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Psr Access Fraction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "crater_name",
+          "center_lat",
+          "center_lon",
+          "diameter_km",
+          "max_slope_deg",
+          "roughness_rms_m",
+          "rock_abundance",
+          "psr_access_fraction"
+        ],
+        "title": "CandidateInput"
+      },
+      "ConstraintResponse": {
+        "properties": {
+          "constraint_id": {
+            "type": "string",
+            "title": "Constraint Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "operator": {
+            "type": "string",
+            "title": "Operator"
+          }
+        },
+        "type": "object",
+        "required": [
+          "constraint_id",
+          "name",
+          "description",
+          "threshold",
+          "unit",
+          "operator"
+        ],
+        "title": "ConstraintResponse"
+      },
+      "EvaluateRequest": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateInput"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "weights": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoringWeightsInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidates"
+        ],
+        "title": "EvaluateRequest"
+      },
+      "EvaluateResponse": {
+        "properties": {
+          "total_candidates": {
+            "type": "integer",
+            "title": "Total Candidates"
+          },
+          "passed_hc": {
+            "type": "integer",
+            "title": "Passed Hc"
+          },
+          "rejected_hc": {
+            "type": "integer",
+            "title": "Rejected Hc"
+          },
+          "rejected": {
+            "items": {
+              "$ref": "#/components/schemas/RejectedCandidate"
+            },
+            "type": "array",
+            "title": "Rejected"
+          },
+          "ranked": {
+            "items": {
+              "$ref": "#/components/schemas/RankedCandidateResponse"
+            },
+            "type": "array",
+            "title": "Ranked"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_candidates",
+          "passed_hc",
+          "rejected_hc",
+          "rejected",
+          "ranked"
+        ],
+        "title": "EvaluateResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "title": "HealthResponse"
+      },
+      "MissionStatusResponse": {
+        "properties": {
+          "mission_id": {
+            "type": "string",
+            "title": "Mission Id"
+          },
+          "phase": {
+            "type": "string",
+            "title": "Phase"
+          },
+          "phase_description": {
+            "type": "string",
+            "title": "Phase Description"
+          },
+          "safety_state": {
+            "type": "string",
+            "title": "Safety State"
+          },
+          "tbd_open_count": {
+            "type": "integer",
+            "title": "Tbd Open Count"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mission_id",
+          "phase",
+          "phase_description",
+          "safety_state",
+          "tbd_open_count",
+          "note"
+        ],
+        "title": "MissionStatusResponse"
+      },
+      "RankedCandidateResponse": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "crater_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crater Name"
+          },
+          "total_score": {
+            "type": "number",
+            "title": "Total Score"
+          },
+          "score_uncertainty": {
+            "type": "number",
+            "title": "Score Uncertainty"
+          },
+          "science_score": {
+            "type": "number",
+            "title": "Science Score"
+          },
+          "energy_score": {
+            "type": "number",
+            "title": "Energy Score"
+          },
+          "thermal_score": {
+            "type": "number",
+            "title": "Thermal Score"
+          },
+          "communication_score": {
+            "type": "number",
+            "title": "Communication Score"
+          },
+          "risk_score": {
+            "type": "number",
+            "title": "Risk Score"
+          },
+          "max_slope_deg": {
+            "type": "number",
+            "title": "Max Slope Deg"
+          },
+          "psr_access_fraction": {
+            "type": "number",
+            "title": "Psr Access Fraction"
+          },
+          "rock_abundance": {
+            "type": "number",
+            "title": "Rock Abundance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rank",
+          "candidate_id",
+          "crater_name",
+          "total_score",
+          "score_uncertainty",
+          "science_score",
+          "energy_score",
+          "thermal_score",
+          "communication_score",
+          "risk_score",
+          "max_slope_deg",
+          "psr_access_fraction",
+          "rock_abundance"
+        ],
+        "title": "RankedCandidateResponse"
+      },
+      "RejectedCandidate": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "reason"
+        ],
+        "title": "RejectedCandidate"
+      },
+      "ScoringWeightsInput": {
+        "properties": {
+          "science": {
+            "type": "number",
+            "title": "Science",
+            "default": 0.35
+          },
+          "energy": {
+            "type": "number",
+            "title": "Energy",
+            "default": 0.25
+          },
+          "thermal": {
+            "type": "number",
+            "title": "Thermal",
+            "default": 0.15
+          },
+          "communication": {
+            "type": "number",
+            "title": "Communication",
+            "default": 0.1
+          },
+          "risk": {
+            "type": "number",
+            "title": "Risk",
+            "default": 0.15
+          }
+        },
+        "type": "object",
+        "title": "ScoringWeightsInput"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
