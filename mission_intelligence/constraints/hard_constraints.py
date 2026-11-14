@@ -119,7 +119,7 @@ class HardConstraintEvaluator:
         return [
             HardConstraint(
                 constraint_id="HC-001",
-                name="Maksimum Egim",
+                name="Maximum Slope",
                 parameter="max_slope_deg",
                 operator="lte",
                 threshold=15.0,
@@ -128,7 +128,7 @@ class HardConstraintEvaluator:
             ),
             HardConstraint(
                 constraint_id="HC-002",
-                name="Minimum PSR Erisimi",
+                name="Minimum PSR Access",
                 parameter="psr_access_fraction",
                 operator="gte",
                 threshold=0.10,
@@ -137,15 +137,15 @@ class HardConstraintEvaluator:
             ),
             HardConstraint(
                 constraint_id="HC-003",
-                name="Maksimum Kaya Yogunlugu",
+                name="Maximum Rock Abundance",
                 parameter="rock_abundance",
                 operator="lte",
                 threshold=0.20,
                 unit="fraction",
                 source="QAR-MOB-001",
             ),
-            # TBD: inis elipsi boyutu — arac navigasyon parametrelerine bagli (ICD-003)
-            # TBD: haberlesme gorus acisi — frekans bant ve anten gain'e bagli
+            # TBD: landing ellipse size — depends on vehicle navigation parameters (ICD-003)
+            # TBD: communication line-of-sight angle — depends on frequency band and antenna gain
         ]
 
     # ------------------------------------------------------------------
