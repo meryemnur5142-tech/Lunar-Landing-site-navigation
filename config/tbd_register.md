@@ -70,6 +70,17 @@ Tüm `TBD(source: §10)` ve ilgili belirsiz parametreleri tek yerde toplar. §10
 | TBD-PLAN-007 | Safe haven minimum yeniden şarj kapasitesi (Wh/sol) | — | §10 enerji + orbital | autonomy/mission_planner.md §5.2, HC-011 | P-HIGH |
 | TBD-PLAN-008 | İletişim kaybı bekleme süresi — planlayıcı davranışı (s) | — | §10 iletişim alt sistemi (TBD-COM-002) | autonomy/mission_planner.md §6.3 | P-HIGH |
 | TBD-PLAN-009 | Bilim zamanlayıcı öncelik ağırlıkları | — | Bilim ekibi öncelik kararı | autonomy/mission_planner.md §7.3, autonomy/global_planner_pseudocode.py | P-MED |
+| TBD-COM-004 | Frekans bandı seçimi (X-band vs Ka-band) | X-band önerilen | §10 güç/kütle bütçesi + DSN erişim planı | communication/comm_architecture.md §1.1, communication/link_budget_template.yaml | P-CRIT |
+| TBD-COM-005 | TX gücü (W) | — | §10 güç alt sistemi | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-006 | HGA kazancı (dBi) | DSN 34m ~68 dBi tipik (yer tarafı) | §10 yapı alt sistemi (araç anteni) | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-007 | Hedef link marjı (dB) | ≥ 3 dB önerilir | §10 iletişim alt sistemi + link budget | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-008 | Uplink komut veri hızı (bps) | — | §10 iletişim alt sistemi | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-009 | Downlink telemetri veri hızı (bps) | QAR-COM-002 (≤ 10 s periyot) ile boyutlanır | §10 iletişim alt sistemi | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-HIGH |
+| TBD-COM-010 | Downlink bilim verisi veri hızı (bps) | — | §10 bilim paketi + iletişim | communication/comm_architecture.md §1.3, communication/link_budget_template.yaml | P-MED |
+| TBD-COM-011 | SCLK-UTC drift toleransı (ms) | — | §10 OBC osilatör özellikleri | communication/comm_architecture.md §6.2 | P-HIGH |
+| TBD-COM-012 | UTC senkronizasyon frekansı (her link penceresi / günde X kez) | Her link penceresinde | §10 görev operasyon planı | communication/comm_architecture.md §6.2 | P-MED |
+| TBD-COM-013 | Güney kutbu Dünya blackout max süresi (saat) | — | Orbital mekanik sim (SPICE DE440) | communication/comm_architecture.md §2.3, earth_visibility_windows.schema.yaml | P-HIGH |
+| TBD-COM-014 | Komut kimlik doğrulama mekanizması detayları (anahtar yönetimi) | HMAC-SHA256 önerilir | §10 güvenlik analizi | communication/comm_architecture.md §7.2 | P-MED |
 
 ---
 
@@ -100,6 +111,7 @@ Aşağıdaki TBD'ler kapanmadan P1 → P2 geçiş kapısı açılamaz:
 | TBD-ENE-002 | HC-006 dönüş rezervi eşiği |
 | TBD-TIME-001 | Görev başlangıç tarihi |
 | TBD-NAV-004 | LiDAR menzil ve çözünürlük özellikleri |
+| TBD-COM-004 | Frekans bandı seçimi (X-band vs Ka-band) |
 
 ---
 
@@ -109,3 +121,4 @@ Aşağıdaki TBD'ler kapanmadan P1 → P2 geçiş kapısı açılamaz:
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — C3 görevi, 24 TBD kaydı |
 | 0.2 | 2026-11-14 | Agent D (D1-D2-D3): NAV-002..008, FDIR-001..008, PLAN-001..009 eklendi (25 yeni kayıt) |
+| 0.3 | 2026-11-14 | Agent D (D4): COM-004..014 eklendi (11 yeni kayıt) |

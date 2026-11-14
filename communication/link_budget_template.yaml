@@ -1,0 +1,84 @@
+# Link Budget Template — LUNA-AI
+# status: draft
+# owner: Agent D
+# depends_on:
+#   - communication/comm_architecture.md §1
+#   - docs/qar/QAR_TABLE.md (COM-001..COM-006)
+# note: Tüm sayısal değerler TBD — §10 araç verisi bekleniyor.
+#       Yapısal şablon; gerçek değerler dolduğunda config/tbd_register.md
+#       TBD-COM-004..TBD-COM-010 kapatılacaktır.
+# date: 2026-11-14
+
+# --- Frekans ve Bant ---
+frequency_band: TBD            # TBD-COM-004: "X-band" (~8 GHz) veya "Ka-band" (~26 GHz)
+frequency_ghz: TBD             # Merkez frekans (GHz)
+
+# --- Verici (Araç Tarafı) ---
+tx_power_w: TBD                # TBD-COM-005: Verici çıkış gücü (W)
+tx_power_dbw: TBD              # 10*log10(tx_power_w)
+tx_line_loss_db: TBD           # RF hattı ve filtre kaybı (dB)
+tx_antenna_gain_dbi: TBD       # TBD-COM-006: HGA kazancı (dBi); UHF omni için ~0-3 dBi
+tx_pointing_loss_db: TBD       # Anten yönelim sapması kaybı (dB)
+eirp_dbw: TBD                  # = tx_power_dbw + tx_antenna_gain_dbi - tx_line_loss_db - tx_pointing_loss_db
+
+# --- Yayılım ---
+path_distance_km: 384400       # Ortalama Ay-Dünya mesafesi (km); SPICE ile değişir
+path_distance_range_km:
+  min: 356500                  # Ay perijisi
+  max: 406700                  # Ay apojisi
+free_space_path_loss_db: TBD   # = 20*log10(4*pi*d*f/c); X-band ~272 dB, Ka-band ~281 dB
+atmospheric_loss_db: TBD       # Dünya istasyonu atmosfer + yağış kaybı (dB); X-band < 1 dB tipik
+total_path_loss_db: TBD        # = free_space_path_loss_db + atmospheric_loss_db
+
+# --- Alıcı (Dünya İstasyonu, NASA DSN) ---
+rx_antenna_gain_dbi: TBD       # DSN 34 m çanak: X-band ~68 dBi, Ka-band ~76 dBi (tipik)
+rx_pointing_loss_db: TBD       # DSN yönelim kaybı (dB)
+rx_line_loss_db: TBD           # DSN RF hattı kaybı (dB)
+rx_noise_temperature_k: TBD    # Sistem gürültü sıcaklığı (K)
+receiver_noise_figure_db: TBD  # Alıcı gürültü figürü (dB)
+g_over_t_db_per_k: TBD         # G/T = rx_antenna_gain - rx_noise_temp (dB/K)
+
+# --- Received Signal ---
+received_signal_power_dbw: TBD  # = eirp_dbw - total_path_loss_db + rx_antenna_gain_dbi - rx_line_loss_db
+noise_power_density_dbw_per_hz: TBD  # = -228.6 + 10*log10(noise_temp_k)
+
+# --- Modulation & Coding ---
+modulation_scheme: TBD          # BPSK / QPSK / 8PSK
+coding_scheme: TBD              # Reed-Solomon / LDPC (ADR-006)
+code_rate: TBD                  # Kod oranı (örn. 1/2, 7/8)
+required_eb_n0_db: TBD          # Hedef BER için gereken Eb/N0 (dB); modülasyon+kodlamaya bağlı
+
+# --- Link Veri Hızları ---
+uplink_rate_bps: TBD            # TBD-COM-008: Uplink komut veri hızı (bps)
+downlink_telemetry_bps: TBD     # TBD-COM-009: Downlink telemetri veri hızı (bps)
+                                 # QAR-COM-002: ≤ 10 s telemetri periyodunu karşılamalı
+downlink_science_bps: TBD       # TBD-COM-010: Downlink bilim verisi veri hızı (bps)
+downlink_emergency_bps: TBD     # UHF omni acil/beacon modu minimum veri hızı
+
+# --- Link Budget Sonuç ---
+achieved_eb_n0_db: TBD          # = received_signal_power_dbw - noise_power_density_dbw_per_hz - 10*log10(data_rate_bps)
+link_margin_db: TBD             # TBD-COM-007: = achieved_eb_n0_db - required_eb_n0_db; ≥ 3 dB önerilir
+
+# --- QAR Tutarlılık Referansları ---
+# QAR-COM-001: Komut işleme gecikmesi < 500 ms
+# QAR-COM-002: Telemetri güncelleme periyodu ≤ 10 s
+# QAR-COM-003: Kritik durum telemetri ≤ 1 s
+# QAR-COM-004: Otonom çalışma ≥ TBD saat (link yok)
+# QAR-COM-005: CRC hata tespiti %100 (CCSDS CRC-16/CCITT)
+# QAR-COM-006: Link yeniden bağlantı süresi < TBD dakika
+
+# --- Bant Tipi Notlar ---
+notes:
+  x_band_typical:
+    free_space_loss_db: "~272 dB @ 384.400 km @ 8 GHz"
+    dsn_34m_gain_dbi: "~68 dBi"
+    rain_fade_db: "< 1 dB tipik"
+    heritage: "LRO, VIPER, Chandrayaan-3 benzeri"
+
+  ka_band_typical:
+    free_space_loss_db: "~281 dB @ 384.400 km @ 26 GHz"
+    dsn_34m_gain_dbi: "~76 dBi"
+    rain_fade_db: "3-10 dB (yüksek elevasyonda azalır)"
+    heritage: "LRO Ka-band deneme"
+
+  decision: "TBD-COM-004 — §10 güç/kütle bütçesi ve DSN erişim planı ile belirlenir"
