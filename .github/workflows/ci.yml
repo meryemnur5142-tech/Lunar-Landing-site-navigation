@@ -1,6 +1,10 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
 
 jobs:
   test:
@@ -12,18 +16,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+      - name: Install system dependencies (GDAL)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          # GDAL Python bağlaması sistem GDAL versiyonuyla eşleşmeli
+          GDAL_VERSION=$(gdal-config --version)
+          pip install "gdal==${GDAL_VERSION}"
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pyyaml
 
       - name: Run unit tests
-        run: pytest tests/unit/test_models.py -v --tb=short
-
-      - name: Validate YAML schemas
         run: |
-          find . -name "*.schema.yaml" -o -name "*.yaml" | grep -v ".github" | while read f; do
-            python -c "import yaml, sys; yaml.safe_load(open(sys.argv[1]))" "$f" && echo "OK: $f" || echo "FAIL: $f"
+          PYTHONPATH=. pytest tests/unit/ -v --tb=short
+
+      - name: Run integration tests
+        run: |
+          PYTHONPATH=. pytest tests/integration/ -v --tb=short
+
+      - name: Validate interface schemas (YAML syntax)
+        run: |
+          find interfaces/ -name "*.schema.yaml" | while read f; do
+            python -c "import yaml, sys; yaml.safe_load(open(sys.argv[1]))" "$f" \
+              && echo "OK: $f" || (echo "FAIL: $f" && exit 1)
           done

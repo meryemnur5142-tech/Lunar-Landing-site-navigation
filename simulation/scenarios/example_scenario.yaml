@@ -1,0 +1,344 @@
+# LUNA-AI Örnek Senaryo — Nominal Yüzey Keşfi
+# Bağlı: simulation/simulator_design.md §4.3
+#        simulation/scenarios/operational_scenarios.md SC-001
+# Belge ID: LUNA-AI-SIM-SCN-001
+# Versiyon: 0.1-draft
+# Tarih: 2026-11-14
+# Owner: Agent C
+
+scenario_id: "SCN-001-NOMINAL"
+name: "Nominal Yüzey Keşfi — 5 Waypoint Turu"
+description: >
+  Araç NOMINAL güvenlik durumunda, SURFACE_EXPLORATION fazında 5 bilimsel
+  hedef waypoint'e sırayla gider, her noktada bilimsel veri toplar ve
+  base camp'e döner. Hiçbir arıza enjekte edilmez. SIL regresyon baseline.
+version: "1.0"
+created: "2026-11-14"
+references:
+  operational_scenario: "SC-001"
+  safety_state_machine: "LUNA-AI-ARCH-001"
+  conops: "docs/conops/CONOPS.md"
+  hard_constraints:
+    - "HC-006"   # dönüş rezervi
+    - "HC-001"   # eğim limiti
+    - "HC-005"   # güneş paneli zorunlu şarj
+  fault_injection: "none"
+
+# ======================================================
+# BAŞLANGIÇ KOŞULLARI
+# ======================================================
+initial_conditions:
+
+  # Araç konumu (yerel kartezyen — DEM kökenine göre)
+  position:
+    x_m: 0.0
+    y_m: 0.0
+    z_m: 0.0            # DEM'den interpolasyon ile belirlenir
+    uncertainty_m: 0.3  # EKF başlangıç kovaryansı; < 0.5m QAR-NAV-002
+
+  heading_deg: 0.0      # Kuzey yönü (DEM referansı)
+  velocity_ms: 0.0      # Araç durağan başlar
+
+  # Enerji
+  soc_percent: 85.0     # Nominal başlangıç SoC
+  panel_orientation_deg: 0.0  # Güneşe dönük başlangıç
+
+  # Güvenlik durumu
+  safety_state: "NOMINAL"
+  mission_phase: "SURFACE_EXPLORATION"
+
+  # Termal — tüm bileşenler nominal aralıkta
+  thermal:
+    all_nominal: true
+    battery_temp_c: 20.0    # TBD-THM-001; yer ısınma sonrası nominal
+    obc_temp_c: 25.0
+    imu_temp_c: 20.0
+
+  # Haberleşme
+  link_active: true
+  link_quality_pct: 90
+
+  # Görev başlangıç zamanı
+  time_utc: "TBD-TIME-001"  # Görev otoritesi onaylayacak
+
+  # DEM ve ortam
+  dem_file: "TBD-SIM-002"   # LRO LOLA veya eşdeğer; bölge seçimi §10
+  solar_elevation_deg: 15.0  # Başlangıç güneş açısı (düşük ufuk aydınlatması)
+  environment_seed: 42       # Yeniden üretilebilirlik için rastgele tohum
+
+# ======================================================
+# WAYPOINT LİSTESİ
+# ======================================================
+waypoints:
+  - id: "WP-001"
+    x_m: 50.0
+    y_m: 20.0
+    label: "Bilimsel Hedef A — Kraterin kuzey kenarı"
+    science_ops: true
+    science_duration_s: 300   # 5 dakika ölçüm
+
+  - id: "WP-002"
+    x_m: 95.0
+    y_m: 60.0
+    label: "Bilimsel Hedef B — Regolith örnek noktası"
+    science_ops: true
+    science_duration_s: 300
+
+  - id: "WP-003"
+    x_m: 120.0
+    y_m: 80.0
+    label: "Bilimsel Hedef C — LiDAR tarama noktası"
+    science_ops: true
+    science_duration_s: 180
+
+  - id: "WP-004"
+    x_m: 90.0
+    y_m: 110.0
+    label: "Bilimsel Hedef D — Topografik tepe"
+    science_ops: true
+    science_duration_s: 240
+
+  - id: "WP-005"
+    x_m: 40.0
+    y_m: 90.0
+    label: "Bilimsel Hedef E — Gölge geçiş sınırı gözlemi"
+    science_ops: true
+    science_duration_s: 300
+
+  - id: "WP-BASE"
+    x_m: 0.0
+    y_m: 0.0
+    label: "Base Camp / Safe Haven — Dönüş noktası"
+    science_ops: false
+    is_safe_haven: true
+
+# ======================================================
+# OLAYLAR (Zaman veya koşul tetiklemeli)
+# ======================================================
+events:
+
+  - id: "EVT-001"
+    description: "Görev başlangıcı — EKF konverjans kontrolü"
+    trigger:
+      type: "time"
+      time_offset_s: 0
+    action:
+      type: "check_ekf_convergence"
+      max_wait_s: 30          # EKF konverjans < 30s; aksi hâlde FDIR bildir
+
+  - id: "EVT-002"
+    description: "İlk waypoint hareketi başlat"
+    trigger:
+      type: "condition"
+      condition: "ekf_converged AND safety_state == NOMINAL"
+    action:
+      type: "navigate_to_waypoint"
+      waypoint_id: "WP-001"
+
+  - id: "EVT-003"
+    description: "WP-001 ulaşım — bilimsel veri toplama"
+    trigger:
+      type: "condition"
+      condition: "at_waypoint(WP-001)"
+    action:
+      type: "science_ops"
+      duration_s: 300
+      sensors: ["spectrometer", "camera", "lidar_scan"]
+
+  - id: "EVT-004"
+    description: "Enerji bütçe kontrol noktası — WP-002 öncesi"
+    trigger:
+      type: "condition"
+      condition: "at_waypoint(WP-001) AND science_complete"
+    action:
+      type: "energy_budget_check"
+      require_return_reserve: true  # HC-006: dönüş rezervi yeterli mi?
+      on_insufficient_reserve:
+        action: "navigate_to_waypoint"
+        waypoint_id: "WP-BASE"
+        reason: "HC-006_reserve_insufficient"
+
+  - id: "EVT-005"
+    description: "WP-002 gezintisi ve bilimsel operasyon"
+    trigger:
+      type: "condition"
+      condition: "energy_budget_ok AND previous_event_success(EVT-004)"
+    action:
+      type: "navigate_to_waypoint"
+      waypoint_id: "WP-002"
+
+  - id: "EVT-006"
+    description: "WP-003 gezintisi"
+    trigger:
+      type: "condition"
+      condition: "at_waypoint(WP-002) AND science_complete"
+    action:
+      type: "navigate_to_waypoint"
+      waypoint_id: "WP-003"
+
+  - id: "EVT-007"
+    description: "WP-004 gezintisi"
+    trigger:
+      type: "condition"
+      condition: "at_waypoint(WP-003) AND science_complete"
+    action:
+      type: "navigate_to_waypoint"
+      waypoint_id: "WP-004"
+
+  - id: "EVT-008"
+    description: "WP-005 gezintisi"
+    trigger:
+      type: "condition"
+      condition: "at_waypoint(WP-004) AND science_complete"
+    action:
+      type: "navigate_to_waypoint"
+      waypoint_id: "WP-005"
+
+  - id: "EVT-009"
+    description: "Tüm waypoint'ler tamamlandı — Base Camp'e dön"
+    trigger:
+      type: "condition"
+      condition: "at_waypoint(WP-005) AND science_complete"
+    action:
+      type: "navigate_to_waypoint"
+      waypoint_id: "WP-BASE"
+
+  - id: "EVT-010"
+    description: "CAUTION tetiklenirse — devam etme, güvenli son noktayı tamamla"
+    trigger:
+      type: "condition"
+      condition: "safety_state == CAUTION"
+    action:
+      type: "complete_current_waypoint_then_return"
+      max_wait_before_return_s: 300
+
+  - id: "EVT-011"
+    description: "RETURN_REQUIRED tetiklenirse — derhal Base Camp'e dön"
+    trigger:
+      type: "condition"
+      condition: "safety_state == RETURN_REQUIRED"
+    action:
+      type: "emergency_return"
+      destination: "WP-BASE"
+      abort_all_science: true
+
+  - id: "EVT-012"
+    description: "Telemetri downlink — 60 s aralıkla yer kontrolüne rapor"
+    trigger:
+      type: "periodic"
+      interval_s: 60
+    action:
+      type: "downlink_telemetry"
+      fields: ["position", "soc", "safety_state", "nav_uncertainty", "science_data_pending_kb"]
+
+# ======================================================
+# BİTİŞ KRİTERLERİ
+# ======================================================
+termination_criteria:
+
+  success:
+    - condition: "at_waypoint(WP-BASE)"
+      description: "Araç Base Camp'e döndü"
+    - condition: "soc_above_threshold"
+      threshold_pct: 20.0
+      description: "SoC %20'nin üzerinde kaldı (HC-006 marjı)"
+
+  partial_success:
+    - condition: "at_waypoint(WP-BASE) AND waypoints_completed_count >= 3"
+      description: "En az 3 waypoint tamamlandı ve güvenli dönüş yapıldı"
+
+  failure:
+    - condition: "soc_below_critical"
+      threshold_pct: 10.0
+      description: "SURVIVAL eşiği aşıldı"
+    - condition: "safety_state_equals"
+      state: "SURVIVAL"
+      description: "SURVIVAL moduna girildi"
+    - condition: "max_time_exceeded"
+      max_duration_s: 28800  # 8 saat üst limit (TBD-SIM-012 bağımlı)
+      description: "Maksimum senaryo süresi aşıldı"
+    - condition: "vehicle_pose_lost"
+      description: "Lokalizasyon tamamen kayboldu ve kurtarılamadı"
+
+# ======================================================
+# KABUL KRİTERLERİ (Test & Doğrulama)
+# ======================================================
+acceptance_criteria:
+
+  - id: "AC-001"
+    description: "Her waypoint'e ±1m RMS içinde ulaşıldı"
+    metric: "waypoint_position_error_m"
+    threshold: 1.0
+    comparison: "less_than_or_equal"
+
+  - id: "AC-002"
+    description: "SoC hiçbir zaman %10'un altına düşmedi"
+    metric: "soc_min_pct"
+    threshold: 10.0
+    comparison: "greater_than"
+
+  - id: "AC-003"
+    description: "Nav belirsizliği hiçbir zaman 1.0m RMS'i aşmadı (düzeltilmeden)"
+    metric: "nav_uncertainty_max_m"
+    threshold: 1.0
+    comparison: "less_than_or_equal"
+
+  - id: "AC-004"
+    description: "Enerji tüketimi nominal bütçenin ±10% içinde kaldı"
+    metric: "energy_consumption_deviation_pct"
+    threshold: 10.0
+    comparison: "less_than_or_equal"
+
+  - id: "AC-005"
+    description: "Tüm bileşen sıcaklıkları nominal aralıkta kaldı"
+    metric: "thermal_critical_violations"
+    threshold: 0
+    comparison: "equals"
+
+  - id: "AC-006"
+    description: "Güvenlik durumu NOMINAL kaldı (CAUTION tetiklenmediyse)"
+    metric: "max_safety_state_reached"
+    expected: "NOMINAL"
+    note: "Nominal senaryo; CAUTION/RETURN/SURVIVAL = başarısızlık"
+
+  - id: "AC-007"
+    description: "Her bilimsel operasyon planlanan sürede tamamlandı (±10%)"
+    metric: "science_ops_duration_deviation_pct"
+    threshold: 10.0
+    comparison: "less_than_or_equal"
+
+# ======================================================
+# ÇIKIŞ METRİKLERİ (Loglama)
+# ======================================================
+output_metrics:
+  log_level: "INFO"           # DEBUG | INFO | WARNING | ERROR
+  log_interval_s: 1.0
+  record:
+    - position_x_m
+    - position_y_m
+    - position_z_m
+    - heading_deg
+    - velocity_ms
+    - soc_percent
+    - panel_power_w
+    - nav_uncertainty_m
+    - safety_state
+    - mission_phase
+    - battery_temp_c
+    - obc_temp_c
+    - link_active
+    - link_quality_pct
+    - active_fault_mask
+    - science_data_pending_kb
+  checkpoint_interval_s: 300  # Her 5 dakikada simülatör durumunu kaydet
+
+# ======================================================
+# NOT
+# ======================================================
+notes: >
+  Bu senaryo SIL regresyon testinin temel senaryosudur (RT-001).
+  Hiçbir hata enjeksiyonu içermez; baseline metrikler buradan üretilir.
+  Tüm TBD değerleri §10 araç verisi geldikçe config/tbd_register.md
+  üzerinden güncellenecektir.
+  Sayısal waypoint koordinatları bölge seçimi (TBD-TIME-001) onaylandıktan
+  sonra gerçek DEM koordinatlarıyla değiştirilecektir.
