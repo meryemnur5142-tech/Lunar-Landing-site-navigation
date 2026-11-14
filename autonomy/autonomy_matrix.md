@@ -114,8 +114,26 @@ Bu matristeki otorite seviyeleri `interfaces/schemas/vehicle_command.schema.yaml
 
 ---
 
+---
+
+## Görev Planlama Kararları — Yer Onayı Zorunlu (B1-EK)
+
+Aşağıdaki kararlar, otonomi matrisi dışında ancak v1.2 entegrasyon kapsamında operatör onayı (YER) gerektiren ek karar türleridir:
+
+| Karar Türü | Otorite | Gerekçe |
+|-----------|---------|---------|
+| **Site finder kararı** | YER | Nihai iniş bölgesi seçimi görev otoritesi kararıdır; algoritmik sıralama (site finder weighted score) girdi sağlar, karar vermez |
+| **"When to land" / iniş penceresi seçimi** | YER | Güneş/Dünya geometrisi pencere önerisi sunar; iniş zamanı seçimi insansız görev için dahi yer kontrolü onayı gerektirir |
+| **Çoklu bölge karşılaştırması / bölge seçimi** | YER | 2–5 bölge arasından nihai seçim görev otoritesi kararıdır |
+| **Geometri güncellemesi (tahmin iyileştirmesi)** | OTN | Hesaplama iyileştirmesi (JPL Horizons güncellemesi vb.) otonom olabilir; bölge veya zaman seçimi değiştirilmiyorsa onay gerekmez |
+
+**Önemli ayrım:** Site finder algoritması ve "when to land" analizi karar *önerisi* üretir. Nihai bölge-zaman seçimi her koşulda YER'dir. Geometrik hesaplama güncellemesi (örn. yeni ephemeris verisiyle yeniden hesaplama) ise OTN olabilir.
+
+---
+
 ## Revizyon Geçmişi
 
 | Versiyon | Tarih | Değişiklik |
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — B1 görevi |
+| 0.2 | 2026-11-14 | B1-EK: Site finder, iniş penceresi, çoklu bölge karşılaştırması YER kararları eklendi |
