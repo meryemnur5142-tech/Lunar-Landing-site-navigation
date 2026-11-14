@@ -46,6 +46,26 @@ Tüm `TBD(source: §10)` ve ilgili belirsiz parametreleri tek yerde toplar. §10
 | TBD-REPO-001 | lunar-navigator entegrasyon yöntemi (submodule vs referans dizin) | — | Proje kararı | infrastructure/repo_placement.md, DR-INT-001 | P-MED |
 | TBD-REPO-002 | GPU ray-marching flight segment bridge mimarisi | — | P2 tasarım kararı | apps/ground-control, infrastructure/repo_placement.md | P-LOW |
 | TBD-VIS-001 | Marjinal Dünya görünürlük elevation eşiği (°) | — | Ortam modeli analizi | domain/environment/uncertainty_policy.md §7.1, communication/ | P-HIGH |
+| TBD-SIM-001 | Regolith yoğunluğu ve zemin tipi (tekerlek-toprak etkileşim modeli) | — | §10 arazi modeli + jeoloji analizi | simulation/simulator_design.md §1.1, §1.4, §2.3 | P-HIGH |
+| TBD-SIM-002 | DEM dosyası ve çözünürlüğü (m/px) | — | §10 bölge seçimi + LRO LOLA | simulation/simulator_design.md §1.1, example_scenario.yaml | P-HIGH |
+| TBD-SIM-003 | Toz kaplama kaybı faktörü α_dust (panel verimi kaybı) | — | §10 ortam analizi | simulation/simulator_design.md §1.2, §2.4 | P-MED |
+| TBD-SIM-004 | Ay yüzeyi albedo (bölgeye özgü) | — | §10 jeoloji + LRO gözlem | simulation/simulator_design.md §1.3 | P-MED |
+| TBD-SIM-005 | Regolith termal inersi (J m⁻² K⁻¹ s⁻½) | — | §10 jeoloji analizi | simulation/simulator_design.md §1.3 | P-MED |
+| TBD-SIM-006 | OBC + nav işlemci nominal güç tüketimi (W) | — | §10 güç bütçesi | simulation/simulator_design.md §2.1 | P-HIGH |
+| TBD-SIM-007 | Motor sürücüleri nominal güç tüketimi (W, hareket halinde) | — | §10 güç bütçesi | simulation/simulator_design.md §2.1 | P-HIGH |
+| TBD-SIM-008 | Isıtıcılar nominal güç tüketimi (W) | — | §10 termal bütçe | simulation/simulator_design.md §2.1 | P-HIGH |
+| TBD-SIM-009 | Haberleşme modülü güç tüketimi (W, HGA aktif) | — | §10 güç bütçesi | simulation/simulator_design.md §2.1 | P-HIGH |
+| TBD-SIM-010 | Bilimsel sensörler güç tüketimi (W) | — | §10 güç bütçesi | simulation/simulator_design.md §2.1 | P-MED |
+| TBD-SIM-011 | CI pipeline senaryo çalıştırma timeout (dakika) | — | §10 CI altyapısı kapasitesi | simulation/simulator_design.md §5.3 | P-LOW |
+| TBD-SIM-012 | Nominal senaryo maksimum süre (s) | — | §10 görev profili | simulation/simulator_design.md §5.3, example_scenario.yaml | P-HIGH |
+| TBD-RED-001 | İkinci IMU modülü ekleme (kütle/hacim) | — | §10 yapı + sensör alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-HIGH |
+| TBD-RED-002 | Üçlü OBC (triple voting) fizibilite | — | §10 yapı + güç bütçesi | docs/architecture/redundancy_matrix.md TBD listesi | P-MED |
+| TBD-RED-003 | İkinci batarya modülü boyutlandırması | TBD-BAT-001/002 bağımlı | §10 enerji alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-CRIT |
+| TBD-RED-004 | UHF omni anten boyutu ve frekans bandı | TBD-COM-001 bağımlı | §10 iletişim + yapı alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-HIGH |
+| TBD-RED-005 | Motor sürücü redundancy seviyesi (triple) | — | §10 hareket alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-MED |
+| TBD-RED-006 | Termal fallback ısıtıcı güç kapasitesi (W) | TBD-THM-001 bağımlı | §10 termal alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-HIGH |
+| TBD-RED-007 | Yedek güneş paneli veya alternatif enerji kaynağı | TBD-SOL-001 bağımlı | §10 yapı + enerji alt sistemi | docs/architecture/redundancy_matrix.md TBD listesi | P-MED |
+| TBD-RED-008 | PDU yedeklilik detayı (güç hattı yönlendirme topolojisi) | — | §10 araç mühendisliği | docs/architecture/redundancy_matrix.md TBD listesi | P-MED |
 
 ---
 
@@ -83,3 +103,4 @@ Aşağıdaki TBD'ler kapanmadan P1 → P2 geçiş kapısı açılamaz:
 | Versiyon | Tarih | Değişiklik |
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — C3 görevi, 24 TBD kaydı |
+| 0.2 | 2026-11-14 | Agent C: +20 TBD (TBD-SIM-001..012, TBD-RED-001..008) — C3 simülatör tasarımı ve C1 yedeklilik matrisi |
