@@ -98,6 +98,25 @@ Her proje fazının (P0-P3) tamamlandığını gösteren ölçülebilir çıkı�
 
 ---
 
+## Repo Doğrulama Kabul Kriterleri (B4-EK — lunar-navigator VALIDATION.md kaynağı)
+
+> Kaynak: daniel27-space/lunar-navigator VALIDATION.md — JPL Horizons ve NASA GSFC karşılaştırması.
+> Bu kriterler ortam modeli katmanının fizik doğruluğunu ölçer; araç donanımından bağımsızdır.
+
+| Kriter ID | Kriter | Kaynak | Hedef |
+|-----------|--------|--------|-------|
+| AC-VAL-001 | Güneş/Dünya açıları JPL Horizons ile uyumlu | JPL Horizons | ±0.001° içinde |
+| AC-VAL-002 | Aydınlanma oranı NASA GSFC haritasıyla korelasyon | NASA GSFC | r ≥ 0.988, RMS ≤ 2.7 puan |
+| AC-VAL-003 | Dünya görünürlüğü NASA GSFC ile korelasyon | NASA GSFC | r ≥ 0.993 |
+| AC-VAL-004 | Shackleton ridge aydınlanma: 2m gözlem %92.29, 10m gözlem %95.69 (±0.05 puan tolerans) | Gläser et al. (2014): %92.27 / %95.65 | ±0.05 puan içinde |
+| AC-VAL-005 | Çözünürlük bazlı doğrulama raporu: 80m vs 20m vs 300m fark analizi teslim edilmeli | B3-EK RR-011/RR-015 | Fark raporu teslim edildi ve onaylandı |
+
+**Uygulama fazı:** AC-VAL-001..004 P1 (aydınlanma modeli doğrulaması) kapsamındadır. AC-VAL-005 P1 çıkış kapısı koşuludur.
+
+**Marjinal pencere notu:** AC-VAL-003 testinde Dünya elevation < TBD° olan pencereler `confidence: LOW` işaretli olarak ayrı raporlanır (B5-EK §7.1 ve B3-EK RR-014 ile hizalı).
+
+---
+
 ## Faz Geçiş Kapıları
 
 | Faz | Kapı Koşulu | Yetkili |
@@ -114,3 +133,4 @@ Her proje fazının (P0-P3) tamamlandığını gösteren ölçülebilir çıkı�
 | Versiyon | Tarih | Değişiklik |
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — B4 görevi |
+| 0.2 | 2026-11-14 | B4-EK: AC-VAL-001..005 — lunar-navigator VALIDATION.md kaynaklı repo doğrulama kriterleri |
