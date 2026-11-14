@@ -46,6 +46,30 @@ Tüm `TBD(source: §10)` ve ilgili belirsiz parametreleri tek yerde toplar. §10
 | TBD-REPO-001 | lunar-navigator entegrasyon yöntemi (submodule vs referans dizin) | — | Proje kararı | infrastructure/repo_placement.md, DR-INT-001 | P-MED |
 | TBD-REPO-002 | GPU ray-marching flight segment bridge mimarisi | — | P2 tasarım kararı | apps/ground-control, infrastructure/repo_placement.md | P-LOW |
 | TBD-VIS-001 | Marjinal Dünya görünürlük elevation eşiği (°) | — | Ortam modeli analizi | domain/environment/uncertainty_policy.md §7.1, communication/ | P-HIGH |
+| TBD-NAV-002 | EKF süreç gürültüsü kovaryansı Q (IMU) | — | §10 algı alt sistemi (TBD-SNS-002 sonrası) | vehicle/localization/navigation_architecture.md §1.3 | P-HIGH |
+| TBD-NAV-003 | EKF ölçüm gürültüsü kovaryansı R (odometri/VO) | — | §10 algı alt sistemi (TBD-SNS-003 sonrası) | vehicle/localization/navigation_architecture.md §1.3 | P-HIGH |
+| TBD-NAV-004 | LiDAR menzil ve çözünürlük özellikleri | — | §10 algı alt sistemi | vehicle/localization/navigation_architecture.md §3, autonomy/ | P-CRIT |
+| TBD-NAV-005 | Görsel odometri özellik çıkarma parametreleri | — | §10 algı alt sistemi | vehicle/localization/navigation_architecture.md §1.1 | P-HIGH |
+| TBD-NAV-006 | Güneş sensörü doğruluk özellikleri | — | §10 algı alt sistemi | vehicle/localization/navigation_architecture.md §1.1 | P-MED |
+| TBD-NAV-007 | Orbital DEM çözünürlüğü ve güncelleme frekansı | — | Orbital misyon verisi | vehicle/localization/navigation_architecture.md §4.1 | P-HIGH |
+| TBD-NAV-008 | PSR navigasyonu son bilinen iyi konumdan max mesafe | — | §10 araç güç modeli | vehicle/localization/navigation_architecture.md §3.3 | P-HIGH |
+| TBD-FDIR-001 | IMU/VO çapraz kontrol tutarsızlık eşiği (σ_imu_vo_diff) | — | §10 algı alt sistemi | safety/fdir_implementation.md §1.1, safety/fdir_decision_tree.md | P-HIGH |
+| TBD-FDIR-002 | Tekerlek encoder vs komut sapma eşiği (motor sıkışma tespiti) | — | §10 hareket alt sistemi | safety/fdir_implementation.md §2.1, safety/fdir_decision_tree.md | P-HIGH |
+| TBD-FDIR-003 | Batarya SoC sapma anomali eşiği | — | §10 enerji alt sistemi | safety/fdir_implementation.md §3.1 | P-HIGH |
+| TBD-FDIR-004 | Hücre dengesizlik eşiği (mV fark) | — | §10 enerji alt sistemi | safety/fdir_implementation.md §3.1 | P-HIGH |
+| TBD-FDIR-005 | FDIR ana döngü frekansı (Hz); donanım bağımlı | — | §10 OBC/RTOS konfigürasyonu | safety/fdir_implementation.md §6.2, docs/architecture/SAFETY_STATE_MACHINE.md §3 | P-HIGH |
+| TBD-FDIR-006 | İletişim kaybı link_timeout eşiği (s); TBD-COM-002 ile örtüşür | — | §10 iletişim alt sistemi | safety/fdir_implementation.md §4.1, safety/fdir_decision_tree.md | P-HIGH |
+| TBD-FDIR-007 | Lokalizasyon kaybı pozisyon belirsizlik eşiği (m) | 2.0 m (QAR-NAV-004 referans) | §10 algı alt sistemi | safety/fdir_implementation.md §5.1 | P-HIGH |
+| TBD-FDIR-008 | Lokalizasyon recovery bekleme süresi (s) | — | §10 görev parametresi | safety/fdir_implementation.md §5.3, safety/fdir_decision_tree.md | P-HIGH |
+| TBD-PLAN-001 | Weighted A* heuristik ağırlık faktörü (w) | 1.0–3.0 | §10 hesap bütçesi + QAR-PLAN-001 | autonomy/mission_planner.md §1.3, autonomy/global_planner_pseudocode.py | P-MED |
+| TBD-PLAN-002 | Maksimum lokal replanning iterasyon sayısı | — | §10 OBC hesap kapasitesi | autonomy/mission_planner.md §3.2 | P-MED |
+| TBD-PLAN-003 | Arazi tipine göre enerji tüketim modeli (Wh/m) | — | §10 enerji + hareket modeli | autonomy/mission_planner.md §2.3, autonomy/global_planner_pseudocode.py | P-HIGH |
+| TBD-PLAN-004 | Termal maliyet katsayısı (cost fonksiyonu) | — | §10 termal model | autonomy/mission_planner.md §2.3, autonomy/global_planner_pseudocode.py | P-MED |
+| TBD-PLAN-005 | Risk maliyet katsayısı (eğim, engel yakınlığı) | — | §10 arazi veri | autonomy/mission_planner.md §2.3, autonomy/global_planner_pseudocode.py | P-MED |
+| TBD-PLAN-006 | Safe haven minimum aydınlanma eşiği (saat) | — | Orbital mekanik sim (SHV-001) | autonomy/mission_planner.md §5.2, HC-009 | P-HIGH |
+| TBD-PLAN-007 | Safe haven minimum yeniden şarj kapasitesi (Wh/sol) | — | §10 enerji + orbital | autonomy/mission_planner.md §5.2, HC-011 | P-HIGH |
+| TBD-PLAN-008 | İletişim kaybı bekleme süresi — planlayıcı davranışı (s) | — | §10 iletişim alt sistemi (TBD-COM-002) | autonomy/mission_planner.md §6.3 | P-HIGH |
+| TBD-PLAN-009 | Bilim zamanlayıcı öncelik ağırlıkları | — | Bilim ekibi öncelik kararı | autonomy/mission_planner.md §7.3, autonomy/global_planner_pseudocode.py | P-MED |
 
 ---
 
@@ -75,6 +99,7 @@ Aşağıdaki TBD'ler kapanmadan P1 → P2 geçiş kapısı açılamaz:
 | TBD-GNC-001 | Landing GNC gereksinimleri |
 | TBD-ENE-002 | HC-006 dönüş rezervi eşiği |
 | TBD-TIME-001 | Görev başlangıç tarihi |
+| TBD-NAV-004 | LiDAR menzil ve çözünürlük özellikleri |
 
 ---
 
@@ -83,3 +108,4 @@ Aşağıdaki TBD'ler kapanmadan P1 → P2 geçiş kapısı açılamaz:
 | Versiyon | Tarih | Değişiklik |
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — C3 görevi, 24 TBD kaydı |
+| 0.2 | 2026-11-14 | Agent D (D1-D2-D3): NAV-002..008, FDIR-001..008, PLAN-001..009 eklendi (25 yeni kayıt) |
