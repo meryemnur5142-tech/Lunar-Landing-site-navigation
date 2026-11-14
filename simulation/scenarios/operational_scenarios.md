@@ -248,6 +248,97 @@ Bu belge LUNA-AI aracının karşılaşabileceği tipik ve kritik durumlar için
 
 ---
 
+---
+
+## SC-007: En Uzun İletişim Kesintisi (B2-EK)
+
+| Alan | İçerik |
+|------|--------|
+| **Senaryo ID** | SC-007 |
+| **Ad** | En Uzun İletişim Kesintisi — 60 Günlük Pencere Metrikleri |
+| **Tetikleyici koşul** | Güneş/Dünya geometrisi kaynaklı en uzun link kesintisi penceresine girildi (kaynak: repo 60-day sun/Earth window longest gap metric) |
+| **Başlangıç fazı** | SURFACE_EXPLORATION veya PSR_OPS |
+| **Sorumlu modüller** | communication, autonomy/mission-executive, safety/fdir, power |
+
+**Beklenen araç yanıtı (adım adım):**
+
+1. Görev öncesi planlama: 60 günlük pencere analizi en uzun beklenen link kesintisini belirler. Bu değer pre-planned abort trigger listesine ve enerji bütçesine girer.
+2. Kesinti penceresine girmeden önce: Enerji dolumu, bilimsel veri tampon temizliği, safe haven konumlanması.
+3. Kesinti başladığında: SC-002 protokolü uygulanır (faza göre).
+4. Kesinti boyunca: OTN pre-planned operasyon — periyodik haberleşme girişimi, enerji koruma, termal izleme.
+5. Kesinti bitiş tahmini geçildiğinde: Link girişimi sıklaştırılır. Tahmin aşılırsa SC-002 kritik yolu devreye girer.
+
+**Parametreler:** `longest_outage_hours` = TBD (source: repo 60-day analysis, bölgeye göre değişir). `uncertainty_minutes` = TBD (source: §7.1 B5-EK — marjinal Dünya görünürlüğünde belirsizlik).
+
+| Alan | İçerik |
+|------|--------|
+| **Güvenlik durumu geçişi** | SC-002 ile aynı mantık; süre beklenden uzun olursa RETURN_REQUIRED |
+| **Yer kontrolüne bildirim koşulu** | Kesinti penceresine giriş öncesi; kesinti sona erdiğinde |
+| **Kabul kriteri** | En uzun beklenen kesinti için pre-planned plan hazır; araç kesinti boyunca enerji ve termal sınırlar içinde kaldı |
+| **Test yöntemi** | SIL (60-günlük pencere simülasyonu), Analysis |
+
+---
+
+## SC-008: Pencere Kaçırma / Geometri Güncellemesi (B2-EK)
+
+| Alan | İçerik |
+|------|--------|
+| **Senaryo ID** | SC-008 |
+| **Ad** | Pencere Kaçırma / Geometri Güncellemesi — İniş Zamanı Revizyon |
+| **Tetikleyici koşul** | Yeni ephemeris verisi (JPL Horizons güncellemesi) geldi ve önceki iniş zamanı tahmini geçersiz hale geldi |
+| **Başlangıç fazı** | CRUISE (iniş öncesi planlama aşaması) |
+| **Sorumlu modüller** | apps/ground-control, autonomy/mission-executive, vehicle/landing-gnc |
+
+**Beklenen araç yanıtı (adım adım):**
+
+1. Yeni ephemeris verisi alındı → geometri hesabı OTN yeniden çalışır (B1-EK: geometri güncellemesi OTN).
+2. Yeni hesap: önceki iniş penceresi tavsiyesi değişti mi? 
+   - Hayır (pencere aynı kalıyor): Bilgi güncellendi, operasyon devam.
+   - Evet (pencere kaydı veya daralıyor): Yer kontrolüne bildirim. YER — iniş zamanı değişikliği.
+3. Yer kontrolü yeni pencereyi onaylar → `landing_window_validation.schema.yaml` güncellenir.
+4. Güncelleme: `sun_coverage_ok`, `earth_visibility_ok`, `comm_window_ok` yeniden doğrulanır.
+5. Araç yeni zamanlamaya göre iniş hazırlığını günceller.
+
+**Not:** Geometri iyileştirmesi (hesaplama güncelleme) OTN, ancak bu güncellemeden türetilen bölge veya zaman kararı değişiyorsa YER gerekir.
+
+| Alan | İçerik |
+|------|--------|
+| **Güvenlik durumu geçişi** | CRUISE fazında güvenlik durumu geçişi yok; iniş penceresi doğrulaması başarısızsa görev durdurma |
+| **Yer kontrolüne bildirim koşulu** | Pencere değişikliği tespitinde; onay alındığında |
+| **Kabul kriteri** | Geometri güncellemesi doğru tespit edildi; pencere değişikliği YER ile onaylandı; `landing_window_validation` alanları tutarlı |
+| **Test yöntemi** | SIL (ephemeris simülasyonu), Analysis |
+
+---
+
+## SC-009: Observer Height Hassasiyeti (B2-EK)
+
+| Alan | İçerik |
+|------|--------|
+| **Senaryo ID** | SC-009 |
+| **Ad** | Observer Height Hassasiyeti — 1m Yükseklik Farkının Etkisi |
+| **Tetikleyici koşul** | Araç/anten gözlem yüksekliği tasarım değerinden farklı (repo notu: "a mast a metre taller can halve the longest night") |
+| **Başlangıç fazı** | Tasarım doğrulama (pre-launch) ve SURFACE_EXPLORATION |
+| **Sorumlu modüller** | vehicle/localization, thermal, power, communication |
+
+**Beklenen araç yanıtı (adım adım):**
+
+1. **Tasarım aşaması:** Anten/sensör yüksekliği `observer_height_m` = TBD(source: §10 araç yapısı). Bu değer horizon.py hesabına girer.
+2. **Duyarlılık analizi:** 1m yükseklik artışı en uzun gece süresini nasıl etkiler? (Repo: yarıya indirebilir.)
+3. **P1 doğrulama:** Simülatörde `observer_height_m` ±1m değiştirilerek en uzun gece ve Dünya görünürlük penceresi farkı hesaplanır.
+4. **Operasyonel etki:** Yükseklik TBD değerinden düşük gelirse → `longest_outage_hours` artar → SC-007 parametresi güncellenir → güvenlik bütçesi yeniden hesaplanır.
+5. **SURFACE_EXPLORATION:** Araç eğimli arazide en uzun gece tahmininin yeniden hesaplanması gerekip gerekmediğini değerlendirir (OTN — hesaplama güncellemesi).
+
+**Test parametreleri:** `observer_height_m` = [0.5, 1.0, 1.5, 2.0] m için en uzun gece ve Dünya görünürlük penceresi karşılaştırması.
+
+| Alan | İçerik |
+|------|--------|
+| **Güvenlik durumu geçişi** | Yükseklik sapması güvenlik parametrelerini etkiliyorsa yer bildirim |
+| **Yer kontrolüne bildirim koşulu** | Observer height tasarım değerinden sapıyorsa; en uzun gece tahmininde anlamlı değişim varsa |
+| **Kabul kriteri** | Duyarlılık analizi tamamlandı ve sonuçlar SC-007/termal/enerji bütçesine yansıtıldı; observer_height TBD'den §10 ile donduruldu |
+| **Test yöntemi** | Analysis (duyarlılık), SIL (P1 simülatör) |
+
+---
+
 ## Senaryo Özet Tablosu
 
 | Senaryo | Faz | Güvenlik Geçişi | Otorite | Test |
@@ -258,6 +349,9 @@ Bu belge LUNA-AI aracının karşılaşabileceği tipik ve kritik durumlar için
 | SC-004 | SURFACE / PSR | NORMAL→CAUTION→NORMAL veya RETURN_REQUIRED | FDIR | SIL + HIL |
 | SC-005 | SURFACE / PSR / RETURN | →RETURN_REQUIRED veya SURVIVAL | ACL / YER | SIL + HIL |
 | SC-006 | SURFACE / PSR | NORMAL→CAUTION→RETURN_REQUIRED | ACL | SIL + HIL |
+| SC-007 | SURFACE / PSR | SC-002 mantığı; süre aşımında RETURN_REQUIRED | OTN / ACL | SIL + Analysis |
+| SC-008 | CRUISE | Geçiş yok; pencere değişirse YER | OTN / YER | SIL + Analysis |
+| SC-009 | Tasarım / SURFACE | Parametrik etki bildirim | OTN | Analysis + SIL |
 
 ---
 
@@ -266,3 +360,4 @@ Bu belge LUNA-AI aracının karşılaşabileceği tipik ve kritik durumlar için
 | Versiyon | Tarih | Değişiklik |
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — B2 görevi |
+| 0.2 | 2026-11-14 | B2-EK: SC-007 (en uzun iletişim kesintisi), SC-008 (pencere kaçırma), SC-009 (observer height hassasiyeti) eklendi |
