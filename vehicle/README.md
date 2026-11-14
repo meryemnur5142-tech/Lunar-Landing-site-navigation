@@ -1,6 +1,8 @@
 # vehicle/
 
-Araç alt sistem yazılımı: iniş GNC, lokalizasyon, algılama, hareket kontrolü. Bkz. v1.0 §4.2.
+Araç alt sistem yazılımı: iniş GNC, lokalizasyon, algılama, hareket kontrolü. Bkz. v1.0 §4.6.
+
+Uyum Notu 4: İniş GNC ile yüzey navigasyonu ayrıdır. Handover sınırları `vehicle/localization/navigation_architecture.md §5` ile tanımlanmıştır.
 
 ## Alt Dizinler
 
