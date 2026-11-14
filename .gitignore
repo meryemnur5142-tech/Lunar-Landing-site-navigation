@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data / SPICE kernels (büyük dosyalar)
+*.bsp
+*.tls
+*.tpc
+*.tf
+*.bc
+*.ck
+*.spk
+data/raw/
+*.tif
+*.tiff
+*.img
+*.lbl
+
+# Local config
+.env
+*.local

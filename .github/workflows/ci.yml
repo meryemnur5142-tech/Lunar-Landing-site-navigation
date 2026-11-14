@@ -1,0 +1,29 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run unit tests
+        run: pytest tests/unit/test_models.py -v --tb=short
+
+      - name: Validate YAML schemas
+        run: |
+          find . -name "*.schema.yaml" -o -name "*.yaml" | grep -v ".github" | while read f; do
+            python -c "import yaml, sys; yaml.safe_load(open(sys.argv[1]))" "$f" && echo "OK: $f" || echo "FAIL: $f"
+          done
