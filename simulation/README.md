@@ -9,3 +9,5 @@ Simülasyon altyapısı: ortam modeli, araç modeli, dijital ikiz, test senaryol
 - `digital-twin/` — Gerçek zamanlı dijital ikiz; SIL/HIL köprüsü.
 - `scenarios/` — Operasyonel test senaryoları (SC-001..SC-009).
 - `fault-injection/` — FMEA tabanlı hata enjeksiyon çerçevesi; B4 kapsam matrisi.
+
+Lunar-Navigator entegrasyonu: SPICE pipeline (`data-platform/processing/ephemeris/`), 720-ışınlı yerel ufuk hesabı (`data-platform/processing/horizon/`) ve Dünya disk görünürlüğü (`data-platform/processing/visibility/`) bu simülasyon ortamına referans implementasyon olarak beslenecektir. Bkz. `infrastructure/repo_integration_map.md`.

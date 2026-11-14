@@ -68,9 +68,21 @@ Bu belge LUNA-AI v1.1 kapsamında alınan mimari ve tasarım kararlarını, gere
 
 ---
 
+## DR-README-001: README Bölüm Referansı Düzeltmeleri
+Tarih: 2026-11-14  
+Değişiklikler:
+- `vehicle/README.md`: §4.2 → §4.6 (Navigation & Mobility); Uyum Notu 4 eklendi (iniş GNC / yüzey nav ayrımı)
+- `safety/README.md`: §4.6 → §4.8 (Flight Safety & Fault Management); Uyum Notu 3 eklendi (emniyet bütçesi sahipliği)
+- `infrastructure/README.md`: §1 → §10 (Araç Parametreleri / Genel)
+- `simulation/README.md`: Lunar-Navigator entegrasyon notu eklendi (SPICE, horizon, visibility pipeline referansları)
+- Eksik README'ler (mission_intelligence, apps/ground-control, vehicle/localization, vehicle/mobility-control): dosya yok, kural gereği oluşturulmadı; open_items'a not düşüldü.
+
+---
+
 ## Revizyon Geçmişi
 
 | Versiyon | Tarih | Değişiklik |
 |----------|-------|------------|
 | 0.1 | 2026-11-14 | İlk taslak — C2 görevi, DL-001..006 |
 | 0.2 | 2026-11-14 | C6 eki: DR-INT-001..004 — lunar-navigator entegrasyon kararları |
+| 0.3 | 2026-11-14 | DR-README-001: README bölüm referansları ve uyum notları düzeltildi |
