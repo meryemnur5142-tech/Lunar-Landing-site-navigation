@@ -1,7 +1,7 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on: [docs/conops/CONOPS.md §4.2, docs/conops/CONOPS.md §6, domain/mission/constraints/hard_constraints_catalog.yaml]
-# open_items: [resolution_m araç sensör kabiliyetine bağlı TBD(source: §10)]
+# open_items: [resolution_m araç sensör kabiliyetine bağlı TBD(source: §10), coverage_area repo siniri disi global TBD]
 
 schema_version: "1.0.0"
 $schema: "https://json-schema.org/draft/2020-12/schema"
@@ -25,6 +25,9 @@ required:
   - processing_version
   - lineage
   - schema_version
+  - ephemeris_validity_range
+  - terrain_resolution
+  - coverage_area
 
 properties:
 
@@ -104,6 +107,56 @@ properties:
     type: string
     description: "Veri kökeni açıklaması — hangi ham veriden, hangi işlemle türetildi."
     minLength: 1
+
+  # ── A2-EK: Zorunlu yeni alanlar (lunar-navigator DATA_CONTRACT kaynağı) ───────
+
+  ephemeris_validity_range:
+    type: object
+    description: >
+      Efemeris verilerinin geçerli olduğu zaman aralığı.
+      Repo sınırı: 2024-01-01 – 2035-12-31 (SPICE DE440 kapsamı).
+      Bu aralık dışında tahmin yapılmaz; ürün reddedilir.
+    required: [start, end]
+    properties:
+      start:
+        type: string
+        format: date
+        description: "Efemeris geçerlilik başlangıcı (YYYY-MM-DD)."
+      end:
+        type: string
+        format: date
+        description: "Efemeris geçerlilik sonu (YYYY-MM-DD)."
+    example:
+      start: "2024-01-01"
+      end: "2035-12-31"
+
+  terrain_resolution:
+    type: string
+    description: >
+      Arazi veri çözünürlüğü.
+      80m = yüksek çözünürlük (ayrıntılı alan analizi),
+      300m = site finder çözünürlüğü,
+      2700m = global genel bakış.
+      Çözünürlük gizlenmez — planlayıcı hangi çözünürlükte çalıştığını bilir.
+      Uyum Notu 7: Çözünürlük sınırları A2'de zorunlu alan.
+    enum:
+      - "80m"
+      - "300m"
+      - "2700m"
+
+  coverage_area:
+    type: string
+    description: >
+      Veri kapsamı açıklaması.
+      Repo'dan gelen ayrıntılı kapsam: 80°S–90°S (yüksek çözünürlüklü bölge).
+      Bu bölge dışı: global (düşük çözünürlük, 2700m).
+      Planlayıcı kapsamın dışında kesin iniş kararı vermez.
+    minLength: 1
+    examples:
+      - "80S-90S: high-resolution (80m); outside: global (2700m)"
+      - "global: 2700m"
+
+  # ── Mevcut opsiyonel alanlar ─────────────────────────────────────────────────
 
   coverage_extent:
     type: object
