@@ -262,3 +262,52 @@ constraints:
       - return
     verification_method: simulation
     rationale: "Acil erişim imkânı olmayan safe haven, kriz senaryolarında işlevsizdir"
+
+  # ── Site Finder Metrikleri — Ek Hard Constraint'ler (A1-EK) ─────────────────
+  # Kaynak: daniel27-space/lunar-navigator site finder modülü
+  # Uyum Notu 5: Site finder siralama skoru (agirlikli toplam) guvenlik karari vermez.
+  # Siralama yalnizca HC gecen adaylara uygulanir.
+
+  - id: HC-016
+    name: "Site Finder Minimum Güneş Oranı"
+    parameter: site_sun_fraction
+    operator: gte
+    threshold: null  # TBD(source: §10) — lunar-navigator site finder metric
+    unit: "fraction (0-1)"
+    classification: hard
+    source: "lunar-navigator site finder; Uyum Notu 5"
+    applies_to_phases:
+      - surface_exploration
+      - safe_state
+    verification_method: orbital_analysis
+    rationale: "Güneş oranı eşiğin altında kalırsa şarj yetersiz — safe haven geçersiz"
+    note: "Site finder sıralaması güvenlik kararı vermez. Bu HC eleme içindir."
+
+  - id: HC-017
+    name: "Site Finder Minimum Dünya Görünürlük Oranı"
+    parameter: site_earth_fraction
+    operator: gte
+    threshold: null  # TBD(source: §10) — lunar-navigator earth_fraction metric
+    unit: "fraction (0-1)"
+    classification: hard
+    source: "lunar-navigator site finder; Uyum Notu 5"
+    applies_to_phases:
+      - surface_exploration
+      - safe_state
+    verification_method: orbital_analysis
+    rationale: "Dünya görünürlüğü eşiğin altındaysa haberleşme riski — HC-014 ile örtüşür"
+    note: "Ağırlıklı toplam tek başına güvenlik kararı veremez. Bu HC eleme içindir."
+
+  - id: HC-018
+    name: "İniş Zamanı Dünya Görünürlük Penceresi Doğrulaması"
+    parameter: earth_visibility_confirmed
+    operator: eq
+    threshold: true
+    unit: bool
+    classification: hard
+    source: "interfaces/schemas/earth_visibility_windows.schema.yaml; lunar-navigator pipeline/ephem/"
+    applies_to_phases:
+      - landing
+    verification_method: link_analysis
+    rationale: "İniş zamanında Dünya görünürlüğü doğrulanmamışsa iniş abort riski"
+    note: "earth_visibility_windows.schema.yaml earth_visible alanından beslenir"

@@ -1,7 +1,7 @@
 # status: draft
 # owner: luna-ai-architecture
 # depends_on: [docs/conops/CONOPS.md, docs/qar/QAR_TABLE.md, docs/adr/ADR-001..ADR-006, docs/architecture/SAFETY_STATE_MACHINE.md]
-# open_items: [HC-001 araç eğim limiti TBD(source: §10), HC-002 pürüzlülük RMS TBD(source: §10), HC-004 düzlük varyansı TBD(source: §10), HC-005 tırmanma açısı TBD(source: §10), HC-006 dönüş rezervi Wh TBD(source: §10), HC-007 termal marj eşiği TBD(source: §10 termal model), HC-008 PSR batarya SoC TBD(source: §10), HC-009 min aydınlanma süresi TBD(source: §10), HC-010 maks karanlık aralığı TBD(source: §10), HC-011 şarj olanağı eşiği TBD(source: §10), HC-013 termal limit TBD(source: §10), HC-014 görüş açısı/pencere TBD(source: §10), HC-015 acil erişim mesafesi TBD(source: §10)]
+# open_items: [HC-001 araç eğim limiti TBD(source: §10), HC-002 pürüzlülük RMS TBD(source: §10), HC-004 düzlük varyansı TBD(source: §10), HC-005 tırmanma açısı TBD(source: §10), HC-006 dönüş rezervi Wh TBD(source: §10), HC-007 termal marj eşiği TBD(source: §10 termal model), HC-008 PSR batarya SoC TBD(source: §10), HC-009 min aydınlanma süresi TBD(source: §10), HC-010 maks karanlık aralığı TBD(source: §10), HC-011 şarj olanağı eşiği TBD(source: §10), HC-013 termal limit TBD(source: §10), HC-014 görüş açısı/pencere TBD(source: §10), HC-015 acil erişim mesafesi TBD(source: §10), HC-016 site finder min güneş oranı TBD(source: §10), HC-017 site finder min Dünya görünürlük oranı TBD(source: §10), HC-018 iniş zamanı Dünya görünürlük penceresi doğrulanmış]
 
 # Hard Constraint Kataloğu — LUNA-AI v1.1
 
@@ -83,6 +83,23 @@ Soft constraint örnekleri (bu katalogda yer almaz, puanlama skorunda işlenir):
 - Yüzey örneği çeşitliliği
 - Telemetri kalitesi
 - İletişim bant genişliği tercihi
+
+---
+
+## 4b. Site Finder Metrikleri — Ek Hard Constraint'ler (A1-EK)
+
+> **Kaynak:** `daniel27-space/lunar-navigator` site finder modülü (eğim/güneş/Dünya/PSR metrikleri).
+> **Uyum Notu 5 hatırlatıcısı:** Site finder sıralaması güvenlik kararı vermez.
+> Ağırlıklı toplam (sun × w1 + earth × w2 + ...) tek başına güvenlik kararı veremez.
+> Site finder çıktısı yalnızca HC geçen adayları sıralamak için kullanılır.
+
+| ID | Ad | Parametre | Operatör | Eşik | Birim | Kaynak / Gerekçe | Faz | Doğrulama Yöntemi |
+|---|---|---|---|---|---|---|---|---|
+| HC-016 | Site Finder Min Güneş Oranı | `site_sun_fraction` | ≥ | TBD(source: §10) | fraction (0–1) | lunar-navigator site finder; güneş oranı < eşik → şarj yetersiz | surface_exploration, safe_state | orbit analysis |
+| HC-017 | Site Finder Min Dünya Görünürlük Oranı | `site_earth_fraction` | ≥ | TBD(source: §10) | fraction (0–1) | lunar-navigator site finder; Dünya görünürlüğü < eşik → haberleşme riski | surface_exploration, safe_state | orbit analysis |
+| HC-018 | İniş Zamanı Dünya Görünürlük Penceresi | `earth_visibility_confirmed` | == | true | bool | Dünya görünürlük penceresi doğrulanmış [kaynak: earth_visibility_windows.schema.yaml]; iniş zamanı planlamasında zorunlu | landing | link analysis |
+
+**Hard vs Soft:** HC-016, HC-017, HC-018 → **Hard** (eleme). Site finder sıralama skoru → Soft (ceza).
 
 ---
 
