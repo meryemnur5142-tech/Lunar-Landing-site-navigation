@@ -9,7 +9,8 @@ export const criteria=[
 export const craters=[
  {id:'tycho',name:'Tycho Crater',lat:-43.31,lon:-11.36,diameter:85,depth:4.8,region:'SOUTHERN HIGHLANDS',description:'Terraced walls / ray system',shift:0},
  {id:'copernicus',name:'Copernicus Crater',lat:9.62,lon:-20.08,diameter:93,depth:3.8,region:'OCEANUS PROCELLARUM',description:'Terraced walls / central peaks',shift:1},
- {id:'clavius',name:'Clavius Crater',lat:-58.75,lon:-14.4,diameter:225,depth:3.5,region:'SOUTHERN HIGHLANDS',description:'Walled plain / nested impacts',shift:2}
+ {id:'clavius',name:'Clavius Crater',lat:-58.75,lon:-14.4,diameter:225,depth:3.5,region:'SOUTHERN HIGHLANDS',description:'Walled plain / nested impacts',shift:2},
+ {id:'mons-mouton',name:'Mons Mouton',lat:-83.9,lon:-3.9,diameter:97,depth:1.8,region:'SOUTH POLAR HIGHLAND',description:'Polar massif — IM-2 landing site (Mar 2025)',shift:3},
 ];
 const fixtures=[
  {id:'A',x:8, y:3, roughness:.08,slopeDeg:1.1,rockCover:.09,hazardFree:.97,stability:94},

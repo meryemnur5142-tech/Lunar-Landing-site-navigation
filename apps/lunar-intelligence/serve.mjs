@@ -9,14 +9,18 @@ const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=u
 function horizonsProxy(req,res){
   const qs=new URL(req.url,'http://localhost').search;
   const target='https://ssd-api.jpl.nasa.gov/horizons.api'+qs;
+  const hdrs={'Content-Type':'application/json','Access-Control-Allow-Origin':'*','Cache-Control':'no-cache'};
   https.get(target,{headers:{'User-Agent':'LUNA-AI/1.0'}},(hr)=>{
     const chunks=[];
     hr.on('data',c=>chunks.push(c));
     hr.on('end',()=>{
-      res.writeHead(200,{'Content-Type':'application/json','Access-Control-Allow-Origin':'*','Cache-Control':'no-cache'});
-      res.end(Buffer.concat(chunks));
+      const body=Buffer.concat(chunks).toString('utf8');
+      res.writeHead(200,hdrs);
+      // Wrap non-JSON responses (HTML error pages) so the browser gets a clean error message
+      try{JSON.parse(body);res.end(body);}
+      catch{res.end(JSON.stringify({error:`NASA Horizons HTML yanıtı (${hr.statusCode}): ${body.slice(0,300)}`}));}
     });
-  }).on('error',e=>{res.writeHead(502);res.end(JSON.stringify({error:e.message}));});
+  }).on('error',e=>{res.writeHead(200,hdrs);res.end(JSON.stringify({error:`NASA bağlantı hatası: ${e.message}`}));});
 }
 
 http.createServer((req,res)=>{
