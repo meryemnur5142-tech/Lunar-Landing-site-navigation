@@ -12,10 +12,13 @@ export const craters=[
  {id:'clavius',name:'Clavius Crater',lat:-58.75,lon:-14.4,diameter:225,depth:3.5,region:'SOUTHERN HIGHLANDS',description:'Walled plain / nested impacts',shift:2}
 ];
 const fixtures=[
- {id:'A',x:8,y:3,roughness:.10,slopeDeg:1.4,rockCover:.12,hazardFree:.96,stability:91},
- {id:'B',x:11,y:5,roughness:.16,slopeDeg:1.8,rockCover:.14,hazardFree:.94,stability:90},
- {id:'C',x:9,y:7,roughness:.20,slopeDeg:2.2,rockCover:.16,hazardFree:.92,stability:89},
- {id:'D',x:13,y:8,roughness:.24,slopeDeg:2.6,rockCover:.18,hazardFree:.90,stability:88}
+ {id:'A',x:8, y:3, roughness:.08,slopeDeg:1.1,rockCover:.09,hazardFree:.97,stability:94},
+ {id:'B',x:11,y:5, roughness:.13,slopeDeg:1.6,rockCover:.12,hazardFree:.95,stability:91},
+ {id:'C',x:7, y:6, roughness:.18,slopeDeg:2.3,rockCover:.17,hazardFree:.90,stability:87},
+ {id:'D',x:14,y:4, roughness:.22,slopeDeg:3.0,rockCover:.20,hazardFree:.87,stability:84},
+ {id:'E',x:10,y:9, roughness:.27,slopeDeg:3.8,rockCover:.24,hazardFree:.82,stability:79},
+ {id:'F',x:6, y:10,roughness:.34,slopeDeg:5.1,rockCover:.30,hazardFree:.73,stability:70},
+ {id:'G',x:15,y:11,roughness:.42,slopeDeg:6.8,rockCover:.38,hazardFree:.62,stability:58},
 ];
 export function zonesFor(crater){return fixtures.map((f,i)=>{const x=f.x+crater.shift,y=f.y+crater.shift*.5;return {...f,x,y,lat:crater.lat+y/1737.4*180/Math.PI,lon:crater.lon+x/(1737.4*Math.cos(crater.lat*Math.PI/180))*180/Math.PI,roughness:f.roughness+crater.shift*.015,slopeDeg:f.slopeDeg+crater.shift*.3,edgeKm:crater.diameter/2-Math.hypot(x,y),referenceClearance:35+crater.shift*4,profileSeed:i+crater.shift*5}})}
 export const sourceNote='Site measurements, normalized criteria and elevation profiles are synthetic demo data. Crater dimensions and locations are approximate context only. NASA imagery is used for visualization, not as evidence for these scores.';
