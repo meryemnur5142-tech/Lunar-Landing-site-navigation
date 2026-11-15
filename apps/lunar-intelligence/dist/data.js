@@ -1,4 +1,5 @@
 import {site20} from './site20.js';
+import {teamSite} from './team.js';
 export const criteria=[
  {key:'smoothness',name:'Terrain Smoothness',weight:.25,explanation:'Lower local height variation provides a more even touchdown surface. This demo rates synthetic roughness over the landing footprint, not LRO measurements.'},
  {key:'slope',name:'Slope Suitability',weight:.20,explanation:'Gentler slopes reduce touchdown tilt. This demo uses an illustrative slope penalty. Vehicle-specific allowable slopes have not been supplied.'},
@@ -12,6 +13,7 @@ export const craters=[
  {id:'copernicus',name:'Copernicus Crater',lat:9.62,lon:-20.08,diameter:93,depth:3.8,region:'OCEANUS PROCELLARUM',description:'Terraced walls / central peaks',shift:1},
  {id:'clavius',name:'Clavius Crater',lat:-58.75,lon:-14.4,diameter:225,depth:3.5,region:'SOUTHERN HIGHLANDS',description:'Walled plain / nested impacts',shift:2},
  site20,
+ ...(teamSite?[teamSite]:[]),
 ];
 const fixtures=[
  {id:'A',x:8, y:3, roughness:.08,slopeDeg:1.1,rockCover:.09,hazardFree:.97,stability:94},

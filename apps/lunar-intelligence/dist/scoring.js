@@ -1,6 +1,7 @@
 import {criteria} from './data.js';
 const clamp=v=>Math.min(100,Math.max(0,v));
 export function scoreZone(zone){
+ if(zone.team)return {...zone,scores:{},contributions:zone.teamContributions,total:zone.teamTotal};
  const values=[zone.roughness,zone.slopeDeg,zone.rockCover,zone.hazardFree,zone.edgeKm,zone.referenceClearance,zone.stability];
  if(values.some(v=>!Number.isFinite(v))||zone.referenceClearance<=0)throw new Error('Finite inputs and positive reference clearance are required.');
  const scores={smoothness:clamp(100-zone.roughness*50),slope:clamp(100-zone.slopeDeg*5),rocks:clamp((1-zone.rockCover)*100),hazards:clamp(zone.hazardFree*100),edge:clamp(zone.edgeKm/zone.referenceClearance*100),stability:clamp(zone.stability)};
@@ -9,6 +10,7 @@ export function scoreZone(zone){
 }
 export function rankZones(zones){return zones.map(scoreZone).sort((a,b)=>b.total-a.total)}
 export function riskScore(zone){
+ if(zone.team)return Math.round(zone.teamRisk);
  const slopeRisk=Math.min(1,zone.slopeDeg/15);
  const rockRisk=Math.min(1,zone.rockCover/0.20);
  const roughRisk=Math.min(1,zone.roughness/0.30);
