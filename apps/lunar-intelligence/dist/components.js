@@ -1,5 +1,5 @@
-import {criteria,sourceNote} from './data.js';
-import {profileFor} from './scoring.js';
+import {criteria,sourceNote,vehicles as _vehicles} from './data.js';
+import {profileFor,riskScore} from './scoring.js';
 export const $=id=>document.getElementById(id);
 export const coord=(lat,lon)=>`${Math.abs(lat).toFixed(2)}°${lat<0?'S':'N'} / ${Math.abs(lon).toFixed(2)}°${lon<0?'W':'E'}`;
 export function CraterInformation(crater,zones){
@@ -10,7 +10,24 @@ export function CraterInformation(crater,zones){
  const mean=zones.reduce((s,z)=>s+z.total,0)/zones.length;$('regionalScore').textContent=mean.toFixed(1);$('gaugeArc').style.strokeDasharray=`${mean} 100`;
 }
 export function LandingZoneList(zones,selected,onSelect){
- $('zoneList').innerHTML=zones.map(z=>`<button class="zone-row ${z.id===selected?'selected':''}" aria-pressed="${z.id===selected}" data-zone="${z.id}"><span class="zone-icon">⌖</span><span><strong>Zone ${z.id}</strong><small>${coord(z.lat,z.lon)}</small></span><span class="zone-score">${Math.round(z.total)}<small>/ 100</small></span></button>`).join('');
+ const efficient=zones.slice(0,2),risky=zones.slice(2);
+ const row=(z,isRisky)=>{
+  const rs=riskScore(z);
+  const rCol=rs>=60?'#ff4455':rs>=35?'#ff9140':'#60ead5';
+  return `<button class="zone-row ${z.id===selected?'selected':''} ${isRisky?'risky':''}" aria-pressed="${z.id===selected}" data-zone="${z.id}">
+   <span class="zone-icon">⌖</span>
+   <span><strong>Zone ${z.id}</strong><small>${coord(z.lat,z.lon)}</small></span>
+   <span class="zone-score-wrap">
+    <span class="zone-score">${Math.round(z.total)}<small>/ 100</small></span>
+    <span class="zone-risk-badge" style="color:${rCol};border-color:${rCol}20">RISK ${rs}%</span>
+   </span>
+  </button>`;
+ };
+ $('zoneList').innerHTML=
+  `<div class="zone-section-header">▲ EN VERİMLİ BÖLGELER</div>`+
+  efficient.map(z=>row(z,false)).join('')+
+  `<div class="zone-section-header risky-header">▼ EN RİSKLİ BÖLGELER</div>`+
+  risky.map(z=>row(z,true)).join('');
  $('zoneList').querySelectorAll('button').forEach(b=>b.onclick=()=>onSelect(b.dataset.zone,true));
 }
 export function ClusterMap(zones,selected,onSelect){
@@ -20,11 +37,34 @@ export function ClusterMap(zones,selected,onSelect){
  $('clusterScale').textContent=`${span.toFixed(0)} KM WINDOW · SYNTHETIC LOCAL PLAN`;
  $('clusterMap').querySelectorAll('[data-zone]').forEach(g=>{g.onclick=()=>onSelect(g.dataset.zone,true);g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(g.dataset.zone,true)}}});
 }
-export function LandingAnalysis(zone,onCriterion){
+export function LandingAnalysis(zone,onCriterion,vehicle){
  $('selectedZoneLabel').textContent=`SELECTED LANDING ZONE / ${zone.id}`;$('scoreValue').textContent=zone.total.toFixed(1);
  $('criteriaList').innerHTML=zone.contributions.map(c=>`<button class="criterion" data-criterion="${c.key}" aria-label="Explain ${c.name}"><span class="criterion-label"><span>${c.name} <small>ⓘ</small></span><b>${c.value.toFixed(0)}</b></span><span class="bar-track"><span class="bar-fill" style="width:0%"></span></span></button>`).join('');
  requestAnimationFrame(()=>{$('criteriaList').querySelectorAll('.bar-fill').forEach((el,i)=>el.style.width=`${zone.contributions[i].value}%`)});
  $('criteriaList').querySelectorAll('button').forEach(b=>b.onclick=()=>onCriterion(b.dataset.criterion));
+ // vehicle compatibility block
+ const vc=$('vehicleCompat');if(!vc)return;
+ const rs=riskScore(zone);
+ if(!vehicle||vehicle.maxSlopeDeg==null){
+  vc.innerHTML=`<div class="vc-title">ARAÇ UYUMU — ${vehicle?vehicle.name:'—'}</div><p class="vc-note">Bu araç tipi (${vehicle?vehicle.type:'—'}) için yüzey geçiş eğim limiti tanımlı değil.</p>`;
+  return;
+ }
+ const checks=[
+  {label:'Eğim',zone:`${zone.slopeDeg.toFixed(1)}°`,limit:`Maks ${vehicle.maxSlopeDeg}°`,pass:zone.slopeDeg<=vehicle.maxSlopeDeg,margin:(vehicle.maxSlopeDeg-zone.slopeDeg).toFixed(1)+' ° marj'},
+  {label:'Kaya Örtüsü',zone:`${Math.round(zone.rockCover*100)}%`,limit:vehicle.maxRockCover!=null?`Maks ${Math.round(vehicle.maxRockCover*100)}%`:'—',pass:vehicle.maxRockCover==null||zone.rockCover<=vehicle.maxRockCover,margin:vehicle.maxRockCover!=null?`${Math.round((vehicle.maxRockCover-zone.rockCover)*100)} pp marj`:''},
+  {label:'Pürüzlülük',zone:`${zone.roughness.toFixed(2)} m`,limit:vehicle.maxRoughness!=null?`Maks ${vehicle.maxRoughness} m`:'—',pass:vehicle.maxRoughness==null||zone.roughness<=vehicle.maxRoughness,margin:vehicle.maxRoughness!=null?`${(vehicle.maxRoughness-zone.roughness).toFixed(2)} m marj`:''},
+ ];
+ const rCol=rs>=60?'#ff4455':rs>=35?'#ff9140':'#60ead5';
+ vc.innerHTML=`<div class="vc-title">ARAÇ UYUMU — ${vehicle.name}</div>
+  <div class="vc-risk-line"><span>Bölge Risk Oranı</span><span style="color:${rCol};font:600 13px var(--mono)">${rs}%</span></div>
+  ${checks.map(c=>`<div class="vc-row">
+   <span class="vc-label">${c.label}</span>
+   <span class="vc-zone">${c.zone}</span>
+   <span class="vc-sep">vs</span>
+   <span class="vc-limit">${c.limit}</span>
+   <span class="vc-status" style="color:${c.pass?'#60ead5':'#ff4455'}">${c.pass?'✓':'✗'}</span>
+   <span class="vc-margin">${c.margin}</span>
+  </div>`).join('')}`;
 }
 export function TerrainProfile(zone){
  const profile=profileFor(zone),base=Math.min(...profile.points.map(p=>p.z));const coords=profile.points.map(p=>[35+p.x/200*550,110-(p.z-base)/(profile.range||1)*85]);
@@ -37,7 +77,17 @@ function show(html){$('modalContent').innerHTML=html;if(!$('analysisModal').open
 export function CriterionModal(zone,key){const c=zone.contributions.find(c=>c.key===key);show(`<span class="micro">CRITERION EXPLAINED / ZONE ${zone.id}</span><h2>${c.name.toUpperCase()}</h2><p>${c.explanation}</p><div class="formula">${raw(zone)[key]}<br>Clamped to [0, 100] = ${c.value.toFixed(2)}<br>${c.value.toFixed(2)} × ${c.weight.toFixed(2)} = <b>${c.contribution.toFixed(2)} points</b></div><p>Weight: ${c.weight*100}% of the total suitability score.</p><div class="method-note">${sourceNote}</div>`)}
 export function DetailedAnalysisModal(zone,zones,crater){
  const best=zones[0],runner=zones[1],rank=zones.findIndex(z=>z.id===zone.id)+1;
- const verdict=rank===1?`Zone ${zone.id} ranks first among these four demo sites, ${ (best.total-runner.total).toFixed(2)} points above Zone ${runner.id}. Its combination of smoothness, slope and hazard-free coverage yields the highest weighted result.`:`Zone ${zone.id} ranks ${rank} of 4, ${(best.total-zone.total).toFixed(2)} points below Zone ${best.id}. Compare the contributions below to see which trade-offs reduce its score.`;
- show(`<span class="micro">${crater.name.toUpperCase()} / DECISION SUPPORT</span><h2>DETAILED LANDING ANALYSIS</h2><div class="modal-hero"><div><h3>Selected Zone: Zone ${zone.id}</h3><p>${coord(zone.lat,zone.lon)} · Synthetic candidate</p></div><div class="modal-score">${zone.total.toFixed(2)}<small> / 100</small></div></div><div class="method-note">Landing suitability is a weighted comparative score, not an empirically calibrated probability of successful landing. ${sourceNote}</div><h3>WHY IS THIS ZONE SUITABLE?</h3><table class="contributions"><thead><tr><th>CRITERION</th><th>SCORE</th><th>WEIGHT</th><th>CONTRIBUTION</th></tr></thead><tbody>${zone.contributions.map(c=>`<tr><td>${c.name}</td><td>${c.value.toFixed(2)}</td><td>${c.weight*100}%</td><td>${c.contribution.toFixed(2)} pts</td></tr>`).join('')}<tr><td><b>TOTAL</b></td><td></td><td>100%</td><td>${zone.total.toFixed(2)} / 100</td></tr></tbody></table><div class="explanations">${zone.contributions.map(c=>`<div><h3>${c.name}</h3><p>${c.explanation}</p><p class="formula">${raw(zone)[c.key]} → ${c.value.toFixed(2)}</p></div>`).join('')}</div><div class="conclusion"><h3>COMPARATIVE RESULT</h3><p>${verdict}</p></div><h3>ALL FOUR CANDIDATES</h3><table class="contributions"><thead><tr><th>ZONE</th><th>SCORE</th><th>SLOPE</th><th>ROUGHNESS</th></tr></thead><tbody>${zones.map(z=>`<tr><td>${z.id===zone.id?'▸ ':''}Zone ${z.id}</td><td>${z.total.toFixed(2)}</td><td>${z.slopeDeg.toFixed(1)}°</td><td>${z.roughness.toFixed(2)} m</td></tr>`).join('')}</tbody></table>`);
+ const cat=rank<=2?'EN VERİMLİ':'EN RİSKLİ';
+ const verdict=rank===1?`Zone ${zone.id} ranks first (most efficient) among these four demo sites, ${ (best.total-runner.total).toFixed(2)} points above Zone ${runner.id}. Its combination of smoothness, slope and hazard-free coverage yields the highest weighted result.`:`Zone ${zone.id} ranks ${rank} of 4 — categorised as ${cat}. ${rank<=2?'':'Its score is '+(best.total-zone.total).toFixed(2)+' points below Zone '+best.id+'; see contributions for trade-offs.'}`;
+ show(`<span class="micro">${crater.name.toUpperCase()} / DECISION SUPPORT</span><h2>DETAILED LANDING ANALYSIS</h2><div class="modal-hero"><div><h3>Selected Zone: Zone ${zone.id} <span style="font:9px var(--mono);padding:3px 7px;border:1px solid ${rank<=2?'#60ead5':'#ff9140'};color:${rank<=2?'var(--green)':'#ff9140'};margin-left:10px">${cat}</span></h3><p>${coord(zone.lat,zone.lon)} · Synthetic candidate</p></div><div class="modal-score">${zone.total.toFixed(2)}<small> / 100</small></div></div><div class="method-note">Landing suitability is a weighted comparative score, not an empirically calibrated probability of successful landing. ${sourceNote}</div><h3>WHY IS THIS ZONE SUITABLE?</h3><table class="contributions"><thead><tr><th>CRITERION</th><th>SCORE</th><th>WEIGHT</th><th>CONTRIBUTION</th></tr></thead><tbody>${zone.contributions.map(c=>`<tr><td>${c.name}</td><td>${c.value.toFixed(2)}</td><td>${c.weight*100}%</td><td>${c.contribution.toFixed(2)} pts</td></tr>`).join('')}<tr><td><b>TOTAL</b></td><td></td><td>100%</td><td>${zone.total.toFixed(2)} / 100</td></tr></tbody></table><div class="explanations">${zone.contributions.map(c=>`<div><h3>${c.name}</h3><p>${c.explanation}</p><p class="formula">${raw(zone)[c.key]} → ${c.value.toFixed(2)}</p></div>`).join('')}</div><div class="conclusion"><h3>COMPARATIVE RESULT</h3><p>${verdict}</p></div><h3>TÜM ADAYLAR — 2 VERİMLİ + 2 RİSKLİ</h3><table class="contributions"><thead><tr><th>ZONE</th><th>KATEGORİ</th><th>SCORE</th><th>SLOPE</th><th>ROUGHNESS</th></tr></thead><tbody>${zones.map((z,i)=>`<tr><td>${z.id===zone.id?'▸ ':''}Zone ${z.id}</td><td style="color:${i<2?'var(--green)':'#ff9140'};font:7px var(--mono)">${i<2?'VERİMLİ':'RİSKLİ'}</td><td>${z.total.toFixed(2)}</td><td>${z.slopeDeg.toFixed(1)}°</td><td>${z.roughness.toFixed(2)} m</td></tr>`).join('')}</tbody></table>`);
+}
+export function VehiclePanel(selectedId,onSelect){
+ const v=_vehicles.find(x=>x.id===selectedId)||_vehicles[0];
+ const sel=$('vehicleSelect');
+ if(sel.dataset.built!=='1'){sel.innerHTML=_vehicles.map(x=>`<option value="${x.id}">${x.name} — ${x.type}</option>`).join('');sel.dataset.built='1';sel.onchange=()=>onSelect(sel.value);}
+ sel.value=v.id;
+ $('vehicleFullName').textContent=v.fullName;
+ const rows=[['TYPE',v.type],['AGENCY',v.agency],['MASS',v.mass],['DIMS',v.dims],['WHEEL',v.wheelDiam],['POWER',v.power],['MAX SLOPE',v.maxSlope],['SPEED',v.speed],['PAYLOAD',v.payload]];
+ $('vehicleSpecs').innerHTML=rows.map(([k,val])=>`<div class="vspec-row"><span class="vspec-label">${k}</span><span class="vspec-val">${val}</span></div>`).join('')+`<p class="vspec-note">${v.note}</p><div class="vspec-source"><a href="${v.source}" target="_blank" rel="noreferrer">NASA/agency page ↗</a></div>`;
 }
 export function MethodologyModal(){show(`<span class="micro">MODEL TRANSPARENCY</span><h2>DATA & METHODOLOGY</h2><div class="method-note">${sourceNote}</div><h3>Weighted multi-criteria decision analysis</h3><p>Each input is normalized to a 0–100 suitability scale. Higher is better. The total is the sum of criterion score × criterion weight. Scores are deterministic; re-running the same dataset returns the same results.</p><div class="formula">${criteria.map(c=>`${c.name} × ${c.weight.toFixed(2)}`).join('<br>+ ')}</div><p>Normalization: smoothness = 100 − roughness(m) × 50; slope = 100 − degrees × 5; rocks = (1 − rock fraction) × 100; hazards = hazard-free fraction × 100; edge clearance = clearance/reference × 100; stability = synthetic index. Each result is clamped to [0, 100]. These mappings are illustrative assumptions, not validated mission requirements.</p><h3>Visual source</h3><p>The globe uses the 4096 × 2048 LROC color mosaic and a LOLA height preview from <a href="https://svs.gsfc.nasa.gov/4720/" target="_blank" rel="noreferrer">NASA’s Scientific Visualization Studio — CGI Moon Kit</a>. Credit: NASA SVS, Ernie Wright; LROC/LOLA instrument teams. These maps are prepared for visualization. They do not resolve landing-scale obstacles.</p><h3>Limits of this demonstration</h3><p>Profiles, stability, roughness and hazard measurements are synthetic. No spacecraft dynamics, sensor errors, navigation uncertainty or validated touchdown simulations are included. Time-dependent sunlight is not computed by this model. A high score does not certify a safe landing.</p>`)}
