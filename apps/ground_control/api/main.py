@@ -60,3 +60,9 @@ app.include_router(evaluate_router)
 app.include_router(mission_router)
 app.include_router(efficiency_router)
 app.include_router(history_router)
+
+from fastapi.staticfiles import StaticFiles
+import os as _os
+_UI_DIR = _os.path.join(_os.path.dirname(__file__), "..", "..", "..", "apps", "lunar-intelligence", "dist")
+if _os.path.isdir(_UI_DIR):
+    app.mount("/lunar-ui", StaticFiles(directory=_UI_DIR, html=True), name="lunar-ui")

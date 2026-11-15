@@ -39,3 +39,6 @@ data/
 # Local config
 .env
 *.local
+
+# Lunar Intelligence UI — browser-check.mjs screenshot outputs
+apps/lunar-intelligence/outputs/
