@@ -1,0 +1,782 @@
+{
+  "surum": "1.0",
+  "tarih_utc": "2026-11-27T00:00:00+00:00",
+  "sentetik_demo": false,
+  "rover_bilgi": {
+    "kutu": [
+      {
+        "etiket": "Araç",
+        "deger": "VIPER (referans)",
+        "birim": "",
+        "kaynak": "K"
+      },
+      {
+        "etiket": "Kütle",
+        "deger": 447.0,
+        "birim": "kg",
+        "kaynak": "K"
+      },
+      {
+        "etiket": "Batarya kapasitesi",
+        "deger": 5420.0,
+        "birim": "Wh",
+        "kaynak": "K"
+      },
+      {
+        "etiket": "Güneş paneli (tek yüz, tepe)",
+        "deger": 320.0,
+        "birim": "W",
+        "kaynak": "K"
+      },
+      {
+        "etiket": "Planlama hızı",
+        "deger": 0.1,
+        "birim": "m/s",
+        "kaynak": "V"
+      },
+      {
+        "etiket": "Maks. tırmanma eğimi",
+        "deger": 15.0,
+        "birim": "°",
+        "kaynak": "V"
+      },
+      {
+        "etiket": "Karanlıkta çalışma (operasyon, %100→%10)",
+        "deger": 8.1,
+        "birim": "saat",
+        "kaynak": "T"
+      },
+      {
+        "etiket": "Karanlıkta hibernasyon",
+        "deger": 45.2,
+        "birim": "saat",
+        "kaynak": "T"
+      },
+      {
+        "etiket": "Sürüş (güneş girişi yok)",
+        "deger": 16.3,
+        "birim": "saat",
+        "kaynak": "T"
+      },
+      {
+        "etiket": "Sürüş menzili (güneşsiz, tek yön ayrılmış enerji ile)",
+        "deger": 2.93,
+        "birim": "km",
+        "kaynak": "T"
+      }
+    ],
+    "parametreler": {
+      "rover_kutlesi_kg": 447.0,
+      "batarya_Wh": 5420.0,
+      "batarya_kimyasi": null,
+      "psr_giris_soc_min": 0.85,
+      "soc_min": 0.1,
+      "panel_pik_W": 320.0,
+      "panel_normal_el_deg": 0.0,
+      "P_hibernasyon_W": 108.0,
+      "P_surus_W": 300.0,
+      "P_operasyon_W": 600.0,
+      "hiz_ms": 0.1,
+      "max_egim_deg": 15.0,
+      "egim_ceza": 1.0,
+      "golge_ceza": 0.3
+    },
+    "aciklama": "K=NASA kaynaklı, T=kaynaktan türetilmiş, V=takım varsayımı"
+  },
+  "ortam": {
+    "tarih_utc": "2026-11-27T00:00:00+00:00",
+    "bolge_merkez": {
+      "lon": 31.6129,
+      "lat": -85.41982
+    },
+    "gunes": {
+      "yukseklik_deg": 3.577,
+      "azimut_deg": 296.85
+    },
+    "dunya": {
+      "yukseklik_deg": 8.412,
+      "azimut_deg": 330.25
+    },
+    "alt_gunes_noktasi_yaklasik": {
+      "enlem_deg": -1.519,
+      "boylam_deg": -31.431
+    },
+    "ay_dunya": {
+      "hata": "\n================================================================================\n\nToolkit version: CSPICE_N0067\n\nSPICE(UNPARSEDTIME) --\n\nThe input string uses the ISO  \"T\" date/time delimiter but does not match any of the accepted ISO formats.\n\nstr2et_c --> STR2ET\n\n================================================================================"
+    }
+  },
+  "puanlama": {
+    "agirliklar": {
+      "egim": 25.0,
+      "puruzluluk": 20.0,
+      "iletisim": 15.0,
+      "gunes": 15.0,
+      "karanlik_hedef": 10.0,
+      "yerel_rolyef": 10.0,
+      "veri_guvenilirligi": 5.0
+    },
+    "kriter_adlari": {
+      "egim": "Eğim",
+      "puruzluluk": "Yüzey pürüzlülüğü",
+      "iletisim": "Dünya ile iletişim (görüş)",
+      "gunes": "Güneş aydınlanması (enerji)",
+      "karanlik_hedef": "Karanlık (gölge) hedefe erişim",
+      "yerel_rolyef": "Yerel yükselti farkı (rölyef)",
+      "veri_guvenilirligi": "Veri güvenilirliği"
+    },
+    "ayarlar": {
+      "iniş_egim_limiti_deg": 15.0,
+      "elips_yari_eksen_m": [
+        500.0,
+        250.0
+      ],
+      "puruz_limit_m": 10.0,
+      "rolyef_limit_m": 100.0,
+      "dunya_min_el_deg": 5.0,
+      "karanlik_oran_esik": 0.05,
+      "aday_aralik_m": 500.0,
+      "min_secim_aralik_m": 1500.0,
+      "pencere_gun": 30.0,
+      "adim_saat": 6.0,
+      "nan_orani_max_en_iyi": 0.1,
+      "nan_orani_max_riskli": 0.5,
+      "yuzde_modu": "mutlak"
+    },
+    "tanim": "Verimlilik% = toplam(agirlik*skor); skor 1=ideal, 0=kesinlikle inilmemeli. Risk% = 100 - Verimlilik%. 'yuzde' alanı yuzde_modu'na göre mutlak veya göreli (ROI'deki en iyi %100) yüzdedir; ikisi de ayrı alanlarda var. Güneş ve iletişim ROI içindeki en iyi konuma göre normalize edilir."
+  },
+  "en_verimli": [
+    {
+      "id": "V1",
+      "sira": 1,
+      "tur": "en_verimli",
+      "lon": 32.65704,
+      "lat": -85.15286,
+      "satir": 56,
+      "sutun": 206,
+      "verimlilik_yuzde": 80.0,
+      "risk_yuzde": 20.0,
+      "verimlilik_goreli_yuzde": 100.0,
+      "risk_goreli_yuzde": 0.0,
+      "yuzde": 80.0,
+      "sert_sinir_asildi": false,
+      "kriterler": {
+        "egim": {
+          "ad": "Eğim",
+          "agirlik": 25.0,
+          "skor": 0.4434,
+          "puan": 11.09,
+          "risk_puani": 13.91,
+          "ham_deger": 8.3486,
+          "birim": "° (elips içi %95)"
+        },
+        "puruzluluk": {
+          "ad": "Yüzey pürüzlülüğü",
+          "agirlik": 20.0,
+          "skor": 0.9479,
+          "puan": 18.96,
+          "risk_puani": 1.04,
+          "ham_deger": 0.5207,
+          "birim": "m (100 m pencere std)"
+        },
+        "iletisim": {
+          "ad": "Dünya ile iletişim (görüş)",
+          "agirlik": 15.0,
+          "skor": 1.0,
+          "puan": 15.0,
+          "risk_puani": 0.0,
+          "ham_deger": 0.4417,
+          "birim": "oran (Dünya görünür süre)"
+        },
+        "gunes": {
+          "ad": "Güneş aydınlanması (enerji)",
+          "agirlik": 15.0,
+          "skor": 0.8476,
+          "puan": 12.71,
+          "risk_puani": 2.29,
+          "ham_deger": 0.3708,
+          "birim": "oran (güneşli süre)"
+        },
+        "karanlik_hedef": {
+          "ad": "Karanlık (gölge) hedefe erişim",
+          "agirlik": 10.0,
+          "skor": 0.9259,
+          "puan": 9.26,
+          "risk_puani": 0.74,
+          "ham_deger": 894.4272,
+          "birim": "m (en yakın karanlık hedef, düz mesafe)"
+        },
+        "yerel_rolyef": {
+          "ad": "Yerel yükselti farkı (rölyef)",
+          "agirlik": 10.0,
+          "skor": 0.7996,
+          "puan": 8.0,
+          "risk_puani": 2.0,
+          "ham_deger": 20.0435,
+          "birim": "m (elips içi yükselti farkı)"
+        },
+        "veri_guvenilirligi": {
+          "ad": "Veri güvenilirliği",
+          "agirlik": 5.0,
+          "skor": 1.0,
+          "puan": 5.0,
+          "risk_puani": 0.0,
+          "ham_deger": 1.0,
+          "birim": "oran (ölçülmüş piksel)"
+        }
+      },
+      "uyarilar": [],
+      "gorsel_png": "C:\\Users\\user\\AppData\\Local\\Programs\\Microsoft VS Code\\cikti_arayuz\\siteler\\V1.png"
+    },
+    {
+      "id": "V2",
+      "sira": 2,
+      "tur": "en_verimli",
+      "lon": 27.43108,
+      "lat": -85.4553,
+      "satir": 74,
+      "sutun": 8,
+      "verimlilik_yuzde": 80.0,
+      "risk_yuzde": 20.0,
+      "verimlilik_goreli_yuzde": 100.0,
+      "risk_goreli_yuzde": 0.0,
+      "yuzde": 80.0,
+      "sert_sinir_asildi": false,
+      "kriterler": {
+        "egim": {
+          "ad": "Eğim",
+          "agirlik": 25.0,
+          "skor": 0.3984,
+          "puan": 9.96,
+          "risk_puani": 15.04,
+          "ham_deger": 9.0242,
+          "birim": "° (elips içi %95)"
+        },
+        "puruzluluk": {
+          "ad": "Yüzey pürüzlülüğü",
+          "agirlik": 20.0,
+          "skor": 0.949,
+          "puan": 18.98,
+          "risk_puani": 1.02,
+          "ham_deger": 0.5105,
+          "birim": "m (100 m pencere std)"
+        },
+        "iletisim": {
+          "ad": "Dünya ile iletişim (görüş)",
+          "agirlik": 15.0,
+          "skor": 1.0,
+          "puan": 15.0,
+          "risk_puani": 0.0,
+          "ham_deger": 0.4417,
+          "birim": "oran (Dünya görünür süre)"
+        },
+        "gunes": {
+          "ad": "Güneş aydınlanması (enerji)",
+          "agirlik": 15.0,
+          "skor": 0.928,
+          "puan": 13.92,
+          "risk_puani": 1.08,
+          "ham_deger": 0.4565,
+          "birim": "oran (güneşli süre)"
+        },
+        "karanlik_hedef": {
+          "ad": "Karanlık (gölge) hedefe erişim",
+          "agirlik": 10.0,
+          "skor": 1.0,
+          "puan": 10.0,
+          "risk_puani": 0.0,
+          "ham_deger": 505.9644,
+          "birim": "m (en yakın karanlık hedef, düz mesafe)"
+        },
+        "yerel_rolyef": {
+          "ad": "Yerel yükselti farkı (rölyef)",
+          "agirlik": 10.0,
+          "skor": 0.7147,
+          "puan": 7.15,
+          "risk_puani": 2.85,
+          "ham_deger": 28.5254,
+          "birim": "m (elips içi yükselti farkı)"
+        },
+        "veri_guvenilirligi": {
+          "ad": "Veri güvenilirliği",
+          "agirlik": 5.0,
+          "skor": 1.0,
+          "puan": 5.0,
+          "risk_puani": 0.0,
+          "ham_deger": 1.0,
+          "birim": "oran (ölçülmüş piksel)"
+        }
+      },
+      "uyarilar": [],
+      "gorsel_png": "C:\\Users\\user\\AppData\\Local\\Programs\\Microsoft VS Code\\cikti_arayuz\\siteler\\V2.png"
+    }
+  ],
+  "en_riskli": [
+    {
+      "id": "R1",
+      "sira": 1,
+      "tur": "en_riskli",
+      "lon": 29.28517,
+      "lat": -85.71961,
+      "satir": 188,
+      "sutun": 8,
+      "verimlilik_yuzde": 26.9,
+      "risk_yuzde": 73.1,
+      "verimlilik_goreli_yuzde": 0.0,
+      "risk_goreli_yuzde": 100.0,
+      "yuzde": 73.1,
+      "sert_sinir_asildi": true,
+      "kriterler": {
+        "egim": {
+          "ad": "Eğim",
+          "agirlik": 25.0,
+          "skor": 0.0,
+          "puan": 0.0,
+          "risk_puani": 25.0,
+          "ham_deger": 26.602,
+          "birim": "° (elips içi %95)"
+        },
+        "puruzluluk": {
+          "ad": "Yüzey pürüzlülüğü",
+          "agirlik": 20.0,
+          "skor": 0.9013,
+          "puan": 18.03,
+          "risk_puani": 1.97,
+          "ham_deger": 0.9867,
+          "birim": "m (100 m pencere std)"
+        },
+        "iletisim": {
+          "ad": "Dünya ile iletişim (görüş)",
+          "agirlik": 15.0,
+          "skor": 0.0,
+          "puan": 0.0,
+          "risk_puani": 15.0,
+          "ham_deger": 0.0,
+          "birim": "oran (Dünya görünür süre)"
+        },
+        "gunes": {
+          "ad": "Güneş aydınlanması (enerji)",
+          "agirlik": 15.0,
+          "skor": 0.0787,
+          "puan": 1.18,
+          "risk_puani": 13.82,
+          "ham_deger": 0.0839,
+          "birim": "oran (güneşli süre)"
+        },
+        "karanlik_hedef": {
+          "ad": "Karanlık (gölge) hedefe erişim",
+          "agirlik": 10.0,
+          "skor": 0.2739,
+          "puan": 2.74,
+          "risk_puani": 7.26,
+          "ham_deger": 2325.5107,
+          "birim": "m (en yakın karanlık hedef, düz mesafe)"
+        },
+        "yerel_rolyef": {
+          "ad": "Yerel yükselti farkı (rölyef)",
+          "agirlik": 10.0,
+          "skor": 0.0,
+          "puan": 0.0,
+          "risk_puani": 10.0,
+          "ham_deger": 217.6553,
+          "birim": "m (elips içi yükselti farkı)"
+        },
+        "veri_guvenilirligi": {
+          "ad": "Veri güvenilirliği",
+          "agirlik": 5.0,
+          "skor": 1.0,
+          "puan": 5.0,
+          "risk_puani": 0.0,
+          "ham_deger": 1.0,
+          "birim": "oran (ölçülmüş piksel)"
+        }
+      },
+      "uyarilar": [
+        "Elips içi eğim sınırı aşıyor",
+        "Seçilen anda nokta gölgede veya Güneş ufkun altında",
+        "Seçilen anda Dünya görünmüyor (eşik 5° + arazi ufku)"
+      ],
+      "gorsel_png": "C:\\Users\\user\\AppData\\Local\\Programs\\Microsoft VS Code\\cikti_arayuz\\siteler\\R1.png"
+    },
+    {
+      "id": "R2",
+      "sira": 2,
+      "tur": "en_riskli",
+      "lon": 27.06802,
+      "lat": -85.3991,
+      "satir": 50,
+      "sutun": 8,
+      "verimlilik_yuzde": 30.0,
+      "risk_yuzde": 70.0,
+      "verimlilik_goreli_yuzde": 5.8,
+      "risk_goreli_yuzde": 94.2,
+      "yuzde": 70.0,
+      "sert_sinir_asildi": false,
+      "kriterler": {
+        "egim": {
+          "ad": "Eğim",
+          "agirlik": 25.0,
+          "skor": 0.0076,
+          "puan": 0.19,
+          "risk_puani": 24.81,
+          "ham_deger": 14.8858,
+          "birim": "° (elips içi %95)"
+        },
+        "puruzluluk": {
+          "ad": "Yüzey pürüzlülüğü",
+          "agirlik": 20.0,
+          "skor": 0.9551,
+          "puan": 19.1,
+          "risk_puani": 0.9,
+          "ham_deger": 0.4495,
+          "birim": "m (100 m pencere std)"
+        },
+        "iletisim": {
+          "ad": "Dünya ile iletişim (görüş)",
+          "agirlik": 15.0,
+          "skor": 0.0,
+          "puan": 0.0,
+          "risk_puani": 15.0,
+          "ham_deger": 0.0,
+          "birim": "oran (Dünya görünür süre)"
+        },
+        "gunes": {
+          "ad": "Güneş aydınlanması (enerji)",
+          "agirlik": 15.0,
+          "skor": 0.1024,
+          "puan": 1.54,
+          "risk_puani": 13.46,
+          "ham_deger": 0.1092,
+          "birim": "oran (güneşli süre)"
+        },
+        "karanlik_hedef": {
+          "ad": "Karanlık (gölge) hedefe erişim",
+          "agirlik": 10.0,
+          "skor": 0.3872,
+          "puan": 3.87,
+          "risk_puani": 6.13,
+          "ham_deger": 2076.9208,
+          "birim": "m (en yakın karanlık hedef, düz mesafe)"
+        },
+        "yerel_rolyef": {
+          "ad": "Yerel yükselti farkı (rölyef)",
+          "agirlik": 10.0,
+          "skor": 0.0348,
+          "puan": 0.35,
+          "risk_puani": 9.65,
+          "ham_deger": 96.5195,
+          "birim": "m (elips içi yükselti farkı)"
+        },
+        "veri_guvenilirligi": {
+          "ad": "Veri güvenilirliği",
+          "agirlik": 5.0,
+          "skor": 1.0,
+          "puan": 5.0,
+          "risk_puani": 0.0,
+          "ham_deger": 1.0,
+          "birim": "oran (ölçülmüş piksel)"
+        }
+      },
+      "uyarilar": [
+        "Seçilen anda nokta gölgede veya Güneş ufkun altında",
+        "Seçilen anda Dünya görünmüyor (eşik 5° + arazi ufku)"
+      ],
+      "gorsel_png": "C:\\Users\\user\\AppData\\Local\\Programs\\Microsoft VS Code\\cikti_arayuz\\siteler\\R2.png"
+    }
+  ],
+  "gorev_ozetleri": [
+    {
+      "site_id": "V1",
+      "durum": "TAMAM",
+      "hedef_satir_sutun": [
+        46,
+        233
+      ],
+      "hedef_lon_lat": [
+        33.19064965087621,
+        -85.09210371659053
+      ],
+      "ozet": {
+        "baslangic_zamani_utc": "2026-11-27 00:00",
+        "rota_uzunluk_m": 2493.8,
+        "rota_maks_egim_deg": 11.3,
+        "gidis_suresi_saat": 8.22,
+        "soc_baslangic_pct": 100.0,
+        "soc_varis_pct": 96.9,
+        "golgede_kalis_saat": 7.49,
+        "donus_icin_yeterli_enerji": true,
+        "soc_donus_basinda_pct": 14.0,
+        "soc_baslangica_varis_pct": 13.3,
+        "gorev_boyunca_min_soc_pct": 10.6,
+        "soc_min_ihlali": false,
+        "sarj_suresi_saat_(donustan_%100'e)": 22.2,
+        "analitik_golgede_dayanma_operasyon_saat": 8.1,
+        "analitik_golgede_dayanma_hibernasyon_saat": 45.2,
+        "tur": 1
+      },
+      "rota_lon_lat": [
+        [
+          32.65704421500917,
+          -85.1528557390872
+        ],
+        [
+          32.68327621588291,
+          -85.15143416408335
+        ],
+        [
+          32.70949281523808,
+          -85.15001157606136
+        ],
+        [
+          32.718862728831915,
+          -85.14637253246546
+        ],
+        [
+          32.72821858560207,
+          -85.1427333692097
+        ],
+        [
+          32.73756041665929,
+          -85.13909408659363
+        ],
+        [
+          32.746888253024075,
+          -85.1354546849158
+        ],
+        [
+          32.75620212562703,
+          -85.1318151644739
+        ],
+        [
+          32.782291617108285,
+          -85.13038977997799
+        ],
+        [
+          32.80836581595244,
+          -85.12896338912536
+        ],
+        [
+          32.83442472481112,
+          -85.12753599280599
+        ],
+        [
+          32.86046834635813,
+          -85.1261075919092
+        ],
+        [
+          32.86967947610163,
+          -85.12246653830748
+        ],
+        [
+          32.87887684716347,
+          -85.11882536884002
+        ],
+        [
+          32.90486091801739,
+          -85.1173952623097
+        ],
+        [
+          32.93082974819193,
+          -85.11596415490438
+        ],
+        [
+          32.93996925253545,
+          -85.11232217058922
+        ],
+        [
+          32.965900806420315,
+          -85.11088971499721
+        ],
+        [
+          32.99181714569294,
+          -85.10945626125837
+        ],
+        [
+          33.01771827314397,
+          -85.10802181025616
+        ],
+        [
+          33.04360419158564,
+          -85.10658636287361
+        ],
+        [
+          33.06947490385174,
+          -85.10514991999342
+        ],
+        [
+          33.09533041279749,
+          -85.10371248249777
+        ],
+        [
+          33.12117072129958,
+          -85.10227405126862
+        ],
+        [
+          33.146995832256,
+          -85.10083462718714
+        ],
+        [
+          33.17280574858608,
+          -85.09939421113442
+        ],
+        [
+          33.181734339372,
+          -85.095749018283
+        ],
+        [
+          33.19064965087621,
+          -85.09210371659053
+        ]
+      ]
+    },
+    {
+      "site_id": "V2",
+      "durum": "TAMAM",
+      "hedef_satir_sutun": [
+        96,
+        12
+      ],
+      "hedef_lon_lat": [
+        27.890723191330437,
+        -85.50173895783077
+      ],
+      "ozet": {
+        "baslangic_zamani_utc": "2026-11-27 00:00",
+        "rota_uzunluk_m": 1905.3,
+        "rota_maks_egim_deg": 10.7,
+        "gidis_suresi_saat": 7.27,
+        "soc_baslangic_pct": 100.0,
+        "soc_varis_pct": 68.1,
+        "golgede_kalis_saat": 2.23,
+        "donus_icin_yeterli_enerji": true,
+        "soc_donus_basinda_pct": 43.4,
+        "soc_baslangica_varis_pct": 10.6,
+        "gorev_boyunca_min_soc_pct": 10.2,
+        "soc_min_ihlali": false,
+        "sarj_suresi_saat_(donustan_%100'e)": 23.1,
+        "analitik_golgede_dayanma_operasyon_saat": 8.1,
+        "analitik_golgede_dayanma_hibernasyon_saat": 45.2,
+        "tur": 1
+      },
+      "rota_lon_lat": [
+        [
+          27.431075567836555,
+          -85.45530241867542
+        ],
+        [
+          27.475906686892955,
+          -85.45642547884796
+        ],
+        [
+          27.52075996952358,
+          -85.4575457597237
+        ],
+        [
+          27.53613615764366,
+          -85.45988162155287
+        ],
+        [
+          27.551528191298548,
+          -85.4622171601834
+        ],
+        [
+          27.566936092769605,
+          -85.46455237510602
+        ],
+        [
+          27.58235988437499,
+          -85.4668872658108
+        ],
+        [
+          27.597799588469694,
+          -85.46922183178637
+        ],
+        [
+          27.61325522744561,
+          -85.4715560725208
+        ],
+        [
+          27.62872682373162,
+          -85.47388998750091
+        ],
+        [
+          27.64421439979361,
+          -85.47622357621275
+        ],
+        [
+          27.65971797813458,
+          -85.47855683814122
+        ],
+        [
+          27.675237581294667,
+          -85.48088977277018
+        ],
+        [
+          27.690773231851225,
+          -85.48322237958271
+        ],
+        [
+          27.706324952418885,
+          -85.4855546580608
+        ],
+        [
+          27.72189276564962,
+          -85.48788660768547
+        ],
+        [
+          27.737476694232797,
+          -85.49021822793661
+        ],
+        [
+          27.753076760895244,
+          -85.49254951829336
+        ],
+        [
+          27.768692988401316,
+          -85.4948804782336
+        ],
+        [
+          27.814001845323688,
+          -85.49598260494216
+        ],
+        [
+          27.829661562693083,
+          -85.49831226392602
+        ],
+        [
+          27.845337512055252,
+          -85.50064159035249
+        ],
+        [
+          27.890723191330437,
+          -85.50173895783077
+        ]
+      ]
+    }
+  ],
+  "genel_harita_png": "C:\\Users\\user\\AppData\\Local\\Programs\\Microsoft VS Code\\cikti_arayuz\\genel_harita.png",
+  "istatistik": {
+    "aday_sayisi": 1521,
+    "sert_sinir_asan_aday": 937,
+    "zaman_ornek_sayisi": 120,
+    "pencere_gun": 30.0,
+    "adim_saat": 6.0,
+    "grid_piksel_m": 80.0,
+    "grid_boyut": [
+      250,
+      250
+    ]
+  },
+  "veri_kaynaklari": {
+    "dem": "cikti_arayuz\\dem_v2_+31.62_-85.42_10km.tif",
+    "yatay_cozunurluk_m": 20.0,
+    "gunes_dunya": "NASA/JPL SPICE (DE440, MOON_ME)",
+    "pururluk": "LOLA DEM'den yerel detrend std (kaya/regolit pürüzlülüğü DEĞİL)",
+    "kayalik": "Kaya (rock) haritası kullanılmadı"
+  },
+  "uyarilar": [
+    "LOLA 20 m DEM 0.3 m iniş pürüzlülüğünü veya <5 m kayaları ölçemez; sonuçlar ön eleme niteliğindedir.",
+    "Dünya görünürlüğü fiziksel görüş hattıdır; RF link bütçesi/istasyon erişimi dahil değildir.",
+    "ROI dışındaki arazi gölge/görüş hesabına katılmadı.",
+    "Kaya, termal ve ShadowCam/PSR maskeleri bu sürümde yok (veri bulunmadığı için UNKNOWN)."
+  ]
+}

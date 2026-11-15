@@ -1,0 +1,22 @@
+{
+  "turlar": [
+    {
+      "baslangic_zamani_utc": "2026-11-21 19:00",
+      "rota_uzunluk_m": 1924.0,
+      "rota_maks_egim_deg": 14.8,
+      "gidis_suresi_saat": 8.31,
+      "soc_baslangic_pct": 100.0,
+      "soc_varis_pct": 87.2,
+      "golgede_kalis_saat": 5.76,
+      "donus_icin_yeterli_enerji": true,
+      "soc_donus_basinda_pct": 23.5,
+      "soc_baslangica_varis_pct": 11.6,
+      "gorev_boyunca_min_soc_pct": 10.0,
+      "soc_min_ihlali": false,
+      "sarj_suresi_saat_(donustan_%100'e)": 22.8,
+      "analitik_golgede_dayanma_operasyon_saat": 8.1,
+      "analitik_golgede_dayanma_hibernasyon_saat": 45.2,
+      "tur": 1
+    }
+  ]
+}
