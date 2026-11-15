@@ -103,3 +103,36 @@ class MissionStatusResponse(BaseModel):
     safety_state: str
     tbd_open_count: int
     note: str
+
+
+# ---------------------------------------------------------------------------
+# Audit history (GET /history, GET /history/{run_id})
+# ---------------------------------------------------------------------------
+
+class RunSummaryResponse(BaseModel):
+    run_id: str
+    timestamp: str
+    mode: str
+    recommendation: Optional[str]
+    total_candidates: int
+    passed_hc: int
+    rejected_hc: int
+
+
+class RankedEntryResponse(BaseModel):
+    rank: int
+    candidate_id: str
+    total_score: float
+
+
+class RunDetailResponse(BaseModel):
+    run_id: str
+    timestamp: str
+    mode: str
+    recommendation: Optional[str]
+    total_candidates: int
+    passed_hc: int
+    rejected_hc: int
+    crater_ids: List[str]
+    weights: dict
+    ranked: List[RankedEntryResponse]

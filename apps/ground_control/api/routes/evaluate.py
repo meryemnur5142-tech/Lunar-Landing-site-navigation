@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 
 from ..schemas import EvaluateRequest, EvaluateResponse
-from .candidates import _run_and_format
+from .candidates import _run_and_format, _try_log_run
 from domain.crater.models import CraterRecord, DataProductMetadata, LandingSiteCandidate
 from domain.mission.models import ScoringWeights
 from luna_ai.pipeline import run_pipeline
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["Evaluate"])
 
@@ -73,4 +76,14 @@ def evaluate_candidates(body: EvaluateRequest):
         )
 
     result = run_pipeline(candidates, weights=weights)
+
+    weights_dict = {
+        "science": body.weights.science if body.weights else 0.35,
+        "energy": body.weights.energy if body.weights else 0.25,
+        "thermal": body.weights.thermal if body.weights else 0.15,
+        "communication": body.weights.communication if body.weights else 0.10,
+        "risk": body.weights.risk if body.weights else 0.15,
+    }
+    _try_log_run(result, mode="user", weights_dict=weights_dict)
+
     return _run_and_format(result)

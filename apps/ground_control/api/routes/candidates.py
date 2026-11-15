@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter
 
 from ..schemas import (
@@ -17,13 +19,36 @@ from luna_ai.pipeline import run_pipeline
 from luna_ai.sample_data import CANDIDATES
 from mission_intelligence.constraints.hard_constraints import HardConstraintEvaluator
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/v1", tags=["Candidates"])
+
+# Default weights dict for the demo pipeline (mirrors luna_ai.pipeline._DEFAULT_WEIGHTS)
+_DEMO_WEIGHTS_DICT = {
+    "science": 0.35,
+    "energy": 0.25,
+    "thermal": 0.15,
+    "communication": 0.10,
+    "risk": 0.15,
+}
 
 
 @router.get("/candidates", response_model=EvaluateResponse)
 def list_candidates():
     """Run the evaluation pipeline on the built-in estimated candidates."""
-    return _run_and_format(run_pipeline(CANDIDATES))
+    result = run_pipeline(CANDIDATES)
+    _try_log_run(result, mode="demo", weights_dict=_DEMO_WEIGHTS_DICT)
+    return _run_and_format(result)
+
+
+def _try_log_run(result, mode: str, weights_dict: dict) -> None:
+    """Log a pipeline run to the audit store; swallow any errors so endpoint stays up."""
+    try:
+        from data_platform.persistence.audit_store import SQLiteAuditStore  # noqa: PLC0415
+        store = SQLiteAuditStore()
+        store.log_run(result, mode=mode, weights_dict=weights_dict)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("audit_store: failed to log run — %s", exc)
 
 
 @router.get("/constraints", response_model=list[ConstraintResponse])

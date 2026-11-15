@@ -30,7 +30,7 @@ Thumbs.db
 *.bc
 *.ck
 *.spk
-data/raw/
+data/
 *.tif
 *.tiff
 *.img
