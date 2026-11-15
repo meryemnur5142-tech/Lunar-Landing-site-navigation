@@ -1,0 +1,10 @@
+{
+  "type": "FeatureCollection",
+  "name": "landing_candidates_unverified",
+  "features": [],
+  "metadata": {
+    "is_real_data": false,
+    "status": "CANDIDATES_REQUIRE_DEM_ANALYSIS",
+    "warning": "Rastgele koordinat oluşturulmadı; API analiz sonrası nokta üretir."
+  }
+}

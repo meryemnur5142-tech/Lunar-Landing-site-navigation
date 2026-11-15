@@ -1,0 +1,10 @@
+{
+  "type": "FeatureCollection",
+  "name": "shadowcam_psr_unavailable",
+  "features": [],
+  "metadata": {
+    "is_real_data": false,
+    "status": "NO_PSR_POLYGONS_LOADED",
+    "warning": "GeoJSON boş. Bu dosyayı gerçek ShadowCam PSR veri seti olarak yayınlamayın."
+  }
+}

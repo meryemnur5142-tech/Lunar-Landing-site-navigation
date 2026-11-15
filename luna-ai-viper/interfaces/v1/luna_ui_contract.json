@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "backend": "luna-ai-viper/ay_api.py (runs in Python)",
+  "producer": "luna-ai-viper/run_integration.py",
+  "production_requirements": [
+    "real NASA LOLA elevation DEM",
+    "SPICE DE440 kernels",
+    "complete P-CRIT model validation"
+  ],
+  "routes": {
+    "GET /api/status": "data readiness summary",
+    "GET /api/result": "last normalized result; 404 before run",
+    "POST /api/analyze": "json body {\"mode\":\"demo\" or \"real\", \"utc\":\"...\" optional}"
+  },
+  "required_output_fields": [
+    "schema_version",
+    "mode",
+    "is_synthetic",
+    "can_claim_safe_landing",
+    "source_data_ready",
+    "missing_requirements",
+    "sites",
+    "environment",
+    "rover_reference",
+    "raw_result",
+    "assets"
+  ],
+  "site_fields": [
+    "id",
+    "kind",
+    "longitude_deg_east",
+    "latitude_deg",
+    "efficiency_pct",
+    "risk_pct",
+    "constraints_violated",
+    "criteria",
+    "warnings",
+    "image_relative_path"
+  ],
+  "asset_rule": "Relative image paths from generated folder; server GET /assets/{filename} handles .png",
+  "important": "Synthetic score and preliminary scientific rank are NOT certified real landing safety, even if percentage displayed."
+}

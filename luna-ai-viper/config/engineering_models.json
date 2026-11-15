@@ -1,0 +1,76 @@
+{
+  "mobility": {
+    "speed_ms": 0.1,
+    "drive_power_W": 300.0,
+    "derived_travel_Wh_per_m": 0.833333,
+    "derived_not_measured": true,
+    "max_route_slope_deg": 15.0,
+    "max_landing_slope_deg": 15.0,
+    "ellipse_semiaxis_m": [
+      500,
+      250
+    ]
+  },
+  "battery": {
+    "capacity_Wh": 5420.0,
+    "chemistry": null,
+    "max_safe_soc": null,
+    "min_soc_assumption": 0.1,
+    "entry_psr_min_soc_assumption": 0.85
+  },
+  "solar": {
+    "single_face_peak_W": 320.0,
+    "total_nominal_W": null,
+    "panel_normal_el_deg_assumption": 0.0
+  },
+  "thermal": {
+    "heater_power_W": null,
+    "thermal_mass_J_K": null,
+    "conductance_W_K": null,
+    "max_darkness_survival_min": null,
+    "component_operating_limits_C_unvalidated": {
+      "battery": [
+        0,
+        45
+      ],
+      "avionics": [
+        -40,
+        60
+      ]
+    },
+    "thermal_margin_min_C_requirement": 5
+  },
+  "navigation": {
+    "lidar": null,
+    "stereo_camera": null,
+    "imu_gyro_bias_deg_hr": null,
+    "imu_accel_noise_ms2": null,
+    "odometry_slip_fraction": null,
+    "handover_uncertainty_m": null,
+    "mast_height_measured_m": null,
+    "mast_height_cli_default_m": 2.0
+  },
+  "communications": {
+    "earth_min_el_deg": 5.0,
+    "antenna_type": null,
+    "antenna_gain_dbi": null,
+    "link_timeout_warning_min": 15,
+    "link_timeout_abort_min": 60,
+    "rf_link_available": null
+  },
+  "hard_constraints": {
+    "max_rock_fraction": 0.2,
+    "max_landing_rms_m": 0.3,
+    "max_terrain_slope_deg": 15,
+    "landing_rms_and_rock_not_evaluated": true
+  },
+  "energy_reserve": {
+    "formula": "return_distance_m * measured_Wh_per_m + heater_W * dark_hours + margin_Wh",
+    "measured_Wh_per_m": null,
+    "heater_W": null,
+    "margin_Wh": null,
+    "result_Wh": null,
+    "is_safety_certified": false
+  },
+  "provenance": "mixed: [K] VIPER literature as annotated in source code; [V] team assumptions; document-only requirements are not verified hardware specifications."
+}

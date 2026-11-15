@@ -1,0 +1,76 @@
+metadata:
+  purpose: REVIEW_ONLY_NOT_APPLIED
+  target: domain/mission/constraints/hard_constraints_catalog.yaml
+  warning: Bu dosyayı mevcut katalogun üzerine kopyalama. Mevcut HC alanlarına inceleme
+    ve merge sonrası aktar.
+proposals:
+- id: HC-001
+  parameter: landing_max_slope_deg
+  threshold: 15.0
+  unit: deg
+  state: belge_esigi
+  implemented: api_eğim_p95; tum elips hücre kontrolü yok
+- id: HC-002
+  parameter: landing_rms_roughness_m
+  threshold: 0.3
+  unit: m
+  state: belge_esigi
+  implemented: false
+  warning: kod 100m std/10m skor üst sınırını kullanıyor, aynı metrik değil
+- id: HC-003
+  parameter: rock_fraction
+  threshold: 0.2
+  unit: ratio
+  state: belge_esigi
+  implemented: false
+- id: HC-005
+  parameter: rover_max_climb_deg
+  threshold: null
+  target_range:
+  - 20
+  - 30
+  unit: deg
+  state: kararsiz
+  warning: kod varsayımı 15deg; ihtiyac belgesi 20–30deg; araç doğrulaması lazım
+- id: HC-006
+  parameter: return_energy_reserve_Wh
+  threshold: null
+  formula: D_return_m * e_travel_Wh_m + P_heater_W * t_dark_h + margin_Wh
+  state: eksik_fiziksel_girdi
+- id: HC-007
+  parameter: thermal_survivability
+  threshold: null
+  state: eksik_termal_model
+- id: HC-008
+  parameter: psr_entry_soc_fraction
+  threshold: 0.85
+  unit: fraction
+  state: takim_varsayimi
+- id: HC-009
+  parameter: solar_panel_W
+  threshold: null
+  reference_single_face_peak_W: 320
+  state: toplam_sistem_gucu_bilinmiyor
+- id: HC-010
+  parameter: max_darkness_survival_min
+  threshold: null
+  target_range_min:
+  - 30
+  - 120
+  state: termal_hesap_yok
+- id: HC-013
+  parameter: surface_temperature_K
+  threshold: null
+  state: diviner_raster_yok
+- id: HC-014
+  parameter: earth_min_elevation_deg
+  threshold: 5.0
+  unit: deg
+  state: geometrik_gorus_esigi
+  warning: RF link garantisi değil
+- id: HC-018
+  parameter: earth_min_elevation_deg
+  threshold: 5.0
+  unit: deg
+  state: belge_gorus_esigi
+  warning: Doğrulama ve mevcut repo kataloğuna uyarlama gerekli
