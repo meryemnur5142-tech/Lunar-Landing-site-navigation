@@ -6,7 +6,7 @@ export const coord=(lat,lon)=>`${Math.abs(lat).toFixed(2)}°${lat<0?'S':'N'} / $
 export function CraterInformation(crater,zones){
  const image=document.querySelector('.crater-image img');image.src=crater.id==='tycho'?'assets/tycho-detail.png':'assets/moon-color.jpg';image.alt=crater.id==='tycho'?'LROC mosaic of Tycho crater':'NASA global lunar mosaic for regional context';document.querySelector('.crater-image>span').textContent=crater.id==='tycho'?'TYCHO / LROC WAC MOSAIC':'GLOBAL MOSAIC / CONTEXT';
  $('sector').textContent=crater.region;$('sceneTitle').textContent=crater.name;$('sceneCoordinates').textContent=coord(crater.lat,crater.lon);
- $('craterInfo').innerHTML=`<dt>Diameter</dt><dd>~${crater.diameter} km</dd><dt>Depth</dt><dd>~${crater.depth} km</dd><dt>Latitude</dt><dd>${crater.lat.toFixed(2)}°</dd><dt>Longitude</dt><dd>${crater.lon.toFixed(2)}°</dd>`;
+ $('craterInfo').innerHTML=`<dt>${crater.kind==='lola'?'Tile width':crater.kind==='team'?'ROI width':'Diameter'}</dt><dd>~${crater.diameter} km</dd><dt>${crater.depthLabel||(crater.kind==='lola'?'Mean elevation':crater.kind==='massif'?'Height':'Depth')}</dt><dd>${crater.depthText||`~${crater.depth} km`}</dd><dt>Latitude</dt><dd>${crater.lat.toFixed(2)}°</dd><dt>Longitude</dt><dd>${crater.lon.toFixed(2)}°</dd>`;
  $('craterInfo').title=crater.description;
  const mean=zones.reduce((s,z)=>s+z.total,0)/zones.length;$('regionalScore').textContent=mean.toFixed(1);$('gaugeArc').style.strokeDasharray=`${mean} 100`;
 }
@@ -25,9 +25,9 @@ export function LandingZoneList(zones,selected,onSelect){
   </button>`;
  };
  $('zoneList').innerHTML=
-  `<div class="zone-section-header">▲ EN VERİMLİ BÖLGELER</div>`+
+  `<div class="zone-section-header">▲ MOST EFFICIENT ZONES</div>`+
   efficient.map(z=>row(z,false)).join('')+
-  `<div class="zone-section-header risky-header">▼ EN RİSKLİ BÖLGELER</div>`+
+  `<div class="zone-section-header risky-header">▼ HIGHEST-RISK ZONES</div>`+
   risky.map(z=>row(z,true)).join('');
  $('zoneList').querySelectorAll('button').forEach(b=>b.onclick=()=>onSelect(b.dataset.zone,true));
 }
@@ -41,23 +41,23 @@ export function ClusterMap(zones,selected,onSelect){
 export function LandingAnalysis(zone,onCriterion,vehicle){
  $('selectedZoneLabel').textContent=`SELECTED LANDING ZONE / ${zone.id}`;$('scoreValue').textContent=zone.total.toFixed(1);
  $('criteriaList').innerHTML=zone.contributions.map(c=>`<button class="criterion" data-criterion="${c.key}" aria-label="Explain ${c.name}"><span class="criterion-label"><span>${c.name} <small>ⓘ</small></span><b>${c.value.toFixed(0)}</b></span><span class="bar-track"><span class="bar-fill" style="width:0%"></span></span></button>`).join('');
- requestAnimationFrame(()=>{$('criteriaList').querySelectorAll('.bar-fill').forEach((el,i)=>el.style.width=`${zone.contributions[i].value}%`)});
+ requestAnimationFrame(()=>{$('criteriaList').querySelectorAll('.bar-fill').forEach((el,i)=>el.style.width=`${zone.contributions[i]?.value??0}%`)});
  $('criteriaList').querySelectorAll('button').forEach(b=>b.onclick=()=>onCriterion(b.dataset.criterion));
  // vehicle compatibility block
  const vc=$('vehicleCompat');if(!vc)return;
  const rs=riskScore(zone);
  if(!vehicle||vehicle.maxSlopeDeg==null){
-  vc.innerHTML=`<div class="vc-title">ARAÇ UYUMU — ${vehicle?vehicle.name:'—'}</div><p class="vc-note">Bu araç tipi (${vehicle?vehicle.type:'—'}) için yüzey geçiş eğim limiti tanımlı değil.</p>`;
+  vc.innerHTML=`<div class="vc-title">VEHICLE COMPATIBILITY — ${vehicle?vehicle.name:'—'}</div><p class="vc-note">This vehicle type (${vehicle?vehicle.type:'—'}) has no surface traverse slope limit defined.</p>`;
   return;
  }
  const checks=[
-  {label:'Eğim',zone:`${zone.slopeDeg.toFixed(1)}°`,limit:`Maks ${vehicle.maxSlopeDeg}°`,pass:zone.slopeDeg<=vehicle.maxSlopeDeg,margin:(vehicle.maxSlopeDeg-zone.slopeDeg).toFixed(1)+' ° marj'},
-  {label:'Kaya Örtüsü',zone:`${Math.round(zone.rockCover*100)}%`,limit:vehicle.maxRockCover!=null?`Maks ${Math.round(vehicle.maxRockCover*100)}%`:'—',pass:vehicle.maxRockCover==null||zone.rockCover<=vehicle.maxRockCover,margin:vehicle.maxRockCover!=null?`${Math.round((vehicle.maxRockCover-zone.rockCover)*100)} pp marj`:''},
-  {label:'Pürüzlülük',zone:`${zone.roughness.toFixed(2)} m`,limit:vehicle.maxRoughness!=null?`Maks ${vehicle.maxRoughness} m`:'—',pass:vehicle.maxRoughness==null||zone.roughness<=vehicle.maxRoughness,margin:vehicle.maxRoughness!=null?`${(vehicle.maxRoughness-zone.roughness).toFixed(2)} m marj`:''},
+  {label:'Slope',zone:`${zone.slopeDeg.toFixed(1)}°`,limit:`Max ${vehicle.maxSlopeDeg}°`,pass:zone.slopeDeg<=vehicle.maxSlopeDeg,margin:(vehicle.maxSlopeDeg-zone.slopeDeg).toFixed(1)+' ° margin'},
+  {label:'Rock Cover',zone:zone.rockCover==null?'no data':`${Math.round(zone.rockCover*100)}%`,limit:vehicle.maxRockCover!=null?`Max ${Math.round(vehicle.maxRockCover*100)}%`:'—',pass:vehicle.maxRockCover==null||zone.rockCover==null||zone.rockCover<=vehicle.maxRockCover,margin:vehicle.maxRockCover!=null&&zone.rockCover!=null?`${Math.round((vehicle.maxRockCover-zone.rockCover)*100)} pp margin`:''},
+  {label:'Roughness',zone:`${zone.roughness.toFixed(2)} m`,limit:vehicle.maxRoughness!=null?`Max ${vehicle.maxRoughness} m`:'—',pass:vehicle.maxRoughness==null||zone.roughness<=vehicle.maxRoughness,margin:vehicle.maxRoughness!=null?`${(vehicle.maxRoughness-zone.roughness).toFixed(2)} m margin`:''},
  ];
  const rCol=rs>=60?'#ff4455':rs>=35?'#ff9140':'#60ead5';
- vc.innerHTML=`<div class="vc-title">ARAÇ UYUMU — ${vehicle.name}</div>
-  <div class="vc-risk-line"><span>Bölge Risk Oranı</span><span style="color:${rCol};font:600 13px var(--mono)">${rs}%</span></div>
+ vc.innerHTML=`<div class="vc-title">VEHICLE COMPATIBILITY — ${vehicle.name}</div>
+  <div class="vc-risk-line"><span>Zone Risk Rate</span><span style="color:${rCol};font:600 13px var(--mono)">${rs}%</span></div>
   ${checks.map(c=>`<div class="vc-row">
    <span class="vc-label">${c.label}</span>
    <span class="vc-zone">${c.zone}</span>
@@ -71,18 +71,18 @@ export function TerrainProfile(zone){
  const profile=profileFor(zone),base=Math.min(...profile.points.map(p=>p.z));const coords=profile.points.map(p=>[35+p.x/200*550,110-(p.z-base)/(profile.range||1)*85]);
  const path=coords.map(([x,y],i)=>`${i?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');const mid=coords[40];
  $('terrainChart').innerHTML=`<defs><linearGradient id="profileFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#0d9be5" stop-opacity=".4"/><stop offset="1" stop-color="#0d9be5" stop-opacity="0"/></linearGradient></defs>${[25,55,85,115].map(y=>`<path d="M35 ${y}H590" stroke="#15364b" stroke-dasharray="3 5"/>`).join('')}<text x="0" y="25" fill="#5b839d" font-size="8">${profile.range.toFixed(1)}m</text><text x="3" y="113" fill="#5b839d" font-size="8">0m</text><path d="${path} L585,120 L35,120 Z" fill="url(#profileFill)"/><path d="${path}" fill="none" stroke="#3cceff" stroke-width="1.7"/><path d="M${mid[0]} 12V120" stroke="#68efca" stroke-dasharray="3 4" opacity=".6"/><circle cx="${mid[0]}" cy="${mid[1]}" r="4" fill="#68efca"/><text x="${mid[0]+8}" y="15" fill="#68efca" font-size="8">TOUCHDOWN / ZONE ${zone.id}</text>`;
- $('profileZone').textContent=`ZONE ${zone.id}`;$('profileStats').innerHTML=`<div><small>MEAN SLOPE</small><strong>${profile.slope.toFixed(1)}<span>°</span></strong></div><div><small>ROUGHNESS INPUT</small><strong>${profile.roughness.toFixed(2)}<span>m</span></strong></div><div><small>HEIGHT RANGE</small><strong>${profile.range.toFixed(1)}<span>m</span></strong></div>`;
+ $('profileZone').textContent=`ZONE ${zone.id}`;if($('profileSource'))$('profileSource').textContent=zone.profile?'LOLA SITE20 · 200 m E–W':zone.team?'ILLUSTRATIVE — zone outside LOLA Site20 tile':'SYNTHETIC PROFILE';$('profileStats').innerHTML=`<div><small>MEAN SLOPE</small><strong>${profile.slope.toFixed(1)}<span>°</span></strong></div><div><small>ROUGHNESS INPUT</small><strong>${profile.roughness.toFixed(2)}<span>m</span></strong></div><div><small>HEIGHT RANGE</small><strong>${profile.range.toFixed(1)}<span>m</span></strong></div>`;
 }
-const raw=zone=>({smoothness:`100 − (${zone.roughness.toFixed(3)} m × 50)`,slope:`100 − (${zone.slopeDeg.toFixed(1)}° × 5)`,rocks:`(1 − ${zone.rockCover.toFixed(2)} rock fraction) × 100`,hazards:`${zone.hazardFree.toFixed(2)} hazard-free fraction × 100`,edge:`${zone.edgeKm.toFixed(2)} km / ${zone.referenceClearance} km × 100`,stability:`Synthetic stability index: ${zone.stability}`});
+const raw=zone=>zone.team?{}:({smoothness:`100 − (${zone.roughness.toFixed(3)} m × 50)`,slope:`100 − (${zone.slopeDeg.toFixed(1)}° × 5)`,rocks:`(1 − ${zone.rockCover.toFixed(2)} rock fraction) × 100`,hazards:`${zone.hazardFree.toFixed(2)} hazard-free fraction × 100`,edge:`${zone.edgeKm.toFixed(2)} km / ${zone.referenceClearance} km × 100`,stability:`Synthetic stability index: ${zone.stability}`});
 function show(html){$('modalContent').innerHTML=html;if(!$('analysisModal').open)$('analysisModal').showModal()}
-export function CriterionModal(zone,key){const c=zone.contributions.find(c=>c.key===key);show(`<span class="micro">CRITERION EXPLAINED / ZONE ${zone.id}</span><h2>${c.name.toUpperCase()}</h2><p>${c.explanation}</p><div class="formula">${raw(zone)[key]}<br>Clamped to [0, 100] = ${c.value.toFixed(2)}<br>${c.value.toFixed(2)} × ${c.weight.toFixed(2)} = <b>${c.contribution.toFixed(2)} points</b></div><p>Weight: ${c.weight*100}% of the total suitability score.</p><div class="method-note">${sourceNote}</div>`)}
+export function CriterionModal(zone,key){const c=zone.contributions.find(c=>c.key===key);show(`<span class="micro">CRITERION EXPLAINED / ZONE ${zone.id}</span><h2>${c.name.toUpperCase()}</h2><p>${c.explanation}</p><div class="formula">${c.formula||raw(zone)[key]}<br>Clamped to [0, 100] = ${c.value.toFixed(2)}<br>${c.value.toFixed(2)} × ${c.weight.toFixed(2)} = <b>${c.contribution.toFixed(2)} points</b></div><p>Weight: ${(c.weight*100).toFixed(0)}% of the total suitability score.</p><div class="method-note">${zone.team?'Source: team pipeline (arayuz_sonuc.json) — LOLA 20 m DEM + NASA/JPL SPICE.':sourceNote}</div>`)}
 export function DetailedAnalysisModal(zone,zones,crater){
  const best=zones[0],runner=zones[1],rank=zones.findIndex(z=>z.id===zone.id)+1;
  const n=zones.length;
- const cat=rank<=2?'EN VERİMLİ':rank>=n-1?'EN RİSKLİ':'ORTA';
+ const cat=rank<=2?'MOST EFFICIENT':rank>=n-1?'HIGHEST RISK':'MEDIUM';
  const catColor=rank<=2?'#60ead5':rank>=n-1?'#ff9140':'#8ab4c8';
- const verdict=rank===1?`Zone ${zone.id} tüm ${n} adaydan en yüksek skora sahip. Zone ${runner.id}'den ${(best.total-runner.total).toFixed(2)} puan üstünde.`:`Zone ${zone.id}, ${n} aday arasında ${rank}. sırada — ${cat}. Zone ${best.id}'nin ${(best.total-zone.total).toFixed(2)} puan gerisinde.`;
- show(`<span class="micro">${crater.name.toUpperCase()} / DECISION SUPPORT</span><h2>DETAILED LANDING ANALYSIS</h2><div class="modal-hero"><div><h3>Selected Zone: Zone ${zone.id} <span style="font:9px var(--mono);padding:3px 7px;border:1px solid ${catColor};color:${catColor};margin-left:10px">${cat}</span></h3><p>${coord(zone.lat,zone.lon)} · Synthetic candidate</p></div><div class="modal-score">${zone.total.toFixed(2)}<small> / 100</small></div></div><div class="method-note">Landing suitability is a weighted comparative score, not an empirically calibrated probability of successful landing. ${sourceNote}</div><h3>WHY IS THIS ZONE SUITABLE?</h3><table class="contributions"><thead><tr><th>CRITERION</th><th>SCORE</th><th>WEIGHT</th><th>CONTRIBUTION</th></tr></thead><tbody>${zone.contributions.map(c=>`<tr><td>${c.name}</td><td>${c.value.toFixed(2)}</td><td>${c.weight*100}%</td><td>${c.contribution.toFixed(2)} pts</td></tr>`).join('')}<tr><td><b>TOTAL</b></td><td></td><td>100%</td><td>${zone.total.toFixed(2)} / 100</td></tr></tbody></table><div class="explanations">${zone.contributions.map(c=>`<div><h3>${c.name}</h3><p>${c.explanation}</p><p class="formula">${raw(zone)[c.key]} → ${c.value.toFixed(2)}</p></div>`).join('')}</div><div class="conclusion"><h3>COMPARATIVE RESULT</h3><p>${verdict}</p></div><h3>TÜM ADAYLAR — ${n} BÖLGE / GÖSTER: 2 VERİMLİ + 2 RİSKLİ</h3><table class="contributions"><thead><tr><th>ZONE</th><th>KATEGORİ</th><th>SCORE</th><th>SLOPE</th><th>ROUGHNESS</th></tr></thead><tbody>${zones.map((z,i)=>{const c=i<2?'VERİMLİ':i>=n-2?'RİSKLİ':'ORTA';const col=i<2?'var(--green)':i>=n-2?'#ff9140':'#8ab4c8';return`<tr style="${i>=2&&i<n-2?'opacity:.55':''}"><td>${z.id===zone.id?'▸ ':''}Zone ${z.id}</td><td style="color:${col};font:7px var(--mono)">${c}</td><td>${z.total.toFixed(2)}</td><td>${z.slopeDeg.toFixed(1)}°</td><td>${z.roughness.toFixed(2)} m</td></tr>`}).join('')}</tbody></table>`);
+ const verdict=rank===1?`Zone ${zone.id} has the highest score of all ${n} candidates, ${(best.total-runner.total).toFixed(2)} pts ahead of Zone ${runner.id}.`:`Zone ${zone.id} ranks #${rank} of ${n} candidates — ${cat}. ${(best.total-zone.total).toFixed(2)} pts behind Zone ${best.id}.`;
+ show(`<span class="micro">${crater.name.toUpperCase()} / DECISION SUPPORT</span><h2>DETAILED LANDING ANALYSIS</h2><div class="modal-hero"><div><h3>Selected Zone: Zone ${zone.id} <span style="font:9px var(--mono);padding:3px 7px;border:1px solid ${catColor};color:${catColor};margin-left:10px">${cat}</span></h3><p>${coord(zone.lat,zone.lon)} · ${zone.team?zone.teamNote:zone.profile?`NASA LOLA Site20 (5 m) · slope p95 ${zone.slopeP95}° · elev ${zone.elevationM} m · rock/stability: no data (fixed)`:'Synthetic candidate'}</p></div><div class="modal-score">${zone.total.toFixed(2)}<small> / 100</small></div></div><div class="method-note">Landing suitability is a weighted comparative score, not an empirically calibrated probability of successful landing. ${sourceNote}</div><h3>WHY IS THIS ZONE SUITABLE?</h3><table class="contributions"><thead><tr><th>CRITERION</th><th>SCORE</th><th>WEIGHT</th><th>CONTRIBUTION</th></tr></thead><tbody>${zone.contributions.map(c=>`<tr><td>${c.name}</td><td>${c.value.toFixed(2)}</td><td>${c.weight*100}%</td><td>${c.contribution.toFixed(2)} pts</td></tr>`).join('')}<tr><td><b>TOTAL</b></td><td></td><td>100%</td><td>${zone.total.toFixed(2)} / 100</td></tr></tbody></table><div class="explanations">${zone.contributions.map(c=>`<div><h3>${c.name}</h3><p>${c.explanation}</p><p class="formula">${c.formula||raw(zone)[c.key]} → ${c.value.toFixed(2)}</p></div>`).join('')}</div><div class="conclusion"><h3>COMPARATIVE RESULT</h3><p>${verdict}</p></div><h3>ALL CANDIDATES — ${n} ZONES / SHOWN: 2 EFFICIENT + 2 RISKY</h3><table class="contributions"><thead><tr><th>ZONE</th><th>CATEGORY</th><th>SCORE</th><th>SLOPE</th><th>ROUGHNESS</th></tr></thead><tbody>${zones.map((z,i)=>{const c=i<2?'EFFICIENT':i>=n-2?'RISKY':'MEDIUM';const col=i<2?'var(--green)':i>=n-2?'#ff9140':'#8ab4c8';return`<tr style="${i>=2&&i<n-2?'opacity:.55':''}"><td>${z.id===zone.id?'▸ ':''}Zone ${z.id}</td><td style="color:${col};font:7px var(--mono)">${c}</td><td>${z.total.toFixed(2)}</td><td>${z.slopeDeg.toFixed(1)}°</td><td>${z.roughness.toFixed(2)} m</td></tr>`}).join('')}</tbody></table>`);
 }
 export function VehiclePanel(selectedId,onSelect){
  const v=_vehicles.find(x=>x.id===selectedId)||_vehicles[0];
@@ -95,10 +95,10 @@ export function VehiclePanel(selectedId,onSelect){
 }
 export function ForecastPanel(zones,geom,loading,error){
  const out=$('forecastOut');if(!out)return;
- if(loading){out.innerHTML='<div class="fc-loading">JPL Horizons sorgulanıyor<span></span></div>';return;}
+ if(loading){out.innerHTML='<div class="fc-loading">Querying JPL Horizons<span></span></div>';return;}
  if(error){out.innerHTML=`<div class="fc-error">⚠ ${error}</div>`;return;}
  if(!geom){out.innerHTML='';return;}
- const display=[...zones.slice(0,2).map(z=>({...z,cat:'VERİMLİ',catCls:''})),...zones.slice(-2).map(z=>({...z,cat:'RİSKLİ',catCls:'risky'}))];
+ const display=[...zones.slice(0,2).map(z=>({...z,cat:'EFFICIENT',catCls:''})),...zones.slice(-2).map(z=>({...z,cat:'RISKY',catCls:'risky'}))];
  const row=z=>{
   const sol=solarElevDeg(z.lat,z.lon,geom);
   const ear=earthElevDeg(z.lat,z.lon,geom);
@@ -106,14 +106,14 @@ export function ForecastPanel(zones,geom,loading,error){
   const sc=lit?(opt?'#60ead5':'#d4c060'):'#ff4455';
   const ec=vis?'#60ead5':'#ff4455';
   return`<div class="fc-zone ${z.catCls}">
-   <div class="fc-zone-hd"><b>Zone ${z.id}</b><span class="fc-cat ${z.catCls}">${z.cat}</span>${lit&&vis?'<span class="fc-ok">✓ İDEAL</span>':''}</div>
-   <div class="fc-row"><span style="color:${sc}">${lit?'☀':'◑'} GÜNEŞ</span><b style="color:${sc}">${sol.toFixed(1)}°</b></div>
-   <div class="fc-row"><span style="color:${ec}">${vis?'🌐':'✗'} DÜNYA</span><b style="color:${ec}">${ear.toFixed(1)}°</b></div>
+   <div class="fc-zone-hd"><b>Zone ${z.id}</b><span class="fc-cat ${z.catCls}">${z.cat}</span>${lit&&vis?'<span class="fc-ok">✓ IDEAL</span>':''}</div>
+   <div class="fc-row"><span style="color:${sc}">${lit?'☀':'◑'} SUN</span><b style="color:${sc}">${sol.toFixed(1)}°</b></div>
+   <div class="fc-row"><span style="color:${ec}">${vis?'🌐':'✗'} EARTH</span><b style="color:${ec}">${ear.toFixed(1)}°</b></div>
   </div>`;
  };
  out.innerHTML=`<div class="fc-header">
   <span class="fc-src">◈ ${geom.source}</span>
-  <div class="fc-geo"><span>Moon: ${geom.moonEclLon.toFixed(1)}° ekl.</span><span>Subsolar: ${Math.abs(geom.subsolarLon).toFixed(0)}°${geom.subsolarLon>=0?'D':'B'} / ${Math.abs(geom.subsolarLat).toFixed(0)}°${geom.subsolarLat>=0?'K':'G'}</span></div>
+  <div class="fc-geo"><span>Moon: ${geom.moonEclLon.toFixed(1)}° ecl.</span><span>Subsolar: ${Math.abs(geom.subsolarLon).toFixed(0)}°${geom.subsolarLon>=0?'E':'W'} / ${Math.abs(geom.subsolarLat).toFixed(0)}°${geom.subsolarLat>=0?'N':'S'}</span></div>
  </div>${display.map(row).join('')}`;
 }
 export function MethodologyModal(){show(`<span class="micro">MODEL TRANSPARENCY</span><h2>DATA & METHODOLOGY</h2><div class="method-note">${sourceNote}</div><h3>Weighted multi-criteria decision analysis</h3><p>Each input is normalized to a 0–100 suitability scale. Higher is better. The total is the sum of criterion score × criterion weight. Scores are deterministic; re-running the same dataset returns the same results.</p><div class="formula">${criteria.map(c=>`${c.name} × ${c.weight.toFixed(2)}`).join('<br>+ ')}</div><p>Normalization: smoothness = 100 − roughness(m) × 50; slope = 100 − degrees × 5; rocks = (1 − rock fraction) × 100; hazards = hazard-free fraction × 100; edge clearance = clearance/reference × 100; stability = synthetic index. Each result is clamped to [0, 100]. These mappings are illustrative assumptions, not validated mission requirements.</p><h3>Visual source</h3><p>The globe uses the 4096 × 2048 LROC color mosaic and a LOLA height preview from <a href="https://svs.gsfc.nasa.gov/4720/" target="_blank" rel="noreferrer">NASA’s Scientific Visualization Studio — CGI Moon Kit</a>. Credit: NASA SVS, Ernie Wright; LROC/LOLA instrument teams. These maps are prepared for visualization. They do not resolve landing-scale obstacles.</p><h3>Limits of this demonstration</h3><p>Profiles, stability, roughness and hazard measurements are synthetic. No spacecraft dynamics, sensor errors, navigation uncertainty or validated touchdown simulations are included. Time-dependent sunlight is not computed by this model. A high score does not certify a safe landing.</p>`)}

@@ -8,7 +8,7 @@ const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=u
 
 function horizonsProxy(req,res){
   const qs=new URL(req.url,'http://localhost').search;
-  const target='https://ssd-api.jpl.nasa.gov/horizons.api'+qs;
+  const target='https://ssd.jpl.nasa.gov/api/horizons.api'+qs;
   const hdrs={'Content-Type':'application/json','Access-Control-Allow-Origin':'*','Cache-Control':'no-cache'};
   https.get(target,{headers:{'User-Agent':'LUNA-AI/1.0'}},(hr)=>{
     const chunks=[];
@@ -18,9 +18,9 @@ function horizonsProxy(req,res){
       res.writeHead(200,hdrs);
       // Wrap non-JSON responses (HTML error pages) so the browser gets a clean error message
       try{JSON.parse(body);res.end(body);}
-      catch{res.end(JSON.stringify({error:`NASA Horizons HTML yanıtı (${hr.statusCode}): ${body.slice(0,300)}`}));}
+      catch{res.end(JSON.stringify({error:`NASA Horizons HTML response (${hr.statusCode}): ${body.slice(0,300)}`}));}
     });
-  }).on('error',e=>{res.writeHead(200,hdrs);res.end(JSON.stringify({error:`NASA bağlantı hatası: ${e.message}`}));});
+  }).on('error',e=>{res.writeHead(200,hdrs);res.end(JSON.stringify({error:`NASA connection error: ${e.message}`}));});
 }
 
 http.createServer((req,res)=>{
@@ -32,4 +32,4 @@ http.createServer((req,res)=>{
     res.writeHead(200,{'Content-Type':mime[path.extname(target)]||'application/octet-stream','Cache-Control':'no-cache'});
     fs.createReadStream(target).pipe(res);
   }catch{res.writeHead(400);res.end('Bad request');}
-}).listen(5173,'127.0.0.1',()=>console.log('Local: http://127.0.0.1:5173'));
+}).listen(process.env.PORT||5173,'127.0.0.1',()=>console.log('Local: http://127.0.0.1:'+(process.env.PORT||5173)));

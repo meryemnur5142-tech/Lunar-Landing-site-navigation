@@ -62,7 +62,7 @@ def list_constraints():
             ConstraintResponse(
                 constraint_id=hc.constraint_id,
                 name=hc.name,
-                description=hc.description,
+                description=f"{hc.parameter} {hc.operator} {hc.threshold:g} {hc.unit} (source: {hc.source})",
                 threshold=hc.threshold,
                 unit=hc.unit,
                 operator=hc.operator,

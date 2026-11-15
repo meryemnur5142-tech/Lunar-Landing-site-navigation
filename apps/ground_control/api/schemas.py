@@ -171,8 +171,8 @@ class CompareRequest(BaseModel):
     weights_b: ScoringWeightsInput = ScoringWeightsInput(
         science=0.20, energy=0.20, thermal=0.20, communication=0.10, risk=0.30
     )
-    label_a: str = "Bilim Odakli"
-    label_b: str = "Guvenlik Odakli"
+    label_a: str = "Bilim Odaklı"
+    label_b: str = "Güvenlik Odaklı"
 
 
 class CompareResponse(BaseModel):

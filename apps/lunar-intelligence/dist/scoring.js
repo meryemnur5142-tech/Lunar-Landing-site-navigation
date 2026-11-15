@@ -1,6 +1,7 @@
 import {criteria} from './data.js';
 const clamp=v=>Math.min(100,Math.max(0,v));
 export function scoreZone(zone){
+ if(zone.team)return {...zone,scores:{},contributions:zone.teamContributions,total:zone.teamTotal};
  const values=[zone.roughness,zone.slopeDeg,zone.rockCover,zone.hazardFree,zone.edgeKm,zone.referenceClearance,zone.stability];
  if(values.some(v=>!Number.isFinite(v))||zone.referenceClearance<=0)throw new Error('Finite inputs and positive reference clearance are required.');
  const scores={smoothness:clamp(100-zone.roughness*50),slope:clamp(100-zone.slopeDeg*5),rocks:clamp((1-zone.rockCover)*100),hazards:clamp(zone.hazardFree*100),edge:clamp(zone.edgeKm/zone.referenceClearance*100),stability:clamp(zone.stability)};
@@ -9,10 +10,11 @@ export function scoreZone(zone){
 }
 export function rankZones(zones){return zones.map(scoreZone).sort((a,b)=>b.total-a.total)}
 export function riskScore(zone){
+ if(zone.team)return Math.round(zone.teamRisk);
  const slopeRisk=Math.min(1,zone.slopeDeg/15);
  const rockRisk=Math.min(1,zone.rockCover/0.20);
  const roughRisk=Math.min(1,zone.roughness/0.30);
  const hazardRisk=1-zone.hazardFree;
  return Math.round((slopeRisk*0.40+rockRisk*0.25+roughRisk*0.20+hazardRisk*0.15)*100);
 }
-export function profileFor(zone){const points=Array.from({length:81},(_,i)=>{const x=i*2.5;return {x,z:Math.tan(zone.slopeDeg*Math.PI/180)*x+zone.roughness*(Math.sin(i*.9+zone.profileSeed)*1.4+Math.sin(i*.29+zone.profileSeed))}});const elevations=points.map(p=>p.z);return {points,range:Math.max(...elevations)-Math.min(...elevations),slope:zone.slopeDeg,roughness:zone.roughness}}
+export function profileFor(zone){if(zone.profile){const points=zone.profile.map((z,i)=>({x:i*2.5,z}));const el=zone.profile;return {points,range:Math.max(...el)-Math.min(...el),slope:zone.slopeDeg,roughness:zone.roughness}}const points=Array.from({length:81},(_,i)=>{const x=i*2.5;return {x,z:Math.tan(zone.slopeDeg*Math.PI/180)*x+zone.roughness*(Math.sin(i*.9+zone.profileSeed)*1.4+Math.sin(i*.29+zone.profileSeed))}});const elevations=points.map(p=>p.z);return {points,range:Math.max(...elevations)-Math.min(...elevations),slope:zone.slopeDeg,roughness:zone.roughness}}
