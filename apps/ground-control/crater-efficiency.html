@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -67,12 +67,31 @@ header{
 }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+/* ── TAB ROW ──────────────────────────────────── */
+.tab-row{
+  display:flex;gap:0;
+  background:linear-gradient(90deg,#060e1c,#09132a);
+  border-bottom:1px solid var(--border-hi);
+  padding:0 1.25rem;
+}
+.tab-btn{
+  background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--text-dim);font-family:inherit;font-size:.72rem;
+  letter-spacing:.08em;padding:.55rem 1rem;cursor:pointer;
+  transition:all .15s;
+}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{
+  color:var(--accent);
+  border-bottom-color:var(--accent);
+}
+
 /* ── LAYOUT ──────────────────────────────────── */
 .app{
   display:grid;
   grid-template-columns:230px 1fr;
   grid-template-rows:auto 1fr auto;
-  min-height:calc(100vh - 46px);
+  min-height:calc(100vh - 46px - 36px);
 }
 
 /* ── CRATER SIDEBAR ──────────────────────────── */
@@ -271,6 +290,115 @@ header{
 ::-webkit-scrollbar-track{background:#060b18;}
 ::-webkit-scrollbar-thumb{background:#1a3045;border-radius:3px;}
 
+/* ── COMPARISON VIEW ─────────────────────────── */
+#view-compare{
+  padding:1.25rem;
+  min-height:calc(100vh - 82px);
+}
+
+.cmp-weights-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+@media(max-width:700px){.cmp-weights-row{grid-template-columns:1fr;}}
+
+.cmp-weight-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;padding:1rem;
+}
+.cmp-weight-title{
+  font-size:.7rem;font-weight:700;letter-spacing:.1em;color:var(--accent);
+  margin-bottom:.75rem;border-bottom:1px solid var(--border);padding-bottom:.5rem;
+}
+.cmp-weight-title input{
+  background:none;border:none;color:var(--accent);
+  font-family:inherit;font-size:.7rem;font-weight:700;letter-spacing:.1em;
+  width:140px;outline:none;
+}
+.cmp-weight-title input:focus{border-bottom:1px solid var(--accent2);}
+
+.cmp-input-row{
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;
+}
+.cmp-input-row label{
+  font-size:.65rem;color:var(--text-dim);width:80px;flex-shrink:0;
+}
+.cmp-input-row input[type=number]{
+  width:70px;background:rgba(0,212,255,.05);
+  border:1px solid var(--border-hi);border-radius:3px;
+  color:var(--text);font-family:inherit;font-size:.75rem;
+  padding:.2rem .4rem;outline:none;text-align:right;
+  -moz-appearance:textfield;
+}
+.cmp-input-row input[type=number]:focus{border-color:var(--accent2);}
+.cmp-input-row input[type=number]::-webkit-inner-spin-button,
+.cmp-input-row input[type=number]::-webkit-outer-spin-button{opacity:.4;}
+
+.cmp-sum{
+  font-size:.62rem;margin-top:.6rem;
+  padding:.25rem .5rem;border-radius:3px;
+  border:1px solid var(--border);
+  display:inline-block;
+}
+.cmp-sum.valid{color:var(--green);border-color:rgba(0,232,122,.3);}
+.cmp-sum.invalid{color:var(--red);border-color:rgba(255,68,85,.3);}
+
+.cmp-run-btn{
+  display:block;margin:1rem 0;
+  background:linear-gradient(135deg,rgba(0,136,204,.25),rgba(0,212,255,.12));
+  border:1px solid var(--accent2);color:var(--accent);
+  font-family:inherit;font-size:.8rem;letter-spacing:.1em;
+  padding:.6rem 2rem;border-radius:4px;cursor:pointer;
+  transition:all .2s;
+}
+.cmp-run-btn:hover{background:rgba(0,136,204,.35);box-shadow:0 0 10px var(--glow);}
+.cmp-run-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* comparison results table */
+.cmp-results{margin-top:.75rem;}
+.cmp-table{
+  width:100%;border-collapse:collapse;font-size:.72rem;
+}
+.cmp-table th{
+  text-align:left;padding:.45rem .75rem;
+  font-size:.6rem;letter-spacing:.12em;color:var(--text-dim);
+  border-bottom:1px solid var(--border-hi);text-transform:uppercase;
+}
+.cmp-table td{
+  padding:.5rem .75rem;border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+.cmp-table tr:last-child td{border-bottom:none;}
+.cmp-table tr:hover td{background:var(--bg-hover);}
+.cmp-table tr.top-changed td{background:rgba(167,139,250,.06);}
+.cmp-table tr.top-changed td:first-child{border-left:2px solid var(--purple);}
+
+.dir-up{color:var(--green);font-weight:700;}
+.dir-down{color:var(--red);font-weight:700;}
+.dir-same{color:var(--text-muted);}
+
+.rank-badge{
+  display:inline-block;
+  min-width:1.4rem;text-align:center;
+  font-weight:700;padding:.05rem .3rem;border-radius:3px;
+}
+.rank-1{background:rgba(0,232,122,.15);color:var(--green);}
+.rank-2{background:rgba(0,136,204,.12);color:var(--accent);}
+.rank-other{background:rgba(255,255,255,.04);color:var(--text-dim);}
+
+.top-changed-banner{
+  display:none;
+  margin-bottom:.75rem;
+  padding:.5rem 1rem;background:rgba(167,139,250,.1);
+  border:1px solid rgba(167,139,250,.3);border-radius:4px;
+  font-size:.72rem;color:var(--purple);
+}
+.top-changed-banner.visible{display:block;}
+
+.cmp-score{font-size:.65rem;color:var(--text-dim);}
+
 /* responsive */
 @media(max-width:600px){
   .app{grid-template-columns:1fr;}
@@ -287,6 +415,13 @@ header{
   <div class="mission-badge"><span class="status-dot"></span>LUNA-M1 · 2026-11</div>
 </header>
 
+<nav class="tab-row">
+  <button class="tab-btn active" id="tab-eff" onclick="switchTab('eff')">🌑 İniş Verimliliği</button>
+  <button class="tab-btn" id="tab-cmp" onclick="switchTab('cmp')">⚖ Senaryo Karşılaştırması</button>
+</nav>
+
+<!-- ── EFFICIENCY VIEW ─────────────────────────────── -->
+<div id="view-eff">
 <div class="app">
 
   <!-- sidebar -->
@@ -337,10 +472,93 @@ header{
   </div>
 
 </div>
+</div>
+
+<!-- ── COMPARISON VIEW ─────────────────────────────── -->
+<div id="view-compare" style="display:none">
+
+  <div class="section-heading" style="margin-bottom:1rem">Senaryo Ağırlık Editörü</div>
+
+  <div class="cmp-weights-row">
+
+    <!-- Scenario A -->
+    <div class="cmp-weight-card">
+      <div class="cmp-weight-title">
+        Senaryo A — <input type="text" id="label-a" value="Bilim Odaklı">
+      </div>
+      <div class="cmp-input-row"><label>Bilim</label>
+        <input type="number" id="wa-science" step="0.05" min="0" max="1" value="0.50" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-input-row"><label>Enerji</label>
+        <input type="number" id="wa-energy" step="0.05" min="0" max="1" value="0.20" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-input-row"><label>Termal</label>
+        <input type="number" id="wa-thermal" step="0.05" min="0" max="1" value="0.10" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-input-row"><label>İletişim</label>
+        <input type="number" id="wa-comm" step="0.05" min="0" max="1" value="0.10" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-input-row"><label>Risk</label>
+        <input type="number" id="wa-risk" step="0.05" min="0" max="1" value="0.10" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-sum valid" id="sum-a">Toplam: 1.00 ✓</div>
+    </div>
+
+    <!-- Scenario B -->
+    <div class="cmp-weight-card">
+      <div class="cmp-weight-title">
+        Senaryo B — <input type="text" id="label-b" value="Güvenlik Odaklı">
+      </div>
+      <div class="cmp-input-row"><label>Bilim</label>
+        <input type="number" id="wb-science" step="0.05" min="0" max="1" value="0.20" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-input-row"><label>Enerji</label>
+        <input type="number" id="wb-energy" step="0.05" min="0" max="1" value="0.20" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-input-row"><label>Termal</label>
+        <input type="number" id="wb-thermal" step="0.05" min="0" max="1" value="0.20" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-input-row"><label>İletişim</label>
+        <input type="number" id="wb-comm" step="0.05" min="0" max="1" value="0.10" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-input-row"><label>Risk</label>
+        <input type="number" id="wb-risk" step="0.05" min="0" max="1" value="0.30" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-sum valid" id="sum-b">Toplam: 1.00 ✓</div>
+    </div>
+
+  </div><!-- /cmp-weights-row -->
+
+  <button class="cmp-run-btn" id="runBtn" onclick="runComparison()">⚖ Karşılaştır</button>
+
+  <!-- Results -->
+  <div class="cmp-results" id="cmpResults" style="display:none">
+    <div class="section-heading">Sıralama Karşılaştırması</div>
+
+    <div class="top-changed-banner" id="topChangedBanner">
+      ⚠ Farklı ağırlık setleri farklı bir birinci adayı üretiyor — ağırlık seçimi kararı doğrudan etkiliyor.
+    </div>
+
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Krater</th>
+          <th>A Sırası</th>
+          <th>B Sırası</th>
+          <th>Değişim</th>
+          <th>A Skoru</th>
+          <th>B Skoru</th>
+        </tr>
+      </thead>
+      <tbody id="cmpTableBody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /view-compare -->
 
 <script>
 // ───────────────────────────────────────────────
-//  DATA
+//  DATA (efficiency view)
 // ───────────────────────────────────────────────
 const CRATERS = [
   { id:'SP-006', name:'Malapert A',    lat:-86.0,  lon:357.4, diam:15,  slope:3.5,  rough:0.12, rocks:0.05, psr:0.18, note:null },
@@ -398,7 +616,7 @@ function commLabel(deg) {
 }
 
 // ───────────────────────────────────────────────
-//  UI STATE
+//  UI STATE (efficiency view)
 // ───────────────────────────────────────────────
 let selectedCrater = null;
 let selectedWinIdx = null;
@@ -624,7 +842,7 @@ function buildExplanation(c, w, eff, winIdx, bestIdx) {
 }
 
 // ───────────────────────────────────────────────
-//  EVENTS
+//  EVENTS (efficiency view)
 // ───────────────────────────────────────────────
 function selectCrater(c) {
   selectedCrater = c;
@@ -643,9 +861,191 @@ function selectWindow(i) {
 }
 
 // ───────────────────────────────────────────────
+//  TAB SWITCHING
+// ───────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('view-eff').style.display   = (tab === 'eff') ? '' : 'none';
+  document.getElementById('view-compare').style.display = (tab === 'cmp') ? '' : 'none';
+  document.getElementById('tab-eff').classList.toggle('active', tab === 'eff');
+  document.getElementById('tab-cmp').classList.toggle('active', tab === 'cmp');
+}
+
+// ───────────────────────────────────────────────
+//  COMPARISON — WEIGHT VALIDATION
+// ───────────────────────────────────────────────
+function getWeights(prefix) {
+  return {
+    science:       parseFloat(document.getElementById(prefix + '-science').value) || 0,
+    energy:        parseFloat(document.getElementById(prefix + '-energy').value)  || 0,
+    thermal:       parseFloat(document.getElementById(prefix + '-thermal').value) || 0,
+    communication: parseFloat(document.getElementById(prefix + '-comm').value)    || 0,
+    risk:          parseFloat(document.getElementById(prefix + '-risk').value)    || 0,
+  };
+}
+
+function sumWeights(w) {
+  return w.science + w.energy + w.thermal + w.communication + w.risk;
+}
+
+function updateSum(scenario) {
+  const prefix = 'w' + scenario;
+  const w = getWeights(prefix);
+  const s = sumWeights(w);
+  const el = document.getElementById('sum-' + scenario);
+  const valid = Math.abs(s - 1.0) < 0.001;
+  el.textContent = 'Toplam: ' + s.toFixed(2) + (valid ? ' ✓' : ' ✗ (1.00 olmalı)');
+  el.className = 'cmp-sum ' + (valid ? 'valid' : 'invalid');
+  // Enable/disable run button
+  const wa = getWeights('wa');
+  const wb = getWeights('wb');
+  const bothValid = Math.abs(sumWeights(wa) - 1.0) < 0.001 && Math.abs(sumWeights(wb) - 1.0) < 0.001;
+  document.getElementById('runBtn').disabled = !bothValid;
+}
+
+// ───────────────────────────────────────────────
+//  COMPARISON — INLINE SCORING SIMULATION
+//
+//  Replicates luna_ai/mission_intelligence/scoring/scorer.py
+//  for candidates with no environmental data products (the sample data case).
+//
+//  HC thresholds (hard_constraints.py default_constraints):
+//    HC-001: slope_deg  <= 15.0
+//    HC-002: psr        >= 0.10
+//    HC-003: rock_abund <= 0.20
+//
+//  Score formulas (no env data → all env-dependent terms use fallback values):
+//    science   = min(1, psr / 0.20)       [min_required_fraction = max(0.1, 4.0*0.05)]
+//    energy    = 0.5                       [neutral, no illumination time-series]
+//    thermal   = max(0, 1 - psr)           [invert PSR; higher PSR = more dark exposure]
+//    comm      = 0.5                       [TBD, no link budget yet]
+//    risk      = ( (1 - (slope/15 + rocks + rough)/3) + 0.5 ) / 2
+//                 ↑ terrain_score                     ↑ psr_edge_risk=0.5
+// ───────────────────────────────────────────────
+
+const ALL_CANDIDATES = [
+  { id:'SP-001', name:'Shackleton',    slope:12.5, rough:0.28, rocks:0.11, psr:0.82 },
+  { id:'SP-002', name:'Haworth',       slope:7.3,  rough:0.21, rocks:0.09, psr:0.55 },
+  { id:'SP-003', name:'Nobile',        slope:9.1,  rough:0.35, rocks:0.21, psr:0.48 },
+  { id:'SP-004', name:'de Gerlache',   slope:10.8, rough:0.25, rocks:0.13, psr:0.63 },
+  { id:'SP-005', name:'Unnamed Ridge', slope:17.4, rough:0.44, rocks:0.14, psr:0.31 },
+  { id:'SP-006', name:'Malapert A',    slope:3.5,  rough:0.12, rocks:0.05, psr:0.18 },
+  { id:'SP-007', name:'Cabeus A',      slope:11.2, rough:0.38, rocks:0.16, psr:0.58 },
+];
+
+function hcPass(c) {
+  return c.slope <= 15.0 && c.psr >= 0.10 && c.rocks <= 0.20;
+}
+
+function scoreCandidate(c, w) {
+  const sciScore    = Math.min(1.0, c.psr / 0.20);
+  const energyScore = 0.5;
+  const thermalScore = Math.max(0.0, 1.0 - c.psr);
+  const commScore   = 0.5;
+  const slopeRisk   = Math.min(1.0, c.slope / 15.0);
+  const rockRisk    = c.rocks;
+  const roughRisk   = Math.min(1.0, c.rough / 1.0);
+  const terrainRisk = (slopeRisk + rockRisk + roughRisk) / 3.0;
+  const terrainScore = 1.0 - terrainRisk;
+  const riskScore   = (terrainScore + 0.5) / 2.0;
+
+  const total = w.science       * sciScore
+              + w.energy        * energyScore
+              + w.thermal       * thermalScore
+              + w.communication * commScore
+              + w.risk          * riskScore;
+
+  return {
+    total:   Math.max(0, Math.min(1, total)),
+    science: sciScore,
+    energy:  energyScore,
+    thermal: thermalScore,
+    comm:    commScore,
+    risk:    riskScore,
+  };
+}
+
+function runScenario(weights) {
+  const passed = ALL_CANDIDATES.filter(hcPass);
+  const scored = passed.map(c => ({ ...c, scores: scoreCandidate(c, weights) }));
+  scored.sort((a, b) => b.scores.total - a.scores.total);
+  return scored.map((c, i) => ({ ...c, rank: i + 1 }));
+}
+
+// ───────────────────────────────────────────────
+//  COMPARISON — RUN + RENDER
+// ───────────────────────────────────────────────
+function rankClass(r) {
+  return r === 1 ? 'rank-1' : r === 2 ? 'rank-2' : 'rank-other';
+}
+
+function runComparison() {
+  const wa = getWeights('wa');
+  const wb = getWeights('wb');
+
+  const rankedA = runScenario(wa);
+  const rankedB = runScenario(wb);
+
+  // Build lookup by candidate_id
+  const mapA = {}, mapB = {};
+  rankedA.forEach(c => mapA[c.id] = c);
+  rankedB.forEach(c => mapB[c.id] = c);
+
+  // Common HC-passing IDs (both maps will have same keys since HC is weight-independent)
+  const ids = rankedA.map(c => c.id);  // already filtered
+
+  // Build rows sorted by Scenario A rank
+  const rows = ids.map(id => {
+    const a = mapA[id], b = mapB[id];
+    const delta = a.rank - b.rank;
+    const dir   = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
+    return { id, name: a.name, rankA: a.rank, rankB: b.rank, delta, dir,
+             scoreA: a.scores.total, scoreB: b.scores.total };
+  });
+
+  const topA = rankedA[0] ? rankedA[0].id : null;
+  const topB = rankedB[0] ? rankedB[0].id : null;
+  const topChanged = topA !== topB;
+
+  // Banner
+  const banner = document.getElementById('topChangedBanner');
+  if (topChanged) {
+    banner.classList.add('visible');
+    const nameA = mapA[topA] ? mapA[topA].name : topA;
+    const nameB = mapB[topB] ? mapB[topB].name : topB;
+    banner.innerHTML = `⚠ Birinci adayı değişti: Senaryo A → <strong>${nameA}</strong> &nbsp;|&nbsp; Senaryo B → <strong>${nameB}</strong>. Ağırlık seçimi kararı doğrudan etkiliyor.`;
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  // Table
+  const tbody = document.getElementById('cmpTableBody');
+  tbody.innerHTML = rows.map(r => {
+    const isTopRow = (r.id === topA || r.id === topB) && topChanged;
+    const dirHtml = r.dir === 'up'
+      ? `<span class="dir-up">↑ +${r.delta}</span>`
+      : r.dir === 'down'
+        ? `<span class="dir-down">↓ ${r.delta}</span>`
+        : `<span class="dir-same">= 0</span>`;
+
+    return `<tr class="${isTopRow ? 'top-changed' : ''}">
+      <td style="font-weight:600">${r.name}</td>
+      <td><span class="rank-badge ${rankClass(r.rankA)}">${r.rankA}</span></td>
+      <td><span class="rank-badge ${rankClass(r.rankB)}">${r.rankB}</span></td>
+      <td>${dirHtml}</td>
+      <td class="cmp-score">${(r.scoreA * 100).toFixed(1)}%</td>
+      <td class="cmp-score">${(r.scoreB * 100).toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('cmpResults').style.display = '';
+}
+
+// ───────────────────────────────────────────────
 //  INIT
 // ───────────────────────────────────────────────
 renderSidebar();
+updateSum('a');
+updateSum('b');
 </script>
 </body>
 </html>

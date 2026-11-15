@@ -1,4 +1,4 @@
-"""Request / response schemas for the LUNA-AI Ground Control API."""
+﻿"""Request / response schemas for the LUNA-AI Ground Control API."""
 
 from __future__ import annotations
 
@@ -136,3 +136,50 @@ class RunDetailResponse(BaseModel):
     crater_ids: List[str]
     weights: dict
     ranked: List[RankedEntryResponse]
+
+
+# ---------------------------------------------------------------------------
+# Comparison (POST /api/v1/compare)
+# ---------------------------------------------------------------------------
+
+class RankedScenarioItem(BaseModel):
+    rank: int
+    candidate_id: str
+    crater_name: Optional[str]
+    total_score: float
+
+
+class ScenarioResult(BaseModel):
+    label: str
+    weights: ScoringWeightsInput
+    ranked: List[RankedScenarioItem]
+
+
+class RankChangeItem(BaseModel):
+    candidate_id: str
+    crater_name: str
+    rank_a: int
+    rank_b: int
+    delta: int
+    direction: str  # "up" | "down" | "same"
+
+
+class CompareRequest(BaseModel):
+    weights_a: ScoringWeightsInput = ScoringWeightsInput(
+        science=0.50, energy=0.20, thermal=0.10, communication=0.10, risk=0.10
+    )
+    weights_b: ScoringWeightsInput = ScoringWeightsInput(
+        science=0.20, energy=0.20, thermal=0.20, communication=0.10, risk=0.30
+    )
+    label_a: str = "Bilim Odakli"
+    label_b: str = "Guvenlik Odakli"
+
+
+class CompareResponse(BaseModel):
+    scenario_a: ScenarioResult
+    scenario_b: ScenarioResult
+    rank_changes: List[RankChangeItem]
+    top_pick_changed: bool
+    top_pick_a: str
+    top_pick_b: str
+

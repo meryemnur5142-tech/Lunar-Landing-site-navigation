@@ -6,11 +6,12 @@ reasonable results for representative lunar south-pole landing sites.
 They do NOT require real orbital data products.
 
 Expected outcomes (from published orbital surveys):
-  SP-003 (Nobile)       — rejected: rock_abundance > HC-003 limit
-  SP-005 (Unnamed Ridge)— rejected: max_slope_deg > HC-001 limit
-  SP-001 (Shackleton)   — ranked last among survivors: highest thermal risk
-                           (PSR 82% -> long dark exposure)
-  SP-002 (Haworth)      — ranked first: flattest terrain + lowest rock load
+  SP-003 (Nobile)         — rejected: rock_abundance > HC-003 limit
+  SP-005 (Unnamed Ridge)  — rejected: max_slope_deg > HC-001 limit
+  SP-001 (Shackleton)     — ranked last among survivors: highest thermal risk
+                             (PSR 82% -> long dark exposure)
+  SP-006 (Malapert A)     — ranked first on default weights: best terrain +
+                             lowest thermal risk (PSR only 18%)
 """
 
 from __future__ import annotations
@@ -30,8 +31,9 @@ class TestHardConstraintFilter:
     def test_two_candidates_rejected(self, result):
         assert result.rejected_hc == 2
 
-    def test_three_candidates_pass(self, result):
-        assert result.passed_hc == 3
+    def test_five_candidates_pass(self, result):
+        # SP-001,002,004,006,007 pass; SP-003 and SP-005 fail
+        assert result.passed_hc == 5
 
     def test_nobile_rejected_rock_abundance(self, result):
         rejected_ids = {cid for cid, _ in result.rejection_summary}
@@ -48,8 +50,9 @@ class TestHardConstraintFilter:
 
 
 class TestScoringAndRanking:
-    def test_three_ranked_candidates(self, result):
-        assert len(result.ranked) == 3
+    def test_five_ranked_candidates(self, result):
+        # All five HC-passing candidates are scored and ranked
+        assert len(result.ranked) == 5
 
     def test_all_scores_in_range(self, result):
         for rc in result.ranked:
@@ -62,10 +65,11 @@ class TestScoringAndRanking:
         scores = [rc.total_score for rc in result.ranked]
         assert scores == sorted(scores, reverse=True)
 
-    def test_haworth_ranked_first(self, result):
-        # Haworth (SP-002): flattest slope (7.3 deg) + lowest rock abundance (9%)
-        # -> best risk score -> should win on default science-biased weights
-        assert result.ranked[0].candidate.candidate_id == "SP-002"
+    def test_malapert_ranked_first(self, result):
+        # Malapert A (SP-006): flattest slope (3.5 deg), lowest rock abundance (5%),
+        # best risk score, highest thermal score (PSR only 18% -> minimal dark exposure)
+        # -> wins on default weights (science=0.35, energy=0.25, thermal=0.15, risk=0.15)
+        assert result.ranked[0].candidate.candidate_id == "SP-006"
 
     def test_shackleton_ranked_last_among_survivors(self, result):
         # Shackleton (SP-001): highest PSR access (82%) -> highest thermal risk

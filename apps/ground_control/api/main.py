@@ -29,6 +29,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .routes.health import router as health_router
 from .routes.candidates import router as candidates_router
+from .routes.compare import router as compare_router
 from .routes.evaluate import router as evaluate_router
 from .routes.mission import router as mission_router
 from .routes.efficiency import router as efficiency_router
@@ -56,6 +57,7 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(candidates_router)
+app.include_router(compare_router)
 app.include_router(evaluate_router)
 app.include_router(mission_router)
 app.include_router(efficiency_router)
