@@ -11,18 +11,6 @@ export const craters=[
  {id:'tycho',name:'Tycho Crater',lat:-43.31,lon:-11.36,diameter:85,depth:4.8,region:'SOUTHERN HIGHLANDS',description:'Terraced walls / ray system',shift:0},
  {id:'copernicus',name:'Copernicus Crater',lat:9.62,lon:-20.08,diameter:93,depth:3.8,region:'OCEANUS PROCELLARUM',description:'Terraced walls / central peaks',shift:1},
  {id:'clavius',name:'Clavius Crater',lat:-58.75,lon:-14.4,diameter:225,depth:3.5,region:'SOUTHERN HIGHLANDS',description:'Walled plain / nested impacts',shift:2},
- {id:'mons-mouton',name:'Mons Mouton',lat:-84.6,lon:31.0,diameter:100,depth:6.0,kind:'massif',region:'SOUTH POLAR HIGHLAND · NOBILE–MALAPERT',description:'Flat-topped massif (~100 km wide, ~6 km high, LOLA) — IM-2 Athena landed 6 Mar 2025',shift:3,
-  // Zone A/B coordinates: LROC (ASU) IM-2 intended site and reported Athena touchdown point.
-  // Terrain metrics are illustrative estimates, not LOLA/NAC measurements.
-  zones:[
-   {id:'A',lat:-84.78,  lon:29.13,  roughness:.10,slopeDeg:3.5, rockCover:.10,hazardFree:.93,stability:90,note:'IM-2 intended landing site (LROC)'},
-   {id:'B',lat:-84.7906,lon:29.1957,roughness:.38,slopeDeg:9.5, rockCover:.30,hazardFree:.60,stability:62,note:'Athena actual touchdown (~250 m off target, tipped in shallow crater)'},
-   {id:'C',lat:-84.60,  lon:31.00,  roughness:.07,slopeDeg:2.0, rockCover:.08,hazardFree:.96,stability:93,note:'Plateau summit centre'},
-   {id:'D',lat:-84.55,  lon:27.50,  roughness:.12,slopeDeg:4.0, rockCover:.12,hazardFree:.92,stability:89,note:'Western plateau (former VIPER operations area)'},
-   {id:'E',lat:-84.35,  lon:32.50,  roughness:.16,slopeDeg:5.5, rockCover:.15,hazardFree:.88,stability:85,note:'Northern plateau'},
-   {id:'F',lat:-84.80,  lon:40.00,  roughness:.30,slopeDeg:12.0,rockCover:.27,hazardFree:.72,stability:71,note:'Eastern plateau edge toward Nobile'},
-   {id:'G',lat:-84.25,  lon:40.50,  roughness:.45,slopeDeg:18.0,rockCover:.40,hazardFree:.52,stability:55,note:'Massif flank'},
-  ]},
  site20,
 ];
 const fixtures=[
