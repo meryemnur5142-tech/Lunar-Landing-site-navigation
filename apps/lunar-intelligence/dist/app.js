@@ -1,13 +1,15 @@
 import {craters,zonesFor,criteria,vehicles} from './data.js';
 import {rankZones} from './scoring.js';
-import {$,CraterInformation,LandingZoneList,ClusterMap,LandingAnalysis,TerrainProfile,CriterionModal,DetailedAnalysisModal,MethodologyModal,VehiclePanel} from './components.js';
+import {$,CraterInformation,LandingZoneList,ClusterMap,LandingAnalysis,TerrainProfile,CriterionModal,DetailedAnalysisModal,MethodologyModal,VehiclePanel,ForecastPanel} from './components.js';
+import {fetchMoonGeometry} from './horizons.js';
 import {MoonVisualization} from './moon.js';
 let crater=craters[0],zones=rankZones(zonesFor(crater)),selected='A',moon,selectedVehicle=vehicles[0].id;
+let forecastGeom=null,forecastLoading=false,forecastError=null;
 const current=()=>zones.find(z=>z.id===selected);
 function selectZone(id,details=false){selected=id;render();moon?.select(id);if(details)DetailedAnalysisModal(current(),zones,crater)}
-function render(){const veh=vehicles.find(v=>v.id===selectedVehicle)||vehicles[0];CraterInformation(crater,zones);LandingZoneList(zones,selected,selectZone);ClusterMap(zones,selected,selectZone);LandingAnalysis(current(),key=>CriterionModal(current(),key),veh);TerrainProfile(current());VehiclePanel(selectedVehicle,id=>{selectedVehicle=id;render();});}
+function render(){const veh=vehicles.find(v=>v.id===selectedVehicle)||vehicles[0];CraterInformation(crater,zones);LandingZoneList(zones,selected,selectZone);ClusterMap(zones,selected,selectZone);LandingAnalysis(current(),key=>CriterionModal(current(),key),veh);TerrainProfile(current());VehiclePanel(selectedVehicle,id=>{selectedVehicle=id;render();});ForecastPanel(zones,forecastGeom,forecastLoading,forecastError);}
 $('craterSelect').innerHTML=craters.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-$('craterSelect').onchange=()=>{crater=craters.find(c=>c.id===$('craterSelect').value);zones=rankZones(zonesFor(crater));selected=zones[0].id;render();moon?.setCrater(crater,zones);$('analysisStatus').textContent=`${crater.name}: 2 verimli + 2 riskli bölge değerlendirildi.`};
+$('craterSelect').onchange=()=>{crater=craters.find(c=>c.id===$('craterSelect').value);zones=rankZones(zonesFor(crater));selected=zones[0].id;forecastGeom=null;forecastError=null;render();moon?.setCrater(crater,zones);$('analysisStatus').textContent=`${crater.name}: 2 verimli + 2 riskli bölge değerlendirildi.`};
 render();
 try{moon=new MoonVisualization($('moonCanvas'),crater,zones,selectZone)}catch(e){console.error(e);$('sceneLoading').hidden=true;$('sceneError').hidden=false;['orbitButton','approachButton','rotateButton','zoomIn','zoomOut','resetView'].forEach(id=>$(id).disabled=true)}
 $('orbitButton').onclick=()=>moon?.orbit();$('approachButton').onclick=()=>moon?.approach();$('rotateButton').onclick=()=>moon?.toggleRotation();$('zoomIn').onclick=()=>moon?.zoom(.8);$('zoomOut').onclick=()=>moon?.zoom(1.25);$('resetView').onclick=()=>moon?.reset();
@@ -16,6 +18,25 @@ $('methodButton').onclick=$('weightsButton').onclick=MethodologyModal;
 document.querySelector('.modal-close').onclick=()=>$('analysisModal').close();
 $('analysisModal').addEventListener('click',e=>{if(e.target===$('analysisModal')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}});
 $('rescanButton').onclick=()=>{const button=$('rescanButton');button.disabled=true;$('analysisStatus').textContent='Altı kriter 4 bölge üzerinden değerlendiriliyor (2 verimli + 2 riskli)…';document.querySelector('.moon-panel').classList.add('scanning');setTimeout(()=>{zones=rankZones(zonesFor(crater));render();document.querySelector('.moon-panel').classList.remove('scanning');button.disabled=false;$('analysisStatus').textContent='Analiz tamamlandı. Aynı girdiler aynı skorları üretir.'},1400)};
+// Set forecast input default to tomorrow noon UTC
+const _tmrw=new Date(Date.now()+86400000);$('forecastDt').value=_tmrw.toISOString().slice(0,16);
+$('forecastBtn').onclick=async()=>{
+ const val=$('forecastDt').value;
+ if(!val){ForecastPanel(zones,null,false,'Lütfen tarih ve saat seçin.');return;}
+ const dt=new Date(val+'Z');
+ if(isNaN(dt)){ForecastPanel(zones,null,false,'Geçersiz tarih.');return;}
+ forecastLoading=true;forecastGeom=null;forecastError=null;
+ $('forecastBtn').disabled=true;
+ ForecastPanel(zones,null,true,null);
+ try{
+  forecastGeom=await fetchMoonGeometry(dt);
+  forecastLoading=false;forecastError=null;
+ }catch(e){
+  forecastLoading=false;forecastError=e.message||'Horizons API bağlantı hatası.';
+ }
+ $('forecastBtn').disabled=false;
+ ForecastPanel(zones,forecastGeom,false,forecastError);
+};
 function tick(){$('clock').textContent=new Date().toISOString().replace('T',' / ').slice(0,21)+' UTC'}tick();setInterval(tick,1000);
 const _origWeights=criteria.map(c=>c.weight);
 function buildWeightEditor(){

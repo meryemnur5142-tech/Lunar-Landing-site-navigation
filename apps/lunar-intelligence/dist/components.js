@@ -1,5 +1,6 @@
 import {criteria,sourceNote,vehicles as _vehicles} from './data.js';
 import {profileFor,riskScore} from './scoring.js';
+import {solarElevDeg,earthElevDeg} from './horizons.js';
 export const $=id=>document.getElementById(id);
 export const coord=(lat,lon)=>`${Math.abs(lat).toFixed(2)}°${lat<0?'S':'N'} / ${Math.abs(lon).toFixed(2)}°${lon<0?'W':'E'}`;
 export function CraterInformation(crater,zones){
@@ -91,5 +92,28 @@ export function VehiclePanel(selectedId,onSelect){
  $('vehicleFullName').textContent=v.fullName;
  const rows=[['TYPE',v.type],['AGENCY',v.agency],['MASS',v.mass],['DIMS',v.dims],['WHEEL',v.wheelDiam],['POWER',v.power],['MAX SLOPE',v.maxSlope],['SPEED',v.speed],['PAYLOAD',v.payload]];
  $('vehicleSpecs').innerHTML=rows.map(([k,val])=>`<div class="vspec-row"><span class="vspec-label">${k}</span><span class="vspec-val">${val}</span></div>`).join('')+`<p class="vspec-note">${v.note}</p><div class="vspec-source"><a href="${v.source}" target="_blank" rel="noreferrer">NASA/agency page ↗</a></div>`;
+}
+export function ForecastPanel(zones,geom,loading,error){
+ const out=$('forecastOut');if(!out)return;
+ if(loading){out.innerHTML='<div class="fc-loading">JPL Horizons sorgulanıyor<span></span></div>';return;}
+ if(error){out.innerHTML=`<div class="fc-error">⚠ ${error}</div>`;return;}
+ if(!geom){out.innerHTML='';return;}
+ const display=[...zones.slice(0,2).map(z=>({...z,cat:'VERİMLİ',catCls:''})),...zones.slice(-2).map(z=>({...z,cat:'RİSKLİ',catCls:'risky'}))];
+ const row=z=>{
+  const sol=solarElevDeg(z.lat,z.lon,geom);
+  const ear=earthElevDeg(z.lat,z.lon,geom);
+  const lit=sol>0,vis=ear>0,opt=sol>=10&&sol<=45;
+  const sc=lit?(opt?'#60ead5':'#d4c060'):'#ff4455';
+  const ec=vis?'#60ead5':'#ff4455';
+  return`<div class="fc-zone ${z.catCls}">
+   <div class="fc-zone-hd"><b>Zone ${z.id}</b><span class="fc-cat ${z.catCls}">${z.cat}</span>${lit&&vis?'<span class="fc-ok">✓ İDEAL</span>':''}</div>
+   <div class="fc-row"><span style="color:${sc}">${lit?'☀':'◑'} GÜNEŞ</span><b style="color:${sc}">${sol.toFixed(1)}°</b></div>
+   <div class="fc-row"><span style="color:${ec}">${vis?'🌐':'✗'} DÜNYA</span><b style="color:${ec}">${ear.toFixed(1)}°</b></div>
+  </div>`;
+ };
+ out.innerHTML=`<div class="fc-header">
+  <span class="fc-src">◈ ${geom.source}</span>
+  <div class="fc-geo"><span>Moon: ${geom.moonEclLon.toFixed(1)}° ekl.</span><span>Subsolar: ${Math.abs(geom.subsolarLon).toFixed(0)}°${geom.subsolarLon>=0?'D':'B'} / ${Math.abs(geom.subsolarLat).toFixed(0)}°${geom.subsolarLat>=0?'K':'G'}</span></div>
+ </div>${display.map(row).join('')}`;
 }
 export function MethodologyModal(){show(`<span class="micro">MODEL TRANSPARENCY</span><h2>DATA & METHODOLOGY</h2><div class="method-note">${sourceNote}</div><h3>Weighted multi-criteria decision analysis</h3><p>Each input is normalized to a 0–100 suitability scale. Higher is better. The total is the sum of criterion score × criterion weight. Scores are deterministic; re-running the same dataset returns the same results.</p><div class="formula">${criteria.map(c=>`${c.name} × ${c.weight.toFixed(2)}`).join('<br>+ ')}</div><p>Normalization: smoothness = 100 − roughness(m) × 50; slope = 100 − degrees × 5; rocks = (1 − rock fraction) × 100; hazards = hazard-free fraction × 100; edge clearance = clearance/reference × 100; stability = synthetic index. Each result is clamped to [0, 100]. These mappings are illustrative assumptions, not validated mission requirements.</p><h3>Visual source</h3><p>The globe uses the 4096 × 2048 LROC color mosaic and a LOLA height preview from <a href="https://svs.gsfc.nasa.gov/4720/" target="_blank" rel="noreferrer">NASA’s Scientific Visualization Studio — CGI Moon Kit</a>. Credit: NASA SVS, Ernie Wright; LROC/LOLA instrument teams. These maps are prepared for visualization. They do not resolve landing-scale obstacles.</p><h3>Limits of this demonstration</h3><p>Profiles, stability, roughness and hazard measurements are synthetic. No spacecraft dynamics, sensor errors, navigation uncertainty or validated touchdown simulations are included. Time-dependent sunlight is not computed by this model. A high score does not certify a safe landing.</p>`)}

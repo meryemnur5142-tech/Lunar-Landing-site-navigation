@@ -35,6 +35,7 @@ from .routes.mission import router as mission_router
 from .routes.efficiency import router as efficiency_router
 from .routes.history import router as history_router
 from .routes.sensitivity import router as sensitivity_router
+from .routes.forecast import router as forecast_router
 
 app = FastAPI(
     title="LUNA-AI Ground Control API",
@@ -64,6 +65,7 @@ app.include_router(mission_router)
 app.include_router(efficiency_router)
 app.include_router(history_router)
 app.include_router(sensitivity_router)
+app.include_router(forecast_router)
 
 from fastapi.staticfiles import StaticFiles
 import os as _os
