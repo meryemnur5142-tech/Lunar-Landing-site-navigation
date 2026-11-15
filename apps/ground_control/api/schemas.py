@@ -183,3 +183,49 @@ class CompareResponse(BaseModel):
     top_pick_a: str
     top_pick_b: str
 
+
+# ---------------------------------------------------------------------------
+# Sensitivity analysis (POST /efficiency/sensitivity)
+# ---------------------------------------------------------------------------
+
+class SensitivityOverrides(BaseModel):
+    solar_elevation_deg: Optional[float] = None
+    earth_elevation_deg: Optional[float] = None
+    descent_angle_deg: Optional[float] = None
+    delta_v_penalty_ms: Optional[float] = None
+    max_slope_deg: Optional[float] = None
+    psr_access_fraction: Optional[float] = None
+    rock_abundance: Optional[float] = None
+
+
+class SensitivityRequest(BaseModel):
+    candidate_id: str
+    overrides: SensitivityOverrides = SensitivityOverrides()
+
+
+class LandingWindowOut(BaseModel):
+    window_id: str
+    label: str
+    utc_time: str
+    solar_elevation_deg: float
+    earth_elevation_deg: float
+    descent_angle_deg: float
+    delta_v_penalty_ms: float
+    solar_flux_wm2: float
+    link_margin_dbm: float
+    comm_mode: str
+    efficiency_pct: float
+    terrain_score: float
+    window_quality: float
+    dominant_factor: str
+    conditions: dict
+
+
+class SensitivityResponse(BaseModel):
+    candidate_id: str
+    crater_name: str
+    windows: List[LandingWindowOut]
+    recommended_window_id: str
+    factor_weights: dict
+    delta_vs_baseline: dict
+

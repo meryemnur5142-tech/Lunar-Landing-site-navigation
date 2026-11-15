@@ -120,7 +120,18 @@ class EfficiencyCalculator:
         calc = EfficiencyCalculator()
         windows = calc.compute_windows(candidate)
         best = max(windows, key=lambda w: w.efficiency_pct)
+
+    Args:
+        orbital_configs: Optional list of orbital window config dicts to use
+            instead of the module-level ``_ORBITAL_CONFIGS``.  Pass a modified
+            copy to perform sensitivity / what-if analysis without touching the
+            shared default configs.
     """
+
+    def __init__(self, orbital_configs: list[dict] | None = None) -> None:
+        self._orbital_configs: list[dict] = (
+            orbital_configs if orbital_configs is not None else _ORBITAL_CONFIGS
+        )
 
     # Solar constants
     _MAX_SOUTH_POLE_SOLAR_DEG = 3.5  # peak sun elevation, south pole
@@ -156,7 +167,7 @@ class EfficiencyCalculator:
         science_score = self._science_score(candidate)
 
         windows: List[LandingWindow] = []
-        for i, cfg in enumerate(_ORBITAL_CONFIGS, start=1):
+        for i, cfg in enumerate(self._orbital_configs, start=1):
             window_quality, solar_q, comm_q, prop_q = self._window_quality(cfg)
 
             efficiency_pct = self._combined_efficiency(
