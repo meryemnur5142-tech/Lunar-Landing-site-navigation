@@ -2,6 +2,7 @@
 // Source: LOLA 20 m DEM + NASA/JPL SPICE sun/Earth geometry, produced by the team's pipeline.
 const EN={egim:'Slope (p95 in ellipse)',puruzluluk:'Surface roughness',iletisim:'Earth visibility (comms)',gunes:'Solar illumination (energy)',karanlik_hedef:'Access to dark (PSR) target',yerel_rolyef:'Local relief',veri_guvenilirligi:'Data reliability'};
 const UNIT={egim:'° (95th pct in landing ellipse)',puruzluluk:'m (100 m window std)',iletisim:'fraction of time Earth visible',gunes:'fraction of time sunlit',karanlik_hedef:'m to nearest dark target',yerel_rolyef:'m (height range in ellipse)',veri_guvenilirligi:'fraction of measured pixels'};
+import {teamProfiles} from './team_profiles.js';
 let data=null;
 try{const r=await fetch('./arayuz_sonuc.json',{cache:'no-store'});if(r.ok)data=await r.json();}catch(e){console.warn('team analysis not loaded',e);}
 function toZone(z,missions){
@@ -13,7 +14,7 @@ function toZone(z,missions){
   return {id:z.id,lat:z.lat,lon:z.lon,x:0,y:0,profileSeed:z.sira,
     slopeDeg:k.egim.ham_deger,roughness:k.puruzluluk.ham_deger,rockCover:null,hazardFree:k.veri_guvenilirligi.ham_deger,
     edgeKm:k.karanlik_hedef.ham_deger/1000,referenceClearance:1,stability:null,
-    team:true,teamContributions:contributions,teamTotal:z.verimlilik_yuzde,teamRisk:z.risk_yuzde,hardLimitExceeded:z.sert_sinir_asildi,
+    team:true,profile:teamProfiles[z.id],teamContributions:contributions,teamTotal:z.verimlilik_yuzde,teamRisk:z.risk_yuzde,hardLimitExceeded:z.sert_sinir_asildi,
     teamNote:`Team analysis (LOLA 20 m DEM + SPICE) · ${z.tur==='en_verimli'?'most efficient':'most risky'} #${z.sira} · efficiency ${z.verimlilik_yuzde}% / risk ${z.risk_yuzde}%${z.sert_sinir_asildi?' · HARD LIMIT EXCEEDED':''}. ${mission}`};
 }
 export const teamSite=data?{
