@@ -1,0 +1,1382 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUNA-AI — İniş Verimliliği</title>
+<style>
+:root {
+  --bg:        #04080f;
+  --bg-card:   #08111f;
+  --bg-hover:  #0d1a2e;
+  --bg-sel:    #0a1e35;
+  --accent:    #00d4ff;
+  --accent2:   #0088cc;
+  --green:     #00e87a;
+  --amber:     #ffa940;
+  --red:       #ff4455;
+  --purple:    #a78bfa;
+  --text:      #d8ecf8;
+  --text-dim:  #6a94aa;
+  --text-muted:#334455;
+  --border:    #0d2035;
+  --border-hi: #004466;
+  --glow:      rgba(0,212,255,.12);
+  --glow-str:  rgba(0,212,255,.30);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Courier New',monospace;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* scanlines overlay */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
+  pointer-events:none;z-index:1000;
+}
+
+/* ── HEADER ─────────────────────────────────── */
+header{
+  display:flex;align-items:center;gap:1rem;
+  padding:.75rem 1.25rem;
+  background:linear-gradient(90deg,#060e1c,#09132a);
+  border-bottom:1px solid var(--border-hi);
+}
+.logo{
+  font-size:1.1rem;font-weight:700;letter-spacing:.15em;
+  color:var(--accent);text-shadow:0 0 10px var(--accent2);
+}
+.logo span{color:var(--text-dim);font-weight:400;}
+.mission-badge{
+  margin-left:auto;
+  font-size:.65rem;letter-spacing:.1em;
+  background:rgba(0,212,255,.08);
+  border:1px solid var(--border-hi);
+  color:var(--accent);padding:.25rem .6rem;border-radius:3px;
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 6px var(--green);display:inline-block;margin-right:.4rem;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── TAB ROW ──────────────────────────────────── */
+.tab-row{
+  display:flex;gap:0;
+  background:linear-gradient(90deg,#060e1c,#09132a);
+  border-bottom:1px solid var(--border-hi);
+  padding:0 1.25rem;
+}
+.tab-btn{
+  background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--text-dim);font-family:inherit;font-size:.72rem;
+  letter-spacing:.08em;padding:.55rem 1rem;cursor:pointer;
+  transition:all .15s;
+}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{
+  color:var(--accent);
+  border-bottom-color:var(--accent);
+}
+
+/* ── LAYOUT ──────────────────────────────────── */
+.app{
+  display:grid;
+  grid-template-columns:230px 1fr;
+  grid-template-rows:auto 1fr auto;
+  min-height:calc(100vh - 46px - 36px);
+}
+
+/* ── CRATER SIDEBAR ──────────────────────────── */
+.sidebar{
+  grid-row:1/3;
+  border-right:1px solid var(--border);
+  padding:.75rem .6rem;
+  overflow-y:auto;
+}
+.sidebar-title{
+  font-size:.6rem;letter-spacing:.18em;color:var(--text-dim);
+  text-transform:uppercase;padding:.3rem .4rem .6rem;
+  border-bottom:1px solid var(--border);margin-bottom:.5rem;
+}
+.crater-btn{
+  width:100%;background:none;border:1px solid transparent;
+  color:var(--text);font-family:inherit;font-size:.75rem;
+  padding:.55rem .7rem;border-radius:4px;cursor:pointer;
+  display:flex;flex-direction:column;gap:.2rem;
+  text-align:left;transition:all .15s;margin-bottom:3px;
+}
+.crater-btn:hover{
+  background:var(--bg-hover);border-color:var(--border-hi);
+}
+.crater-btn.active{
+  background:var(--bg-sel);border-color:var(--accent2);
+  box-shadow:0 0 8px var(--glow);
+}
+.crater-btn .cname{font-weight:700;color:var(--text);}
+.crater-btn .cstats{color:var(--text-dim);font-size:.65rem;}
+.crater-btn .cpsr{
+  font-size:.62rem;padding:.1rem .35rem;border-radius:2px;
+  background:rgba(0,212,255,.07);color:var(--accent2);
+  display:inline-block;margin-top:.15rem;
+}
+.crater-btn.has-warning .cname::after{
+  content:'⚠';font-size:.6rem;margin-left:.3rem;color:var(--amber);
+}
+
+/* ── MAIN PANEL ──────────────────────────────── */
+.main{padding:1rem 1.25rem;}
+
+/* crater info card */
+.crater-info{
+  display:flex;gap:1.5rem;align-items:flex-start;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;padding:.85rem 1rem;margin-bottom:1rem;
+  flex-wrap:wrap;
+}
+.crater-info.hidden{display:none;}
+.crater-info-title{
+  font-size:.95rem;font-weight:700;color:var(--accent);
+  margin-bottom:.4rem;letter-spacing:.05em;
+}
+.crater-info-meta{font-size:.7rem;color:var(--text-dim);line-height:1.6;}
+.crater-info-meta b{color:var(--text);}
+.info-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;flex:1;
+}
+.info-chip{
+  background:rgba(0,212,255,.05);border:1px solid var(--border-hi);
+  border-radius:4px;padding:.45rem .65rem;
+}
+.info-chip .ic-label{font-size:.58rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}
+.info-chip .ic-val{font-size:.85rem;font-weight:700;color:var(--text);margin-top:.1rem;}
+.info-chip .ic-unit{font-size:.6rem;color:var(--text-dim);}
+
+/* section heading */
+.section-heading{
+  font-size:.62rem;letter-spacing:.18em;color:var(--text-dim);
+  text-transform:uppercase;margin-bottom:.7rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.section-heading::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+
+/* ── WINDOW CARDS ────────────────────────────── */
+.windows-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:.75rem;
+  margin-bottom:1rem;
+}
+.win-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;padding:1rem;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.win-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent2),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.win-card:hover{background:var(--bg-hover);border-color:var(--border-hi);}
+.win-card:hover::before{opacity:.5;}
+.win-card.selected{
+  border-color:var(--accent);
+  box-shadow:0 0 16px var(--glow-str),inset 0 0 20px var(--glow);
+}
+.win-card.selected::before{opacity:1;}
+.win-card.best-mark{border-color:var(--green);}
+.win-card.best-mark::before{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+
+.win-label{
+  font-size:.62rem;letter-spacing:.15em;color:var(--text-dim);
+  margin-bottom:.3rem;display:flex;justify-content:space-between;
+}
+.best-tag{
+  font-size:.58rem;background:rgba(0,232,122,.12);
+  color:var(--green);border:1px solid rgba(0,232,122,.3);
+  padding:.05rem .35rem;border-radius:2px;letter-spacing:.05em;
+}
+
+.eff-num{
+  font-size:2.4rem;font-weight:700;line-height:1;
+  margin:.2rem 0 .5rem;
+}
+.eff-pct{font-size:1.1rem;color:var(--text-dim);}
+
+.win-time{
+  font-size:.62rem;color:var(--text-muted);margin-bottom:.75rem;
+  border-bottom:1px solid var(--border);padding-bottom:.5rem;
+}
+
+/* metric rows */
+.metrics{display:flex;flex-direction:column;gap:.35rem;}
+.metric-row{display:flex;align-items:center;gap:.5rem;}
+.metric-icon{font-size:.7rem;width:16px;text-align:center;flex-shrink:0;}
+.metric-label{font-size:.62rem;color:var(--text-dim);flex:1;min-width:0;}
+.metric-bar-wrap{
+  width:70px;height:5px;background:var(--border);border-radius:3px;
+  flex-shrink:0;overflow:hidden;
+}
+.metric-bar{height:100%;border-radius:3px;transition:width .4s;}
+.metric-val{font-size:.6rem;color:var(--text-dim);width:36px;text-align:right;flex-shrink:0;}
+
+/* ── DECISION PANEL ──────────────────────────── */
+.decision-panel{
+  display:none;
+  grid-column:1/-1;
+  background:var(--bg-card);
+  border-top:1px solid var(--border-hi);
+  padding:1.1rem 1.5rem;
+}
+.decision-panel.visible{display:block;}
+
+.dec-header{
+  display:flex;align-items:center;gap:1rem;margin-bottom:.85rem;flex-wrap:wrap;
+}
+.dec-window-badge{
+  font-size:.75rem;font-weight:700;letter-spacing:.08em;
+  background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(0,212,255,.04));
+  border:1px solid var(--accent2);color:var(--accent);
+  padding:.3rem .8rem;border-radius:4px;
+}
+.dec-eff-badge{
+  font-size:1.5rem;font-weight:700;
+}
+.dec-title{
+  font-size:.62rem;letter-spacing:.12em;color:var(--text-dim);
+  text-transform:uppercase;
+}
+.dec-compare{
+  margin-left:auto;
+  display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;
+}
+.cmp-chip{
+  font-size:.65rem;padding:.2rem .5rem;border-radius:3px;
+  border:1px solid var(--border);color:var(--text-dim);
+}
+.cmp-chip.cmp-sel{
+  border-color:var(--accent2);color:var(--accent);
+  background:rgba(0,212,255,.07);
+}
+
+.explanation{
+  font-size:.78rem;line-height:1.75;color:var(--text);
+  max-width:900px;
+  background:rgba(0,0,0,.2);border-left:2px solid var(--accent2);
+  padding:.75rem 1rem;border-radius:0 4px 4px 0;
+}
+.explanation strong{color:var(--accent);}
+.explanation em{color:var(--amber);}
+
+/* empty state */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:200px;color:var(--text-muted);font-size:.75rem;gap:.5rem;
+  grid-column:1/-1;
+}
+.empty-state .big{font-size:2rem;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:#060b18;}
+::-webkit-scrollbar-thumb{background:#1a3045;border-radius:3px;}
+
+/* ── COMPARISON VIEW ─────────────────────────── */
+#view-compare{
+  padding:1.25rem;
+  min-height:calc(100vh - 82px);
+}
+
+.cmp-weights-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+@media(max-width:700px){.cmp-weights-row{grid-template-columns:1fr;}}
+
+.cmp-weight-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;padding:1rem;
+}
+.cmp-weight-title{
+  font-size:.7rem;font-weight:700;letter-spacing:.1em;color:var(--accent);
+  margin-bottom:.75rem;border-bottom:1px solid var(--border);padding-bottom:.5rem;
+}
+.cmp-weight-title input{
+  background:none;border:none;color:var(--accent);
+  font-family:inherit;font-size:.7rem;font-weight:700;letter-spacing:.1em;
+  width:140px;outline:none;
+}
+.cmp-weight-title input:focus{border-bottom:1px solid var(--accent2);}
+
+.cmp-input-row{
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;
+}
+.cmp-input-row label{
+  font-size:.65rem;color:var(--text-dim);width:80px;flex-shrink:0;
+}
+.cmp-input-row input[type=number]{
+  width:70px;background:rgba(0,212,255,.05);
+  border:1px solid var(--border-hi);border-radius:3px;
+  color:var(--text);font-family:inherit;font-size:.75rem;
+  padding:.2rem .4rem;outline:none;text-align:right;
+  -moz-appearance:textfield;
+}
+.cmp-input-row input[type=number]:focus{border-color:var(--accent2);}
+.cmp-input-row input[type=number]::-webkit-inner-spin-button,
+.cmp-input-row input[type=number]::-webkit-outer-spin-button{opacity:.4;}
+
+.cmp-sum{
+  font-size:.62rem;margin-top:.6rem;
+  padding:.25rem .5rem;border-radius:3px;
+  border:1px solid var(--border);
+  display:inline-block;
+}
+.cmp-sum.valid{color:var(--green);border-color:rgba(0,232,122,.3);}
+.cmp-sum.invalid{color:var(--red);border-color:rgba(255,68,85,.3);}
+
+.cmp-run-btn{
+  display:block;margin:1rem 0;
+  background:linear-gradient(135deg,rgba(0,136,204,.25),rgba(0,212,255,.12));
+  border:1px solid var(--accent2);color:var(--accent);
+  font-family:inherit;font-size:.8rem;letter-spacing:.1em;
+  padding:.6rem 2rem;border-radius:4px;cursor:pointer;
+  transition:all .2s;
+}
+.cmp-run-btn:hover{background:rgba(0,136,204,.35);box-shadow:0 0 10px var(--glow);}
+.cmp-run-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* comparison results table */
+.cmp-results{margin-top:.75rem;}
+.cmp-table{
+  width:100%;border-collapse:collapse;font-size:.72rem;
+}
+.cmp-table th{
+  text-align:left;padding:.45rem .75rem;
+  font-size:.6rem;letter-spacing:.12em;color:var(--text-dim);
+  border-bottom:1px solid var(--border-hi);text-transform:uppercase;
+}
+.cmp-table td{
+  padding:.5rem .75rem;border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+.cmp-table tr:last-child td{border-bottom:none;}
+.cmp-table tr:hover td{background:var(--bg-hover);}
+.cmp-table tr.top-changed td{background:rgba(167,139,250,.06);}
+.cmp-table tr.top-changed td:first-child{border-left:2px solid var(--purple);}
+
+.dir-up{color:var(--green);font-weight:700;}
+.dir-down{color:var(--red);font-weight:700;}
+.dir-same{color:var(--text-muted);}
+
+.rank-badge{
+  display:inline-block;
+  min-width:1.4rem;text-align:center;
+  font-weight:700;padding:.05rem .3rem;border-radius:3px;
+}
+.rank-1{background:rgba(0,232,122,.15);color:var(--green);}
+.rank-2{background:rgba(0,136,204,.12);color:var(--accent);}
+.rank-other{background:rgba(255,255,255,.04);color:var(--text-dim);}
+
+.top-changed-banner{
+  display:none;
+  margin-bottom:.75rem;
+  padding:.5rem 1rem;background:rgba(167,139,250,.1);
+  border:1px solid rgba(167,139,250,.3);border-radius:4px;
+  font-size:.72rem;color:var(--purple);
+}
+.top-changed-banner.visible{display:block;}
+
+.cmp-score{font-size:.65rem;color:var(--text-dim);}
+
+/* responsive */
+@media(max-width:600px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{grid-row:auto;border-right:none;border-bottom:1px solid var(--border);}
+  .crater-info{flex-direction:column;}
+}
+
+/* ── SIMULATOR VIEW ──────────────────────────── */
+#view-sim{
+  padding:1.25rem;
+  min-height:calc(100vh - 82px);
+}
+.sim-layout{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  gap:1.25rem;
+  align-items:start;
+}
+@media(max-width:700px){.sim-layout{grid-template-columns:1fr;}}
+.sim-panel{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;padding:1rem;
+}
+.sim-group-title{
+  font-size:.62rem;letter-spacing:.18em;color:var(--accent);
+  text-transform:uppercase;margin-bottom:.75rem;
+  padding-bottom:.4rem;border-bottom:1px solid var(--border);
+}
+.sim-slider-row{
+  display:flex;flex-direction:column;gap:.2rem;margin-bottom:.75rem;
+}
+.sim-slider-header{
+  display:flex;justify-content:space-between;align-items:center;
+}
+.sim-slider-label{font-size:.68rem;color:var(--text-dim);}
+.sim-slider-val{
+  font-size:.72rem;font-weight:700;color:var(--accent);
+  min-width:55px;text-align:right;
+}
+input[type=range].sim-range{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:4px;
+  background:var(--border);border-radius:2px;
+  outline:none;cursor:pointer;
+}
+input[type=range].sim-range::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--accent);border:none;
+  box-shadow:0 0 6px rgba(0,212,255,.5);cursor:pointer;
+  transition:box-shadow .15s;
+}
+input[type=range].sim-range::-webkit-slider-thumb:hover{
+  box-shadow:0 0 10px rgba(0,212,255,.9);
+}
+input[type=range].sim-range::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;
+}
+.sim-reset-btn{
+  width:100%;margin-top:.5rem;
+  background:rgba(0,136,204,.12);border:1px solid var(--border-hi);
+  color:var(--text-dim);font-family:inherit;font-size:.72rem;
+  letter-spacing:.08em;padding:.45rem 1rem;border-radius:4px;
+  cursor:pointer;transition:all .2s;
+}
+.sim-reset-btn:hover{
+  color:var(--accent);border-color:var(--accent2);
+  background:rgba(0,136,204,.2);
+}
+.sim-empty{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:220px;
+  color:var(--text-muted);font-size:.75rem;gap:.5rem;
+}
+.sim-empty .big{font-size:2rem;}
+.sim-win-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:.75rem;
+}
+.sim-win-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;padding:.9rem;
+  position:relative;overflow:hidden;
+}
+.sim-win-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent2),transparent);
+  opacity:.4;
+}
+.sim-win-label{font-size:.62rem;letter-spacing:.15em;color:var(--text-dim);margin-bottom:.3rem;}
+.sim-eff-num{font-size:2rem;font-weight:700;line-height:1;margin:.2rem 0 .3rem;}
+.sim-eff-pct{font-size:1rem;color:var(--text-dim);}
+.sim-delta{font-size:.75rem;font-weight:700;margin-bottom:.4rem;}
+.sim-delta.delta-pos{color:var(--green);}
+.sim-delta.delta-neg{color:var(--red);}
+.sim-delta.delta-zero{color:var(--text-muted);}
+.sim-dom-factor{
+  font-size:.62rem;color:var(--text-dim);
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:3px;padding:.2rem .4rem;display:inline-block;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LUNA<span>-AI</span></div>
+  <div style="font-size:.7rem;color:var(--text-dim)">İniş Verimliliği Analizi</div>
+  <div class="mission-badge"><span class="status-dot"></span>LUNA-M1 · 2026-11</div>
+</header>
+
+<nav class="tab-row">
+  <button class="tab-btn active" id="tab-eff" onclick="switchTab('eff')">🌑 İniş Verimliliği</button>
+  <button class="tab-btn" id="tab-cmp" onclick="switchTab('cmp')">⚖ Senaryo Karşılaştırması</button>
+  <button class="tab-btn" id="tab-sim" onclick="switchTab('sim')">⚙ Koşul Simülatörü</button>
+</nav>
+
+<!-- ── EFFICIENCY VIEW ─────────────────────────────── -->
+<div id="view-eff">
+<div class="app">
+
+  <!-- sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Krater Seçimi</div>
+    <div id="craterList"></div>
+  </aside>
+
+  <!-- main -->
+  <main class="main">
+
+    <!-- crater info -->
+    <div class="crater-info hidden" id="craterInfo">
+      <div>
+        <div class="crater-info-title" id="ci-name">—</div>
+        <div class="crater-info-meta" id="ci-meta"></div>
+      </div>
+      <div class="info-grid" id="ci-grid"></div>
+    </div>
+
+    <!-- windows -->
+    <div class="section-heading" id="windowsHeading" style="display:none">
+      Verimlilik Pencereleri
+    </div>
+    <div class="windows-grid" id="windowsGrid">
+      <div class="empty-state">
+        <span class="big">🌑</span>
+        <span>Sol panelden bir krater seçin</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- decision panel (full width, below grid) -->
+  <div class="decision-panel" id="decisionPanel">
+    <div class="dec-header">
+      <div>
+        <div class="dec-title">Seçilen Pencere</div>
+        <div style="display:flex;align-items:baseline;gap:.6rem;margin-top:.3rem;">
+          <div class="dec-window-badge" id="dec-win-label">—</div>
+          <div class="dec-eff-badge" id="dec-eff-num">—</div>
+        </div>
+      </div>
+      <div class="dec-compare" id="dec-compare"></div>
+    </div>
+    <div class="section-heading">Neden Bu Pencere?</div>
+    <div class="explanation" id="dec-explanation"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ── COMPARISON VIEW ─────────────────────────────── -->
+<div id="view-compare" style="display:none">
+
+  <div class="section-heading" style="margin-bottom:1rem">Senaryo Ağırlık Editörü</div>
+
+  <div class="cmp-weights-row">
+
+    <!-- Scenario A -->
+    <div class="cmp-weight-card">
+      <div class="cmp-weight-title">
+        Senaryo A — <input type="text" id="label-a" value="Bilim Odaklı">
+      </div>
+      <div class="cmp-input-row"><label>Bilim</label>
+        <input type="number" id="wa-science" step="0.05" min="0" max="1" value="0.50" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-input-row"><label>Enerji</label>
+        <input type="number" id="wa-energy" step="0.05" min="0" max="1" value="0.20" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-input-row"><label>Termal</label>
+        <input type="number" id="wa-thermal" step="0.05" min="0" max="1" value="0.10" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-input-row"><label>İletişim</label>
+        <input type="number" id="wa-comm" step="0.05" min="0" max="1" value="0.10" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-input-row"><label>Risk</label>
+        <input type="number" id="wa-risk" step="0.05" min="0" max="1" value="0.10" oninput="updateSum('a')">
+      </div>
+      <div class="cmp-sum valid" id="sum-a">Toplam: 1.00 ✓</div>
+    </div>
+
+    <!-- Scenario B -->
+    <div class="cmp-weight-card">
+      <div class="cmp-weight-title">
+        Senaryo B — <input type="text" id="label-b" value="Güvenlik Odaklı">
+      </div>
+      <div class="cmp-input-row"><label>Bilim</label>
+        <input type="number" id="wb-science" step="0.05" min="0" max="1" value="0.20" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-input-row"><label>Enerji</label>
+        <input type="number" id="wb-energy" step="0.05" min="0" max="1" value="0.20" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-input-row"><label>Termal</label>
+        <input type="number" id="wb-thermal" step="0.05" min="0" max="1" value="0.20" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-input-row"><label>İletişim</label>
+        <input type="number" id="wb-comm" step="0.05" min="0" max="1" value="0.10" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-input-row"><label>Risk</label>
+        <input type="number" id="wb-risk" step="0.05" min="0" max="1" value="0.30" oninput="updateSum('b')">
+      </div>
+      <div class="cmp-sum valid" id="sum-b">Toplam: 1.00 ✓</div>
+    </div>
+
+  </div><!-- /cmp-weights-row -->
+
+  <button class="cmp-run-btn" id="runBtn" onclick="runComparison()">⚖ Karşılaştır</button>
+
+  <!-- Results -->
+  <div class="cmp-results" id="cmpResults" style="display:none">
+    <div class="section-heading">Sıralama Karşılaştırması</div>
+
+    <div class="top-changed-banner" id="topChangedBanner">
+      ⚠ Farklı ağırlık setleri farklı bir birinci adayı üretiyor — ağırlık seçimi kararı doğrudan etkiliyor.
+    </div>
+
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Krater</th>
+          <th>A Sırası</th>
+          <th>B Sırası</th>
+          <th>Değişim</th>
+          <th>A Skoru</th>
+          <th>B Skoru</th>
+        </tr>
+      </thead>
+      <tbody id="cmpTableBody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /view-compare -->
+
+<!-- ── SIMULATOR VIEW ─────────────────────────────── -->
+<div id="view-sim" style="display:none">
+  <div class="sim-layout">
+
+    <!-- Left: Parameter Sliders -->
+    <div>
+      <div class="sim-panel">
+        <div class="sim-group-title">Orbital Koşullar</div>
+
+        <div class="sim-slider-row">
+          <div class="sim-slider-header">
+            <span class="sim-slider-label">Güneş Yükseklik Açısı</span>
+            <span class="sim-slider-val" id="sv-solar">3.2°</span>
+          </div>
+          <input type="range" class="sim-range" id="sr-solar" min="0.5" max="20" step="0.1" value="3.2"
+                 oninput="onSimSlider('solar',this.value,'°')">
+        </div>
+
+        <div class="sim-slider-row">
+          <div class="sim-slider-header">
+            <span class="sim-slider-label">Dünya Yükseklik Açısı</span>
+            <span class="sim-slider-val" id="sv-earth">12.5°</span>
+          </div>
+          <input type="range" class="sim-range" id="sr-earth" min="1" max="30" step="0.5" value="12.5"
+                 oninput="onSimSlider('earth',this.value,'°')">
+        </div>
+
+        <div class="sim-slider-row">
+          <div class="sim-slider-header">
+            <span class="sim-slider-label">İniş Açısı</span>
+            <span class="sim-slider-val" id="sv-angle">8.0°</span>
+          </div>
+          <input type="range" class="sim-range" id="sr-angle" min="5" max="20" step="0.5" value="8.0"
+                 oninput="onSimSlider('angle',this.value,'°')">
+        </div>
+
+        <div class="sim-slider-row">
+          <div class="sim-slider-header">
+            <span class="sim-slider-label">Δv Cezası</span>
+            <span class="sim-slider-val" id="sv-dv">0 m/s</span>
+          </div>
+          <input type="range" class="sim-range" id="sr-dv" min="0" max="100" step="1" value="0"
+                 oninput="onSimSlider('dv',this.value,' m/s')">
+        </div>
+
+        <div class="sim-group-title" style="margin-top:1rem">Arazi Koşulları</div>
+
+        <div class="sim-slider-row">
+          <div class="sim-slider-header">
+            <span class="sim-slider-label">Maks Eğim</span>
+            <span class="sim-slider-val" id="sv-slope">3.5°</span>
+          </div>
+          <input type="range" class="sim-range" id="sr-slope" min="2" max="15" step="0.5" value="3.5"
+                 oninput="onSimSlider('slope',this.value,'°')">
+        </div>
+
+        <div class="sim-slider-row">
+          <div class="sim-slider-header">
+            <span class="sim-slider-label">PSR Erişim Fraksiyonu</span>
+            <span class="sim-slider-val" id="sv-psr">0.18</span>
+          </div>
+          <input type="range" class="sim-range" id="sr-psr" min="0.05" max="0.95" step="0.01" value="0.18"
+                 oninput="onSimSlider('psr',this.value,'')">
+        </div>
+
+        <div class="sim-slider-row">
+          <div class="sim-slider-header">
+            <span class="sim-slider-label">Kaya Bolluğu</span>
+            <span class="sim-slider-val" id="sv-rocks">0.05</span>
+          </div>
+          <input type="range" class="sim-range" id="sr-rocks" min="0.01" max="0.20" step="0.01" value="0.05"
+                 oninput="onSimSlider('rocks',this.value,'')">
+        </div>
+
+        <button class="sim-reset-btn" onclick="resetSimSliders()">↺ Sıfırla</button>
+      </div>
+    </div>
+
+    <!-- Right: Results -->
+    <div>
+      <div class="section-heading" style="margin-bottom:.75rem">Simülasyon Sonuçları</div>
+      <div id="simResultsArea">
+        <div class="sim-empty">
+          <span class="big">⚙</span>
+          <span>Önce sol panelden bir krater seçin</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /view-sim -->
+
+<script>
+// ───────────────────────────────────────────────
+//  DATA (efficiency view)
+// ───────────────────────────────────────────────
+const CRATERS = [
+  { id:'SP-006', name:'Malapert A',    lat:-86.0,  lon:357.4, diam:15,  slope:3.5,  rough:0.12, rocks:0.05, psr:0.18, note:null },
+  { id:'SP-002', name:'Haworth',       lat:-86.9,  lon:358.1, diam:51,  slope:7.3,  rough:0.21, rocks:0.09, psr:0.55, note:null },
+  { id:'SP-004', name:'de Gerlache',   lat:-88.5,  lon:272.0, diam:32,  slope:10.8, rough:0.25, rocks:0.13, psr:0.63, note:null },
+  { id:'SP-001', name:'Shackleton',    lat:-89.9,  lon:0.0,   diam:21,  slope:12.5, rough:0.28, rocks:0.11, psr:0.82, note:null },
+  { id:'SP-007', name:'Cabeus A',      lat:-85.3,  lon:316.0, diam:42,  slope:11.2, rough:0.38, rocks:0.16, psr:0.58, note:'LCROSS onaylı su buzu' },
+  { id:'SP-003', name:'Nobile',        lat:-85.2,  lon:53.5,  diam:73,  slope:9.1,  rough:0.35, rocks:0.21, psr:0.48, note:'HC-003 kaya sınırı aşıldı' },
+];
+
+const ORBITAL_WINDOWS = [
+  { label:'W-1', time:'2026-11-23 14:32 UTC', solar:3.2, earth:12.5, angle:8.0,  dv:0  },
+  { label:'W-2', time:'2026-11-24 02:17 UTC', solar:2.5, earth:8.0,  angle:10.0, dv:12 },
+  { label:'W-3', time:'2026-11-24 19:55 UTC', solar:1.8, earth:5.5,  angle:12.0, dv:28 },
+  { label:'W-4', time:'2026-11-25 11:40 UTC', solar:1.2, earth:3.0,  angle:15.0, dv:45 },
+];
+
+// ───────────────────────────────────────────────
+//  EFFICIENCY CALCULATOR
+// ───────────────────────────────────────────────
+function computeEff(crater, win) {
+  const slopeNorm = Math.max(0, 1 - crater.slope / 12);
+  const roughNorm = Math.max(0, 1 - crater.rough / 0.5);
+  const rockNorm  = Math.max(0, 1 - crater.rocks / 0.15);
+  const terrainQ  = slopeNorm * 0.50 + roughNorm * 0.25 + rockNorm * 0.25;
+
+  const scienceQ  = crater.psr * 0.70 + (1 - crater.rocks) * 0.30;
+
+  const solarQ = Math.min(1, win.solar / 3.5);
+  const commQ  = Math.min(1, win.earth / 12);
+  const propQ  = Math.max(0, 1 - win.dv / 60);
+  const windowQ = solarQ * 0.40 + commQ * 0.30 + propQ * 0.30;
+
+  const composite = terrainQ * 0.35 + scienceQ * 0.25 + windowQ * 0.40;
+  const scaled = composite > 0.70
+    ? 0.70 + (composite - 0.70) * 1.80
+    : composite;
+
+  return Math.round(Math.min(99, Math.max(85, 85 + scaled * 15)));
+}
+
+function effColor(pct) {
+  if (pct >= 97) return 'var(--green)';
+  if (pct >= 94) return 'var(--accent)';
+  if (pct >= 91) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function solarFlux(deg) { return Math.round(1361 * Math.sin(deg * Math.PI / 180)); }
+function linkMargin(deg) { return (deg * 0.67 - 0.5).toFixed(1); }
+function commLabel(deg) {
+  if (deg >= 10) return 'Doğrudan LRS-1';
+  if (deg >= 5)  return 'Marjinal / LRO röle';
+  return 'Yalnızca röle';
+}
+
+// ───────────────────────────────────────────────
+//  UI STATE (efficiency view)
+// ───────────────────────────────────────────────
+let selectedCrater = null;
+let selectedWinIdx = null;
+let cachedEffs = [];
+
+// ───────────────────────────────────────────────
+//  RENDER: sidebar
+// ───────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('craterList');
+  list.innerHTML = '';
+  CRATERS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'crater-btn' + (c.note ? ' has-warning' : '');
+    if (selectedCrater && selectedCrater.id === c.id) btn.classList.add('active');
+    btn.innerHTML = `
+      <span class="cname">${c.name}</span>
+      <span class="cstats">${c.lat.toFixed(1)}°S · ⌀ ${c.diam} km · ${c.slope}° eğim</span>
+      <span class="cpsr">PSR ${Math.round(c.psr*100)}%</span>
+      ${c.note ? `<span style="font-size:.58rem;color:var(--amber)">${c.note}</span>` : ''}
+    `;
+    btn.onclick = () => selectCrater(c);
+    list.appendChild(btn);
+  });
+}
+
+// ───────────────────────────────────────────────
+//  RENDER: crater info
+// ───────────────────────────────────────────────
+function renderCraterInfo(c) {
+  const ci = document.getElementById('craterInfo');
+  ci.classList.remove('hidden');
+  document.getElementById('ci-name').textContent = c.name;
+  document.getElementById('ci-meta').innerHTML =
+    `<b>Koordinat:</b> ${Math.abs(c.lat).toFixed(1)}°G · ${c.lon.toFixed(1)}°D &nbsp;|&nbsp;
+     <b>Çap:</b> ${c.diam} km &nbsp;|&nbsp;
+     <b>Kaynak:</b> Robbins2019 / LROC`;
+
+  const chips = [
+    { l:'Maks. Eğim', v:`${c.slope}°`,   u:'derece' },
+    { l:'Pürüzlülük', v:`${c.rough} m`,  u:'RMS' },
+    { l:'Kaya Örtüsü', v:`${Math.round(c.rocks*100)}%`, u:'yüzde alan' },
+    { l:'PSR Erişimi', v:`${Math.round(c.psr*100)}%`, u:'elips kesişimi' },
+  ];
+  document.getElementById('ci-grid').innerHTML = chips.map(ch =>
+    `<div class="info-chip">
+       <div class="ic-label">${ch.l}</div>
+       <div class="ic-val">${ch.v} <span class="ic-unit">${ch.u}</span></div>
+     </div>`
+  ).join('');
+}
+
+// ───────────────────────────────────────────────
+//  RENDER: windows
+// ───────────────────────────────────────────────
+function renderWindows(c) {
+  cachedEffs = ORBITAL_WINDOWS.map(w => computeEff(c, w));
+  const bestIdx = cachedEffs.indexOf(Math.max(...cachedEffs));
+
+  document.getElementById('windowsHeading').style.display = 'flex';
+  const grid = document.getElementById('windowsGrid');
+  grid.innerHTML = '';
+
+  ORBITAL_WINDOWS.forEach((w, i) => {
+    const eff = cachedEffs[i];
+    const isBest = i === bestIdx;
+    const isSel  = i === selectedWinIdx;
+    const col    = effColor(eff);
+
+    const solarQ = Math.min(1, w.solar / 3.5);
+    const commQ  = Math.min(1, w.earth / 12);
+    const propQ  = Math.max(0, 1 - w.dv / 60);
+    const flux   = solarFlux(w.solar);
+    const lm     = linkMargin(w.earth);
+
+    const card = document.createElement('div');
+    card.className = 'win-card' +
+      (isBest ? ' best-mark' : '') +
+      (isSel  ? ' selected'  : '');
+    card.onclick = () => selectWindow(i);
+
+    card.innerHTML = `
+      <div class="win-label">
+        <span>${w.label}</span>
+        ${isBest ? '<span class="best-tag">EN VERİMLİ</span>' : ''}
+      </div>
+      <div class="eff-num" style="color:${col}">
+        ${eff}<span class="eff-pct">%</span>
+      </div>
+      <div class="win-time">${w.time}</div>
+      <div class="metrics">
+        ${metric('☀', 'Güneş açısı', solarQ, `${w.solar}° · ${flux} W/m²`)}
+        ${metric('📡', 'Yer bağlantısı', commQ, `${commLabel(w.earth)}`)}
+        ${metric('🚀', 'Yakıt marjini', propQ, `${w.dv===0?'Optimal':'+'+w.dv+' m/s'}`)}
+        ${metric('⛰', 'Arazi kalitesi', terrainQ(c), `${c.slope}° · %${Math.round(c.rocks*100)} kaya`)}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function metric(icon, label, ratio, val) {
+  const pct = Math.round(ratio * 100);
+  const barCol = pct >= 75 ? 'var(--green)' : pct >= 50 ? 'var(--accent)' : pct >= 30 ? 'var(--amber)' : 'var(--red)';
+  return `
+    <div class="metric-row">
+      <span class="metric-icon">${icon}</span>
+      <span class="metric-label">${label}</span>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:${pct}%;background:${barCol}"></div></div>
+      <span class="metric-val">${val.length > 12 ? val.substring(0,12) : val}</span>
+    </div>`;
+}
+
+function terrainQ(c) {
+  const sn = Math.max(0, 1 - c.slope / 12);
+  const rn = Math.max(0, 1 - c.rough / 0.5);
+  const kn = Math.max(0, 1 - c.rocks / 0.15);
+  return sn * 0.5 + rn * 0.25 + kn * 0.25;
+}
+
+// ───────────────────────────────────────────────
+//  RENDER: decision panel
+// ───────────────────────────────────────────────
+function renderDecision(c, winIdx) {
+  const w   = ORBITAL_WINDOWS[winIdx];
+  const eff = cachedEffs[winIdx];
+  const bestIdx = cachedEffs.indexOf(Math.max(...cachedEffs));
+  const col = effColor(eff);
+
+  document.getElementById('dec-win-label').textContent = `${c.name} · ${w.label}`;
+  const effEl = document.getElementById('dec-eff-num');
+  effEl.textContent = `%${eff}`;
+  effEl.style.color = col;
+
+  // comparison chips
+  const cmp = document.getElementById('dec-compare');
+  cmp.innerHTML = ORBITAL_WINDOWS.map((ww, i) => {
+    const e = cachedEffs[i];
+    return `<div class="cmp-chip ${i===winIdx?'cmp-sel':''}" style="color:${effColor(e)}">${ww.label} %${e}</div>`;
+  }).join('');
+
+  document.getElementById('dec-explanation').innerHTML = buildExplanation(c, w, eff, winIdx, bestIdx);
+  document.getElementById('decisionPanel').classList.add('visible');
+}
+
+// ───────────────────────────────────────────────
+//  EXPLANATION GENERATOR (Turkish)
+// ───────────────────────────────────────────────
+function buildExplanation(c, w, eff, winIdx, bestIdx) {
+  const flux   = solarFlux(w.solar);
+  const lm     = parseFloat(linkMargin(w.earth));
+  const isBest = winIdx === bestIdx;
+  const otherEffs = cachedEffs.filter((_,i) => i !== winIdx);
+  const avgOther = Math.round(otherEffs.reduce((a,b)=>a+b,0) / otherEffs.length);
+  const diff = eff - avgOther;
+
+  // Dominant limiting factor
+  const solarQ = Math.min(1, w.solar / 3.5);
+  const commQ  = Math.min(1, w.earth / 12);
+  const propQ  = Math.max(0, 1 - w.dv / 60);
+  const tQ     = terrainQ(c);
+  const scores = {solar:solarQ, comm:commQ, prop:propQ, terrain:tQ};
+  const minKey = Object.keys(scores).reduce((a,b)=>scores[a]<scores[b]?a:b);
+  const maxKey = Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
+
+  const factorNames = {
+    solar:'güneş ışınımı', comm:'yer iletişim geometrisi',
+    prop:'yakıt marjini', terrain:'arazi güvenliği'
+  };
+
+  // Solar sentence
+  let solar_s;
+  if (w.solar >= 3.0)
+    solar_s = `Güneş irtifasının <strong>${w.solar}°</strong> ile en yüksek seviyesinde olduğu bu pencerede güneş panelleri <strong>${flux} W/m²</strong> akı üretmekte ve iniş sonrası operasyonlar için yeterli enerji marjini sağlamaktadır.`;
+  else if (w.solar >= 1.8)
+    solar_s = `Güneş irtifasının <strong>${w.solar}°</strong> ile orta seviyede olduğu bu pencerede güneş panelleri <strong>${flux} W/m²</strong> akı üretmektedir; enerji marjini daralmış olmakla birlikte operasyonel limitler içindedir.`;
+  else
+    solar_s = `Güneş irtifası yalnızca <strong>${w.solar}°</strong> olan bu pencerede güneş akısı <em>${flux} W/m²</em> ile kısıtlıdır; iniş öncesi batarya tampon kapasitesinin tam dolumu zorunludur.`;
+
+  // Comm sentence
+  let comm_s;
+  if (w.earth >= 10)
+    comm_s = `Dünya <strong>${w.earth}°</strong> irtifada iken doğrudan LRS-1 bağlantısı <strong>+${lm} dBm</strong> marjinle aktif olup tüm telemetri ve komut kanalları güvenceli biçimde çalışacaktır.`;
+  else if (w.earth >= 5)
+    comm_s = `Dünya <strong>${w.earth}°</strong> irtifada olup link marjini <em>+${lm} dBm</em> ile marjinal doğrudan bağlantı sağlamaktadır; LRO röle desteği aktivasyon sınırında bekletilmelidir.`;
+  else
+    comm_s = `Dünya yalnızca <em>${w.earth}°</em> irtifada olduğundan bu pencerede yalnızca röle uydusu üzerinden iletişim kurulabilmektedir; bu durum komut gecikmesini yaklaşık <em>2.4 sn</em> artırmaktadır.`;
+
+  // Propellant sentence
+  let prop_s;
+  if (w.dv === 0)
+    prop_s = `<strong>${w.angle}°'lik</strong> iniş açısı minimum enerji yörüngesine birebir karşılık geldiğinden herhangi bir ek delta-V harcaması söz konusu değildir ve yakıt rezervi tam marjinini korumaktadır.`;
+  else
+    prop_s = `<strong>${w.angle}°'lik</strong> iniş açısı, minimum enerji yörüngesinden <em>+${w.dv} m/s</em> delta-V sapması gerektirmektedir; bu sapma yakıt rezervini daraltmakla birlikte operasyonel güvenlik sınırlarının dışına çıkmamaktadır.`;
+
+  // Terrain sentence
+  let terrain_s;
+  if (c.slope <= 5)
+    terrain_s = `Kraterin <strong>${c.slope}°'lik</strong> son derece düz arazisi ve düşük kaya yoğunluğu (<strong>%${Math.round(c.rocks*100)}</strong>), tüm pencerelerde arazi güvenliğini maksimum düzeyde tutmaktadır.`;
+  else if (c.slope <= 10)
+    terrain_s = `Kraterin <strong>${c.slope}°'lik</strong> orta eğimi kısıtlayıcı değildir; standart arazi doğrulama prosedürü yeterlidir.`;
+  else
+    terrain_s = `Kraterin <strong>${c.slope}°'lik</strong> yüksek eğimi arazi güvenlik marjini üzerinde baskı oluşturmaktadır; aktif tehlike kaçınma sistemi (HDA) tam kapasite devreye girecektir.`;
+
+  // PSR science sentence
+  let psr_s;
+  if (c.psr >= 0.7)
+    psr_s = `PSR erişim oranının <strong>%${Math.round(c.psr*100)}</strong> ile son derece yüksek olması, bilimsel getiri potansiyelini güney kutup adayları arasında zirveye taşımaktadır.`;
+  else if (c.psr >= 0.4)
+    psr_s = `PSR erişim oranı <strong>%${Math.round(c.psr*100)}</strong> ile orta-yüksek düzeyde olup temel uçucu madde araştırma hedeflerini karşılamaktadır.`;
+  else
+    psr_s = `PSR erişim oranı <strong>%${Math.round(c.psr*100)}</strong> ile nispeten düşük kalmaktadır; bu krater ağırlıklı olarak mühendislik demonstrasyon hedeflerine yöneliktir.`;
+
+  // Comparison + verdict
+  let verdict_s;
+  if (isBest) {
+    verdict_s = `Diğer üç pencereyle karşılaştırıldığında (ortalama <em>%${avgOther}</em>), <strong>${w.label}</strong> ${factorNames[maxKey]} avantajı nedeniyle <em>+${diff} puan</em> fark yaratmaktadır. Bu pencere, bu kratere iniş için en yüksek bütünleşik verimi sunmaktadır.`;
+  } else {
+    verdict_s = `Bu pencerede <em>${factorNames[minKey]}</em> birincil sınırlayıcı etkendir. En yüksek verimli pencereye kıyasla <em>${eff - Math.max(...cachedEffs)} puan</em> fark bulunmakta olup bu pencereyi tercih eden bir operatör, ${minKey==='solar'?'enerji marjinini daraltmayı':'iletişim güvenilirliğini kısmen düşürmeyi'} göze almalıdır.`;
+  }
+
+  return `${solar_s} ${comm_s} ${prop_s} ${terrain_s} ${psr_s} ${verdict_s}`;
+}
+
+// ───────────────────────────────────────────────
+//  EVENTS (efficiency view)
+// ───────────────────────────────────────────────
+function selectCrater(c) {
+  selectedCrater = c;
+  selectedWinIdx = null;
+  document.getElementById('decisionPanel').classList.remove('visible');
+  renderSidebar();
+  renderCraterInfo(c);
+  renderWindows(c);
+}
+
+function selectWindow(i) {
+  if (!selectedCrater) return;
+  selectedWinIdx = i;
+  renderWindows(selectedCrater);  // re-render to highlight selected
+  renderDecision(selectedCrater, i);
+}
+
+// ───────────────────────────────────────────────
+//  TAB SWITCHING
+// ───────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('view-eff').style.display     = (tab === 'eff') ? '' : 'none';
+  document.getElementById('view-compare').style.display = (tab === 'cmp') ? '' : 'none';
+  document.getElementById('view-sim').style.display     = (tab === 'sim') ? '' : 'none';
+  document.getElementById('tab-eff').classList.toggle('active', tab === 'eff');
+  document.getElementById('tab-cmp').classList.toggle('active', tab === 'cmp');
+  document.getElementById('tab-sim').classList.toggle('active', tab === 'sim');
+  if (tab === 'sim') initSimView();
+}
+
+// ───────────────────────────────────────────────
+//  COMPARISON — WEIGHT VALIDATION
+// ───────────────────────────────────────────────
+function getWeights(prefix) {
+  return {
+    science:       parseFloat(document.getElementById(prefix + '-science').value) || 0,
+    energy:        parseFloat(document.getElementById(prefix + '-energy').value)  || 0,
+    thermal:       parseFloat(document.getElementById(prefix + '-thermal').value) || 0,
+    communication: parseFloat(document.getElementById(prefix + '-comm').value)    || 0,
+    risk:          parseFloat(document.getElementById(prefix + '-risk').value)    || 0,
+  };
+}
+
+function sumWeights(w) {
+  return w.science + w.energy + w.thermal + w.communication + w.risk;
+}
+
+function updateSum(scenario) {
+  const prefix = 'w' + scenario;
+  const w = getWeights(prefix);
+  const s = sumWeights(w);
+  const el = document.getElementById('sum-' + scenario);
+  const valid = Math.abs(s - 1.0) < 0.001;
+  el.textContent = 'Toplam: ' + s.toFixed(2) + (valid ? ' ✓' : ' ✗ (1.00 olmalı)');
+  el.className = 'cmp-sum ' + (valid ? 'valid' : 'invalid');
+  // Enable/disable run button
+  const wa = getWeights('wa');
+  const wb = getWeights('wb');
+  const bothValid = Math.abs(sumWeights(wa) - 1.0) < 0.001 && Math.abs(sumWeights(wb) - 1.0) < 0.001;
+  document.getElementById('runBtn').disabled = !bothValid;
+}
+
+// ───────────────────────────────────────────────
+//  COMPARISON — INLINE SCORING SIMULATION
+//
+//  Replicates luna_ai/mission_intelligence/scoring/scorer.py
+//  for candidates with no environmental data products (the sample data case).
+//
+//  HC thresholds (hard_constraints.py default_constraints):
+//    HC-001: slope_deg  <= 15.0
+//    HC-002: psr        >= 0.10
+//    HC-003: rock_abund <= 0.20
+//
+//  Score formulas (no env data → all env-dependent terms use fallback values):
+//    science   = min(1, psr / 0.20)       [min_required_fraction = max(0.1, 4.0*0.05)]
+//    energy    = 0.5                       [neutral, no illumination time-series]
+//    thermal   = max(0, 1 - psr)           [invert PSR; higher PSR = more dark exposure]
+//    comm      = 0.5                       [TBD, no link budget yet]
+//    risk      = ( (1 - (slope/15 + rocks + rough)/3) + 0.5 ) / 2
+//                 ↑ terrain_score                     ↑ psr_edge_risk=0.5
+// ───────────────────────────────────────────────
+
+const ALL_CANDIDATES = [
+  { id:'SP-001', name:'Shackleton',    slope:12.5, rough:0.28, rocks:0.11, psr:0.82 },
+  { id:'SP-002', name:'Haworth',       slope:7.3,  rough:0.21, rocks:0.09, psr:0.55 },
+  { id:'SP-003', name:'Nobile',        slope:9.1,  rough:0.35, rocks:0.21, psr:0.48 },
+  { id:'SP-004', name:'de Gerlache',   slope:10.8, rough:0.25, rocks:0.13, psr:0.63 },
+  { id:'SP-005', name:'Unnamed Ridge', slope:17.4, rough:0.44, rocks:0.14, psr:0.31 },
+  { id:'SP-006', name:'Malapert A',    slope:3.5,  rough:0.12, rocks:0.05, psr:0.18 },
+  { id:'SP-007', name:'Cabeus A',      slope:11.2, rough:0.38, rocks:0.16, psr:0.58 },
+];
+
+function hcPass(c) {
+  return c.slope <= 15.0 && c.psr >= 0.10 && c.rocks <= 0.20;
+}
+
+function scoreCandidate(c, w) {
+  const sciScore    = Math.min(1.0, c.psr / 0.20);
+  const energyScore = 0.5;
+  const thermalScore = Math.max(0.0, 1.0 - c.psr);
+  const commScore   = 0.5;
+  const slopeRisk   = Math.min(1.0, c.slope / 15.0);
+  const rockRisk    = c.rocks;
+  const roughRisk   = Math.min(1.0, c.rough / 1.0);
+  const terrainRisk = (slopeRisk + rockRisk + roughRisk) / 3.0;
+  const terrainScore = 1.0 - terrainRisk;
+  const riskScore   = (terrainScore + 0.5) / 2.0;
+
+  const total = w.science       * sciScore
+              + w.energy        * energyScore
+              + w.thermal       * thermalScore
+              + w.communication * commScore
+              + w.risk          * riskScore;
+
+  return {
+    total:   Math.max(0, Math.min(1, total)),
+    science: sciScore,
+    energy:  energyScore,
+    thermal: thermalScore,
+    comm:    commScore,
+    risk:    riskScore,
+  };
+}
+
+function runScenario(weights) {
+  const passed = ALL_CANDIDATES.filter(hcPass);
+  const scored = passed.map(c => ({ ...c, scores: scoreCandidate(c, weights) }));
+  scored.sort((a, b) => b.scores.total - a.scores.total);
+  return scored.map((c, i) => ({ ...c, rank: i + 1 }));
+}
+
+// ───────────────────────────────────────────────
+//  COMPARISON — RUN + RENDER
+// ───────────────────────────────────────────────
+function rankClass(r) {
+  return r === 1 ? 'rank-1' : r === 2 ? 'rank-2' : 'rank-other';
+}
+
+function runComparison() {
+  const wa = getWeights('wa');
+  const wb = getWeights('wb');
+
+  const rankedA = runScenario(wa);
+  const rankedB = runScenario(wb);
+
+  // Build lookup by candidate_id
+  const mapA = {}, mapB = {};
+  rankedA.forEach(c => mapA[c.id] = c);
+  rankedB.forEach(c => mapB[c.id] = c);
+
+  // Common HC-passing IDs (both maps will have same keys since HC is weight-independent)
+  const ids = rankedA.map(c => c.id);  // already filtered
+
+  // Build rows sorted by Scenario A rank
+  const rows = ids.map(id => {
+    const a = mapA[id], b = mapB[id];
+    const delta = a.rank - b.rank;
+    const dir   = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
+    return { id, name: a.name, rankA: a.rank, rankB: b.rank, delta, dir,
+             scoreA: a.scores.total, scoreB: b.scores.total };
+  });
+
+  const topA = rankedA[0] ? rankedA[0].id : null;
+  const topB = rankedB[0] ? rankedB[0].id : null;
+  const topChanged = topA !== topB;
+
+  // Banner
+  const banner = document.getElementById('topChangedBanner');
+  if (topChanged) {
+    banner.classList.add('visible');
+    const nameA = mapA[topA] ? mapA[topA].name : topA;
+    const nameB = mapB[topB] ? mapB[topB].name : topB;
+    banner.innerHTML = `⚠ Birinci adayı değişti: Senaryo A → <strong>${nameA}</strong> &nbsp;|&nbsp; Senaryo B → <strong>${nameB}</strong>. Ağırlık seçimi kararı doğrudan etkiliyor.`;
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  // Table
+  const tbody = document.getElementById('cmpTableBody');
+  tbody.innerHTML = rows.map(r => {
+    const isTopRow = (r.id === topA || r.id === topB) && topChanged;
+    const dirHtml = r.dir === 'up'
+      ? `<span class="dir-up">↑ +${r.delta}</span>`
+      : r.dir === 'down'
+        ? `<span class="dir-down">↓ ${r.delta}</span>`
+        : `<span class="dir-same">= 0</span>`;
+
+    return `<tr class="${isTopRow ? 'top-changed' : ''}">
+      <td style="font-weight:600">${r.name}</td>
+      <td><span class="rank-badge ${rankClass(r.rankA)}">${r.rankA}</span></td>
+      <td><span class="rank-badge ${rankClass(r.rankB)}">${r.rankB}</span></td>
+      <td>${dirHtml}</td>
+      <td class="cmp-score">${(r.scoreA * 100).toFixed(1)}%</td>
+      <td class="cmp-score">${(r.scoreB * 100).toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('cmpResults').style.display = '';
+}
+
+// ───────────────────────────────────────────────
+//  SIMULATOR
+// ───────────────────────────────────────────────
+const simState = {
+  solar: 3.2, earth: 12.5, angle: 8.0, dv: 0,
+  slope: 3.5, psr: 0.18, rocks: 0.05,
+};
+let simDebounce = null;
+
+function onSimSlider(key, rawVal, unit) {
+  const val = parseFloat(rawVal);
+  simState[key] = val;
+  const el = document.getElementById('sv-' + key);
+  if (el) {
+    if (key === 'psr' || key === 'rocks') el.textContent = val.toFixed(2);
+    else if (key === 'dv')               el.textContent = Math.round(val) + unit;
+    else                                 el.textContent = val.toFixed(1) + unit;
+  }
+  clearTimeout(simDebounce);
+  simDebounce = setTimeout(updateSimResults, 300);
+}
+
+function resetSimSliders() {
+  const c = selectedCrater || CRATERS[0];
+  const w = ORBITAL_WINDOWS[0];
+  const defaults = {
+    solar: w.solar, earth: w.earth, angle: w.angle, dv: w.dv,
+    slope: c.slope, psr: c.psr, rocks: c.rocks,
+  };
+  Object.entries(defaults).forEach(function([key, val]) {
+    simState[key] = val;
+    const range = document.getElementById('sr-' + key);
+    if (range) range.value = val;
+    const el = document.getElementById('sv-' + key);
+    if (el) {
+      if (key === 'psr' || key === 'rocks') el.textContent = val.toFixed(2);
+      else if (key === 'dv')               el.textContent = Math.round(val) + ' m/s';
+      else                                 el.textContent = val.toFixed(1) + '°';
+    }
+  });
+  updateSimResults();
+}
+
+function computeSimEff(crater, win) {
+  const mw = Object.assign({}, win, { solar: simState.solar, earth: simState.earth, dv: simState.dv });
+  const mc = Object.assign({}, crater, { slope: simState.slope, psr: simState.psr, rocks: simState.rocks });
+  return computeEff(mc, mw);
+}
+
+function simDomFactor(crater, win) {
+  const mw = Object.assign({}, win, { solar: simState.solar, earth: simState.earth, dv: simState.dv });
+  const mc = Object.assign({}, crater, { slope: simState.slope, psr: simState.psr, rocks: simState.rocks });
+  const sq = Math.min(1, mw.solar / 3.5);
+  const cq = Math.min(1, mw.earth / 12);
+  const pq = Math.max(0, 1 - mw.dv / 60);
+  const tq = terrainQ(mc);
+  const sc = mc.psr * 0.70 + (1 - mc.rocks) * 0.30;
+  const facs = [['Güneş', sq], ['İletişim', cq], ['Yakıt', pq], ['Arazi', tq], ['Bilim', sc]];
+  return facs.reduce(function(a, b) { return a[1] < b[1] ? a : b; })[0];
+}
+
+function simEffColor(pct) {
+  if (pct >= 96) return 'var(--green)';
+  if (pct >= 93) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+async function updateSimResults() {
+  if (!selectedCrater) return;
+  const crater = selectedCrater;
+  const baseEffs = ORBITAL_WINDOWS.map(function(w) { return computeEff(crater, w); });
+
+  let simEffs = null;
+  try {
+    const resp = await Promise.race([
+      fetch('http://localhost:8000/efficiency/sensitivity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidate_id: crater.id,
+          overrides: {
+            solar_elevation_deg: simState.solar,
+            earth_elevation_deg: simState.earth,
+            landing_angle_deg:   simState.angle,
+            dv_penalty:          simState.dv,
+            slope_deg:           simState.slope,
+            psr_fraction:        simState.psr,
+            rock_abundance:      simState.rocks,
+          },
+        }),
+      }),
+      new Promise(function(_, rej) { setTimeout(function() { rej(new Error('timeout')); }, 2000); }),
+    ]);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (Array.isArray(data.windows)) simEffs = data.windows.map(function(w) { return w.efficiency; });
+    }
+  } catch (_) { /* fall through to inline fallback */ }
+
+  if (!simEffs) simEffs = ORBITAL_WINDOWS.map(function(w) { return computeSimEff(crater, w); });
+
+  renderSimResults(crater, simEffs, baseEffs);
+}
+
+function renderSimResults(crater, simEffs, baseEffs) {
+  const area = document.getElementById('simResultsArea');
+  area.innerHTML = '<div class="sim-win-grid">' +
+    ORBITAL_WINDOWS.map(function(w, i) {
+      const eff   = simEffs[i];
+      const delta = eff - baseEffs[i];
+      const col   = simEffColor(eff);
+      let deltaHtml;
+      if (Math.abs(delta) < 0.05)
+        deltaHtml = '<div class="sim-delta delta-zero">= 0.0%</div>';
+      else if (delta > 0)
+        deltaHtml = '<div class="sim-delta delta-pos">▲ +' + delta.toFixed(1) + '%</div>';
+      else
+        deltaHtml = '<div class="sim-delta delta-neg">▼ ' + delta.toFixed(1) + '%</div>';
+      const dom = simDomFactor(crater, w);
+      return '<div class="sim-win-card">' +
+        '<div class="sim-win-label">' + w.label + '</div>' +
+        '<div class="sim-eff-num" style="color:' + col + '">' + eff + '<span class="sim-eff-pct">%</span></div>' +
+        deltaHtml +
+        '<div class="sim-dom-factor">Baskın: ' + dom + '</div>' +
+        '</div>';
+    }).join('') +
+  '</div>';
+}
+
+function initSimView() {
+  if (selectedCrater) {
+    resetSimSliders();
+  } else {
+    const area = document.getElementById('simResultsArea');
+    if (area) area.innerHTML = '<div class="sim-empty"><span class="big">⚙</span><span>Önce sol panelden bir krater seçin</span></div>';
+  }
+}
+
+// ───────────────────────────────────────────────
+//  INIT
+// ───────────────────────────────────────────────
+renderSidebar();
+updateSum('a');
+updateSum('b');
+</script>
+</body>
+</html>
