@@ -19,15 +19,15 @@ export async function fetchMoonGeometry(date){
   });
   let res;
   try{res=await fetch('/horizons-proxy?'+params.toString());}
-  catch(e){throw new Error('Horizons proxy erişilemedi: '+e.message);}
-  const data=await res.json().catch(()=>{throw new Error('Horizons yanıtı JSON değil.');});
+  catch(e){throw new Error('Horizons proxy unreachable: '+e.message);}
+  const data=await res.json().catch(()=>{throw new Error('Horizons response is not JSON.');});
   if(data.error)throw new Error(data.error);
   const text=data.result||'';
   const soe=text.indexOf('$$SOE'),eoe=text.indexOf('$$EOE');
-  if(soe<0||eoe<0)throw new Error('Horizons yanıtında efemeris tablosu yok: '+text.slice(0,200));
+  if(soe<0||eoe<0)throw new Error('No ephemeris table in Horizons response: '+text.slice(0,200));
   const line=text.slice(soe+5,eoe).trim().split('\n')[0].trim();
   const nums=line.split(/\s+/).slice(2).map(Number);
-  if(nums.length<6||nums.some(isNaN))throw new Error('Horizons satırı çözümlenemedi: '+line);
+  if(nums.length<6||nums.some(isNaN))throw new Error('Could not parse Horizons row: '+line);
   const [obsLon,obsLat,sunLon,sunLat,eclLon,eclLat]=nums;
   return{
     date,

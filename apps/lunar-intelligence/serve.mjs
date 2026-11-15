@@ -18,9 +18,9 @@ function horizonsProxy(req,res){
       res.writeHead(200,hdrs);
       // Wrap non-JSON responses (HTML error pages) so the browser gets a clean error message
       try{JSON.parse(body);res.end(body);}
-      catch{res.end(JSON.stringify({error:`NASA Horizons HTML yanıtı (${hr.statusCode}): ${body.slice(0,300)}`}));}
+      catch{res.end(JSON.stringify({error:`NASA Horizons HTML response (${hr.statusCode}): ${body.slice(0,300)}`}));}
     });
-  }).on('error',e=>{res.writeHead(200,hdrs);res.end(JSON.stringify({error:`NASA bağlantı hatası: ${e.message}`}));});
+  }).on('error',e=>{res.writeHead(200,hdrs);res.end(JSON.stringify({error:`NASA connection error: ${e.message}`}));});
 }
 
 http.createServer((req,res)=>{
