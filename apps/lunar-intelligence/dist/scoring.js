@@ -15,4 +15,4 @@ export function riskScore(zone){
  const hazardRisk=1-zone.hazardFree;
  return Math.round((slopeRisk*0.40+rockRisk*0.25+roughRisk*0.20+hazardRisk*0.15)*100);
 }
-export function profileFor(zone){const points=Array.from({length:81},(_,i)=>{const x=i*2.5;return {x,z:Math.tan(zone.slopeDeg*Math.PI/180)*x+zone.roughness*(Math.sin(i*.9+zone.profileSeed)*1.4+Math.sin(i*.29+zone.profileSeed))}});const elevations=points.map(p=>p.z);return {points,range:Math.max(...elevations)-Math.min(...elevations),slope:zone.slopeDeg,roughness:zone.roughness}}
+export function profileFor(zone){if(zone.profile){const points=zone.profile.map((z,i)=>({x:i*2.5,z}));const el=zone.profile;return {points,range:Math.max(...el)-Math.min(...el),slope:zone.slopeDeg,roughness:zone.roughness}}const points=Array.from({length:81},(_,i)=>{const x=i*2.5;return {x,z:Math.tan(zone.slopeDeg*Math.PI/180)*x+zone.roughness*(Math.sin(i*.9+zone.profileSeed)*1.4+Math.sin(i*.29+zone.profileSeed))}});const elevations=points.map(p=>p.z);return {points,range:Math.max(...elevations)-Math.min(...elevations),slope:zone.slopeDeg,roughness:zone.roughness}}

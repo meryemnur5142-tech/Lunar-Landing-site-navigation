@@ -1,3 +1,4 @@
+import {site20} from './site20.js';
 export const criteria=[
  {key:'smoothness',name:'Terrain Smoothness',weight:.25,explanation:'Lower local height variation provides a more even touchdown surface. This demo rates synthetic roughness over the landing footprint, not LRO measurements.'},
  {key:'slope',name:'Slope Suitability',weight:.20,explanation:'Gentler slopes reduce touchdown tilt. This demo uses an illustrative slope penalty. Vehicle-specific allowable slopes have not been supplied.'},
@@ -10,7 +11,19 @@ export const craters=[
  {id:'tycho',name:'Tycho Crater',lat:-43.31,lon:-11.36,diameter:85,depth:4.8,region:'SOUTHERN HIGHLANDS',description:'Terraced walls / ray system',shift:0},
  {id:'copernicus',name:'Copernicus Crater',lat:9.62,lon:-20.08,diameter:93,depth:3.8,region:'OCEANUS PROCELLARUM',description:'Terraced walls / central peaks',shift:1},
  {id:'clavius',name:'Clavius Crater',lat:-58.75,lon:-14.4,diameter:225,depth:3.5,region:'SOUTHERN HIGHLANDS',description:'Walled plain / nested impacts',shift:2},
- {id:'mons-mouton',name:'Mons Mouton',lat:-83.9,lon:-3.9,diameter:97,depth:1.8,region:'SOUTH POLAR HIGHLAND',description:'Polar massif — IM-2 landing site (Mar 2025)',shift:3},
+ {id:'mons-mouton',name:'Mons Mouton',lat:-84.6,lon:31.0,diameter:100,depth:6.0,kind:'massif',region:'SOUTH POLAR HIGHLAND · NOBILE–MALAPERT',description:'Flat-topped massif (~100 km wide, ~6 km high, LOLA) — IM-2 Athena landed 6 Mar 2025',shift:3,
+  // Zone A/B coordinates: LROC (ASU) IM-2 intended site and reported Athena touchdown point.
+  // Terrain metrics are illustrative estimates, not LOLA/NAC measurements.
+  zones:[
+   {id:'A',lat:-84.78,  lon:29.13,  roughness:.10,slopeDeg:3.5, rockCover:.10,hazardFree:.93,stability:90,note:'IM-2 intended landing site (LROC)'},
+   {id:'B',lat:-84.7906,lon:29.1957,roughness:.38,slopeDeg:9.5, rockCover:.30,hazardFree:.60,stability:62,note:'Athena actual touchdown (~250 m off target, tipped in shallow crater)'},
+   {id:'C',lat:-84.60,  lon:31.00,  roughness:.07,slopeDeg:2.0, rockCover:.08,hazardFree:.96,stability:93,note:'Plateau summit centre'},
+   {id:'D',lat:-84.55,  lon:27.50,  roughness:.12,slopeDeg:4.0, rockCover:.12,hazardFree:.92,stability:89,note:'Western plateau (former VIPER operations area)'},
+   {id:'E',lat:-84.35,  lon:32.50,  roughness:.16,slopeDeg:5.5, rockCover:.15,hazardFree:.88,stability:85,note:'Northern plateau'},
+   {id:'F',lat:-84.80,  lon:40.00,  roughness:.30,slopeDeg:12.0,rockCover:.27,hazardFree:.72,stability:71,note:'Eastern plateau edge toward Nobile'},
+   {id:'G',lat:-84.25,  lon:40.50,  roughness:.45,slopeDeg:18.0,rockCover:.40,hazardFree:.52,stability:55,note:'Massif flank'},
+  ]},
+ site20,
 ];
 const fixtures=[
  {id:'A',x:8, y:3, roughness:.08,slopeDeg:1.1,rockCover:.09,hazardFree:.97,stability:94},
@@ -21,7 +34,9 @@ const fixtures=[
  {id:'F',x:6, y:10,roughness:.34,slopeDeg:5.1,rockCover:.30,hazardFree:.73,stability:70},
  {id:'G',x:15,y:11,roughness:.42,slopeDeg:6.8,rockCover:.38,hazardFree:.62,stability:58},
 ];
-export function zonesFor(crater){return fixtures.map((f,i)=>{const x=f.x+crater.shift,y=f.y+crater.shift*.5;return {...f,x,y,lat:crater.lat+y/1737.4*180/Math.PI,lon:crater.lon+x/(1737.4*Math.cos(crater.lat*Math.PI/180))*180/Math.PI,roughness:f.roughness+crater.shift*.015,slopeDeg:f.slopeDeg+crater.shift*.3,edgeKm:crater.diameter/2-Math.hypot(x,y),referenceClearance:35+crater.shift*4,profileSeed:i+crater.shift*5}})}
+const KM_PER_DEG=1737.4*Math.PI/180;
+function explicitZones(crater){return crater.zones.map((z,i)=>{const y=(z.lat-crater.lat)*KM_PER_DEG,x=(z.lon-crater.lon)*KM_PER_DEG*Math.cos(crater.lat*Math.PI/180);return {x,y,edgeKm:crater.diameter/2-Math.hypot(x,y),referenceClearance:30,profileSeed:i+crater.shift*5,...z}})}
+export function zonesFor(crater){if(crater.zones)return explicitZones(crater);return fixtures.map((f,i)=>{const x=f.x+crater.shift,y=f.y+crater.shift*.5;return {...f,x,y,lat:crater.lat+y/1737.4*180/Math.PI,lon:crater.lon+x/(1737.4*Math.cos(crater.lat*Math.PI/180))*180/Math.PI,roughness:f.roughness+crater.shift*.015,slopeDeg:f.slopeDeg+crater.shift*.3,edgeKm:crater.diameter/2-Math.hypot(x,y),referenceClearance:35+crater.shift*4,profileSeed:i+crater.shift*5}})}
 export const sourceNote='Site measurements, normalized criteria and elevation profiles are synthetic demo data. Crater dimensions and locations are approximate context only. NASA imagery is used for visualization, not as evidence for these scores.';
 export const vehicles=[
  {id:'viper',name:'VIPER',fullName:'Volatiles Investigating Polar Exploration Rover',type:'Polar Rover',agency:'NASA',mass:'450 kg',dims:'1.7 × 1.7 × 2.5 m',wheelDiam:'0.5 m',power:'450 W peak (3 solar arrays)',maxSlope:'15°',maxSlopeDeg:15,maxRockCover:0.18,maxRoughness:0.25,speed:'0.2 m/s',payload:'NIRVSS · NSS · TRIDENT drill · MSolo',note:'Designed for south-pole PSR proximity; cancelled 2024, re-partnered 2025.',source:'https://www.nasa.gov/viper/'},

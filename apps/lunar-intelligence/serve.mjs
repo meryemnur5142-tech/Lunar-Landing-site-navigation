@@ -8,7 +8,7 @@ const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=u
 
 function horizonsProxy(req,res){
   const qs=new URL(req.url,'http://localhost').search;
-  const target='https://ssd-api.jpl.nasa.gov/horizons.api'+qs;
+  const target='https://ssd.jpl.nasa.gov/api/horizons.api'+qs;
   const hdrs={'Content-Type':'application/json','Access-Control-Allow-Origin':'*','Cache-Control':'no-cache'};
   https.get(target,{headers:{'User-Agent':'LUNA-AI/1.0'}},(hr)=>{
     const chunks=[];
@@ -32,4 +32,4 @@ http.createServer((req,res)=>{
     res.writeHead(200,{'Content-Type':mime[path.extname(target)]||'application/octet-stream','Cache-Control':'no-cache'});
     fs.createReadStream(target).pipe(res);
   }catch{res.writeHead(400);res.end('Bad request');}
-}).listen(5173,'127.0.0.1',()=>console.log('Local: http://127.0.0.1:5173'));
+}).listen(process.env.PORT||5173,'127.0.0.1',()=>console.log('Local: http://127.0.0.1:'+(process.env.PORT||5173)));
