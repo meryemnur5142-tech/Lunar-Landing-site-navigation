@@ -39,9 +39,19 @@ jobs:
         run: |
           PYTHONPATH=. pytest tests/unit/ -v --tb=short
 
+      - name: Run API route tests
+        run: |
+          PYTHONPATH=. pytest tests/api/ -v --tb=short
+
       - name: Run integration tests
         run: |
           PYTHONPATH=. pytest tests/integration/ -v --tb=short
+
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check . --select E,F --ignore E501
+        continue-on-error: true
 
       - name: Validate interface schemas (YAML syntax)
         run: |

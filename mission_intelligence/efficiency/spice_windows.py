@@ -139,6 +139,8 @@ class SpiceWindowCalculator:
     ) -> List[OrbitalWindow]:
         """Real SPICE-based computation.  Called only when kernels are ready."""
 
+        _MOON_RADIUS_KM = 1737.4  # IAU mean radius
+
         moon_id    = "MOON"
         earth_id   = "EARTH"
         sun_id     = "SUN"
@@ -197,7 +199,7 @@ class SpiceWindowCalculator:
         """Elevation angle (degrees) of *target* above local horizon at site."""
         pos, _ = spice.spkpos(target, et, frame, abcorr, obs)
         # Vector from site to target in body-fixed frame
-        rel = [pos[j] - site_vec[j] * 1737.4e3 for j in range(3)]  # Moon R=1737.4 km
+        rel = [pos[j] - site_vec[j] * _MOON_RADIUS_KM * 1e3 for j in range(3)]
         dot = sum(site_vec[j] * rel[j] for j in range(3))
         mag = math.sqrt(sum(x**2 for x in rel))
         if mag < 1e-6:

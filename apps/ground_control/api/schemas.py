@@ -65,6 +65,7 @@ class RankedCandidateResponse(BaseModel):
     communication_score: float
     risk_score: float
     max_slope_deg: float
+    roughness_rms_m: float
     psr_access_fraction: float
     rock_abundance: float
 

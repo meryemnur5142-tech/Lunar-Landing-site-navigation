@@ -1,12 +1,14 @@
 """
 API route tests using FastAPI TestClient (no running server required).
 
-Covers all 5 endpoints:
+Covers all 7 endpoints:
   GET  /health
   GET  /api/v1/candidates
   POST /api/v1/evaluate
   GET  /api/v1/constraints
   GET  /api/v1/mission/status
+  GET  /efficiency/craters
+  GET  /efficiency/windows/{candidate_id}
 
 Requires: pip install httpx2
 """
@@ -196,3 +198,58 @@ class TestMissionStatusEndpoint:
     def test_tbd_count_positive(self):
         body = client.get("/api/v1/mission/status").json()
         assert body["tbd_open_count"] > 0
+
+
+# ---------------------------------------------------------------------------
+# GET /efficiency/craters
+# ---------------------------------------------------------------------------
+
+class TestEfficiencyCratersEndpoint:
+    def test_returns_200(self):
+        assert client.get("/efficiency/craters").status_code == 200
+
+    def test_returns_list(self):
+        body = client.get("/efficiency/craters").json()
+        assert isinstance(body, list)
+        assert len(body) > 0
+
+    def test_crater_has_required_fields(self):
+        body = client.get("/efficiency/craters").json()
+        for c in body:
+            assert "candidate_id" in c
+            assert "crater_name" in c
+            assert "max_slope_deg" in c
+            assert "psr_access_fraction" in c
+
+
+# ---------------------------------------------------------------------------
+# GET /efficiency/windows/{candidate_id}
+# ---------------------------------------------------------------------------
+
+class TestEfficiencyWindowsEndpoint:
+    def test_returns_200_for_valid_id(self):
+        assert client.get("/efficiency/windows/SP-001").status_code == 200
+
+    def test_returns_404_for_unknown_id(self):
+        assert client.get("/efficiency/windows/NONEXISTENT").status_code == 404
+
+    def test_returns_four_windows(self):
+        body = client.get("/efficiency/windows/SP-002").json()
+        assert len(body["windows"]) == 4
+
+    def test_efficiency_in_range(self):
+        body = client.get("/efficiency/windows/SP-002").json()
+        for w in body["windows"]:
+            assert 85.0 <= w["efficiency_pct"] <= 99.0
+
+    def test_has_recommended_window(self):
+        body = client.get("/efficiency/windows/SP-001").json()
+        assert "recommended_window_id" in body
+        ids = [w["window_id"] for w in body["windows"]]
+        assert body["recommended_window_id"] in ids
+
+    def test_all_sample_candidates_have_windows(self):
+        from luna_ai.sample_data import CANDIDATES
+        for c in CANDIDATES:
+            r = client.get(f"/efficiency/windows/{c.candidate_id}")
+            assert r.status_code == 200, f"{c.candidate_id} returned {r.status_code}"

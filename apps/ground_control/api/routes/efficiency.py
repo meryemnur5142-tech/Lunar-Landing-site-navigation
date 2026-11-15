@@ -42,7 +42,7 @@ class EfficiencyWindowResponse(BaseModel):
     terrain_score: float
     window_quality: float
     dominant_factor: str
-    conditions: dict
+    conditions: dict[str, str]
 
 
 class EfficiencyWindowsResponse(BaseModel):

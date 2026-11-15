@@ -50,7 +50,7 @@ def list_constraints():
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _run_and_format(result) -> EvaluateResponse:
+def _run_and_format(result: "PipelineResult") -> EvaluateResponse:  # noqa: F821
     ranked = []
     for i, rc in enumerate(result.ranked, start=1):
         c = rc.candidate
@@ -67,6 +67,7 @@ def _run_and_format(result) -> EvaluateResponse:
                 communication_score=round(rc.communication_score, 4),
                 risk_score=round(rc.risk_score, 4),
                 max_slope_deg=c.max_slope_deg,
+                roughness_rms_m=c.roughness_rms_m,
                 psr_access_fraction=c.psr_access_fraction,
                 rock_abundance=c.rock_abundance,
             )
