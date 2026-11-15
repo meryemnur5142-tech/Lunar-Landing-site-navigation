@@ -116,4 +116,32 @@ CANDIDATES: list[LandingSiteCandidate] = [
         psr_access_fraction=0.31,
         metadata=_meta("LROC-estimated"),
     ),
+    # Malapert A — exceptionally flat terrain, low PSR access; best terrain score
+    LandingSiteCandidate(
+        candidate_id="SP-006",
+        crater=_crater("R-00006", "Malapert A", -86.0, 357.4, 15.0),
+        landing_ellipse_center_lat=-85.8,
+        landing_ellipse_center_lon=357.6,
+        landing_ellipse_semi_major_m=450.0,
+        landing_ellipse_semi_minor_m=220.0,
+        max_slope_deg=3.5,           # best terrain among candidates
+        roughness_rms_m=0.12,
+        rock_abundance=0.05,
+        psr_access_fraction=0.18,    # low PSR — primarily an engineering target
+        metadata=_meta("LROC-estimated"),
+    ),
+    # Cabeus A — confirmed water-ice site (LCROSS), high hazard density
+    LandingSiteCandidate(
+        candidate_id="SP-007",
+        crater=_crater("R-00007", "Cabeus A", -85.3, 316.0, 42.0),
+        landing_ellipse_center_lat=-85.1,
+        landing_ellipse_center_lon=316.5,
+        landing_ellipse_semi_major_m=550.0,
+        landing_ellipse_semi_minor_m=275.0,
+        max_slope_deg=11.2,
+        roughness_rms_m=0.38,
+        rock_abundance=0.16,
+        psr_access_fraction=0.58,    # confirmed volatile deposits (LCROSS 2009)
+        metadata=_meta("LCROSS-estimated"),
+    ),
 ]

@@ -102,3 +102,49 @@ class MissionStatusResponse(BaseModel):
     safety_state: str
     tbd_open_count: int
     note: str
+
+
+# ---------------------------------------------------------------------------
+# Comparison (POST /api/v1/compare)
+# ---------------------------------------------------------------------------
+
+class RankedScenarioItem(BaseModel):
+    rank: int
+    candidate_id: str
+    crater_name: Optional[str]
+    total_score: float
+
+
+class ScenarioResult(BaseModel):
+    label: str
+    weights: ScoringWeightsInput
+    ranked: List[RankedScenarioItem]
+
+
+class RankChangeItem(BaseModel):
+    candidate_id: str
+    crater_name: str
+    rank_a: int
+    rank_b: int
+    delta: int
+    direction: str  # "up" | "down" | "same"
+
+
+class CompareRequest(BaseModel):
+    weights_a: ScoringWeightsInput = ScoringWeightsInput(
+        science=0.50, energy=0.20, thermal=0.10, communication=0.10, risk=0.10
+    )
+    weights_b: ScoringWeightsInput = ScoringWeightsInput(
+        science=0.20, energy=0.20, thermal=0.20, communication=0.10, risk=0.30
+    )
+    label_a: str = "Bilim Odaklı"
+    label_b: str = "Güvenlik Odaklı"
+
+
+class CompareResponse(BaseModel):
+    scenario_a: ScenarioResult
+    scenario_b: ScenarioResult
+    rank_changes: List[RankChangeItem]
+    top_pick_changed: bool
+    top_pick_a: str
+    top_pick_b: str
