@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0",
+  "region": "Mons Mouton / VIPER referans alanı",
+  "reference_crs": "MOON_ME; polar stereographic; GDAL/GeoTIFF geotransformu ayrıca denetlenmeli",
+  "layers": [
+    {
+      "id": "ENV-01",
+      "name": "lola_dem",
+      "kind": "GeoTIFF",
+      "path": null,
+      "url": "https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+      "source": "NASA GSFC PGDA",
+      "source_index": "https://pgda.gsfc.nasa.gov/products/90",
+      "valid_real_data": false,
+      "note": "20m yükseklik DEM; kaynaktan yalnız ROI kesilebilir."
+    },
+    {
+      "id": "ENV-02",
+      "name": "lola_vertical_error",
+      "kind": "GeoTIFF",
+      "path": null,
+      "source": "NASA GSFC PGDA",
+      "product_basename": "LDEM_80S_20MPP_ADJ_ERR.TIF",
+      "source_index": "https://pgda.gsfc.nasa.gov/products/90",
+      "valid_real_data": false,
+      "note": "İlgili ERR katmanını aynı projeksiyon ve pencereyle sağla."
+    },
+    {
+      "id": "ENV-02",
+      "name": "lola_effective_resolution",
+      "kind": "GeoTIFF",
+      "path": null,
+      "source": "NASA GSFC PGDA",
+      "product_basename": "LDEM_80S_20MPP_ADJ_EFFRES.TIF",
+      "valid_real_data": false
+    },
+    {
+      "id": "ENV-03",
+      "name": "shadowcam_psr_mask",
+      "kind": "GeoJSON polygon / binary raster",
+      "path": null,
+      "source": "NASA ShadowCam / Danuri",
+      "source_index": "https://www.nasa.gov/blogs/missions/2023/02/09/nasas-shadowcam-images-permanently-shadowed-regions-from-lunar-orbit/",
+      "valid_real_data": false,
+      "note": "ShadowCam görüntüsü kendi başına PSR vektör maskesi değildir; veri işleme gerektirir."
+    },
+    {
+      "id": "ENV-03",
+      "name": "pgda_lpsr_alternative",
+      "kind": "GeoTIFF",
+      "path": null,
+      "source": "NASA GSFC PGDA LOLA",
+      "product_basename": "LPSR_80S_20MPP_ADJ.TIF",
+      "source_index": "https://pgda.gsfc.nasa.gov/products/90",
+      "valid_real_data": false,
+      "note": "LOLA/PGDA PSR ürünü; ShadowCam ile aynı köken değil."
+    },
+    {
+      "id": "ENV-04",
+      "name": "jpl_spice_de440_moon_me",
+      "kind": "SPICE kernels",
+      "path": null,
+      "source": "NAIF/JPL",
+      "source_index": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/",
+      "valid_real_data": false,
+      "required_filenames": [
+        "naif0012.tls",
+        "de440s.bsp",
+        "moon_pa_de440_200625.bpc",
+        "moon_de440_250416.tf"
+      ]
+    },
+    {
+      "id": "ENV-05",
+      "name": "lroc_nac_rock_obstacles",
+      "kind": "float 0..1 GeoTIFF",
+      "path": null,
+      "source": "LROC NAC ve doğrulanmış kaya segmentasyonu",
+      "source_index": "https://lroc.im-ldi.com/images/downloads",
+      "valid_real_data": false,
+      "note": "Ham görüntü doğrudan kaya yoğunluğu değildir."
+    },
+    {
+      "id": "ENV-06",
+      "name": "diviner_surface_temperature",
+      "kind": "Kelvin GeoTIFF",
+      "path": null,
+      "source": "Diviner / PDS",
+      "source_index": "https://www.diviner.ucla.edu/data",
+      "valid_real_data": false,
+      "note": "Aynı lokasyon, zaman/istatistik ve koordinat sistemine denklenmeli."
+    }
+  ],
+  "previous_git_upload_hint": {
+    "known_terrain_branch": "veri/site20-arazi",
+    "known_slope_geotiff": "data/terrain/site20/Site20_final_adj_5mpp_slp.tif",
+    "verified_in_this_runtime": false,
+    "must_not_use_as_dem": true,
+    "other_site20_filenames_unknown": true
+  },
+  "note": "Bu manifest kaynağı listeler; raster/kernel kendisini içermez. Başka branchteki dosyalar otomatik olarak dahil değildir."
+}

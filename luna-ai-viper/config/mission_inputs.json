@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "region": {
+    "name": "Mons Mouton/VIPER yaklaşık ROI merkezi",
+    "center_lon_deg_east": 31.62,
+    "center_lat_deg": -85.42,
+    "roi_radius_km": 10,
+    "center_is_verified_landing_candidate": false,
+    "target_crater_verified": false,
+    "target_crater_center_lon_deg_east": null,
+    "target_crater_center_lat_deg": null
+  },
+  "timeline": {
+    "mission_epoch_utc": null,
+    "demo_epoch_utc": "2026-11-27T00:00:00Z",
+    "analysis_window_days": 30,
+    "step_hours": 6,
+    "mission_date_is_final": false
+  },
+  "scoring": {
+    "weights": {
+      "egim": 25.0,
+      "puruzluluk": 20.0,
+      "iletisim": 15.0,
+      "gunes": 15.0,
+      "karanlik_hedef": 10.0,
+      "yerel_rolyef": 10.0,
+      "veri_guvenilirligi": 5.0
+    },
+    "settings": {
+      "iniş_egim_limiti_deg": 15.0,
+      "elips_yari_eksen_m": [
+        500.0,
+        250.0
+      ],
+      "puruz_limit_m": 10.0,
+      "rolyef_limit_m": 100.0,
+      "dunya_min_el_deg": 5.0,
+      "karanlik_oran_esik": 0.05,
+      "aday_aralik_m": 500.0,
+      "min_secim_aralik_m": 1500.0,
+      "pencere_gun": 30.0,
+      "adim_saat": 6.0,
+      "nan_orani_max_en_iyi": 0.1,
+      "nan_orani_max_riskli": 0.5,
+      "yuzde_modu": "mutlak"
+    },
+    "scoring_is_mission_certified": false
+  },
+  "rover": {
+    "reference_name": "VIPER referans modeli",
+    "parameters": {
+      "rover_kutlesi_kg": 447.0,
+      "batarya_Wh": 5420.0,
+      "batarya_kimyasi": null,
+      "psr_giris_soc_min": 0.85,
+      "soc_min": 0.1,
+      "panel_pik_W": 320.0,
+      "panel_normal_el_deg": 0.0,
+      "P_hibernasyon_W": 108.0,
+      "P_surus_W": 300.0,
+      "P_operasyon_W": 600.0,
+      "hiz_ms": 0.1,
+      "max_egim_deg": 15.0,
+      "egim_ceza": 1.0,
+      "golge_ceza": 0.3
+    },
+    "source_tags": {
+      "NASA_reference": "K",
+      "derived": "T",
+      "team_assumption": "V"
+    },
+    "use_as_built_rover": false
+  },
+  "real_data": {
+    "dem_geotiff_path": null,
+    "dem_error_geotiff_path": null,
+    "dem_effres_geotiff_path": null,
+    "shadowcam_psr_geojson_path": null,
+    "lroc_rock_fraction_geotiff_path": null,
+    "diviner_temperature_geotiff_path": null,
+    "crater_catalog_csv_path": null,
+    "spice_kernel_directory": null
+  },
+  "unresolved_critical": {
+    "battery_chemistry": null,
+    "battery_max_safe_soc_fraction": null,
+    "regolith_travel_energy_measured_Wh_m": null,
+    "heater_power_W": null,
+    "max_thermal_darkness_min": null,
+    "sensor_package": null,
+    "imu_noise_model": null,
+    "wheel_odometry_sigma": null,
+    "antenna_mast_height_measured_m": null,
+    "antenna_gain_dbi": null,
+    "landing_epoch": null
+  },
+  "runtime_modes": [
+    "demo_synthetic",
+    "real_preliminary"
+  ],
+  "status": "INCOMPLETE_REAL_FLIGHT_NOT_VALIDATED"
+}

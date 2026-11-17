@@ -1,0 +1,641 @@
+{
+  "belge_id": "LUNA-AI-DATA-REQ-001",
+  "belge_surum": "1.0",
+  "referans_ust_dosya": "docs/LUNA_AI_DATA_REQ_001_ORIJINAL.md",
+  "kayit_sayisi": 36,
+  "kapsam": "36/36 gereksinim için doküman gereği ve kod/gerçek veri durumu; eksikler null",
+  "gereksinimler": [
+    {
+      "kod": "ENV-01",
+      "ad": "LOLA DEM (Yükseklik Modeli)",
+      "veri_format": "GeoTIFF (`.tif`) / 2D NumPy array",
+      "gereken_olcek_ve_kapsam": "5m – 20m/px (bölgesel 80m/px)",
+      "hedef_modul": "`data-platform/processing/terrain_analyzer.py`",
+      "aciklama": "Horn (1981) yöntemi ile eğim ve pürüzlülük türetimi için.",
+      "veri_durumu": "KAYNAK_TANIMLI_DOSYA_YOK",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "kaynak_url": "https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+        "bulundugu_dizin": null,
+        "islenmis_dem_yolu": null,
+        "cozunurluk_m": 20,
+        "piksel_alani": "Ay guney kutbu (80°G–90°G)"
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": "20m kaynak URL kodda mevcut; gerçek GeoTIFF bu pakete eklenmedi. Önceden yüklenen Site20 eğim dosyası DEM yükseklik verisi değildir."
+    },
+    {
+      "kod": "ENV-02",
+      "ad": "DEM Doğruluk Payı ($\\sigma_{\\text{vertical}}$)",
+      "veri_format": "Float (metre)",
+      "gereken_olcek_ve_kapsam": "1-sigma dikey hata payı ($\\approx 1.0\\text{ m}$)",
+      "hedef_modul": "`environment_product.schema.yaml`",
+      "aciklama": "Belirsizlik yayılımı (*Uncertainty Visible*) hesabı için zorunludur.",
+      "veri_durumu": "OLCUM_DOSYASI_YOK",
+      "kod_durumu": "OPSİYONEL_ERR_KABUL_EDILIYOR",
+      "deger": {
+        "kalite_dosyasi": null,
+        "yaklasik_1sigma_m": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": "Belgedeki yaklaşık 1m bir ölçüm değil hedef bilgisi; ilgili ERR rasterı olmadıkça belirsizlik hesabı geçerli sayı vermez."
+    },
+    {
+      "kod": "ENV-03",
+      "ad": "ShadowCam PSR Maskesi",
+      "veri_format": "GeoJSON Poligon / Binary Raster",
+      "gereken_olcek_ve_kapsam": "$< 2\\text{ m/px}$ çözünürlük",
+      "hedef_modul": "`domain/environment/models.py`",
+      "aciklama": "Kalıcı gölge bölgelerinin sınırları ve erişilebilirlik alanı.",
+      "veri_durumu": "KAYNAK_TESPITI_GEREK",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "shadowcam_psr_maskesi": null,
+        "alternatif_pgd_lpsr_maskesi": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": "Kodun karanlık hedefi 30gün örneklenmiş aydınlanmadan ürettiği yaklaşık maske; bu ShadowCam PSR poligonu değildir."
+    },
+    {
+      "kod": "ENV-04",
+      "ad": "SPICE DE440 Efemeris Verileri",
+      "veri_format": "SPICE Kernelleri (`.bsp`, `.tpc`)",
+      "gereken_olcek_ve_kapsam": "2024–2035 zaman aralığı",
+      "hedef_modul": "`earth_visibility_windows.schema.yaml`",
+      "aciklama": "Güneş ve Dünya'nın yerel ufuk üstü yükseklik açıları ve tutulmalar.",
+      "veri_durumu": "KAYNAK_TANIMLI_DOSYA_YOK",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "kernel_names": [
+          "naif0012.tls",
+          "de440s.bsp",
+          "moon_pa_de440_200625.bpc",
+          "moon_de440_250416.tf"
+        ],
+        "kernel_folder": null,
+        "utc_aralik": "2024–2035 (belge hedefi)"
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": "Çekirdekler çalışma sırasında indirilebilir; MOON_ME frame ve dönem kapsamı çalışma zamanında doğrulanmalı. PGDA DEM üretimindeki DE421 referansı ile DE440 ephemeris aynı şey değildir."
+    },
+    {
+      "kod": "ENV-05",
+      "ad": "Kaya & Engel Yoğunluk Haritası",
+      "veri_format": "2D Float Array (`[0.0 - 1.0]`)",
+      "gereken_olcek_ve_kapsam": "$\\le 5\\text{ m/px}$ (LROC NAC bazlı)",
+      "hedef_modul": "`hard_constraints_catalog.yaml` (`HC-003`)",
+      "aciklama": "Engel fraksiyonu ($\\le 0.20$ eşiği; aşan alanlar elenir).",
+      "veri_durumu": "SADECE_BELGE_ESIGI",
+      "kod_durumu": "PUANLAMAYA_ENTEGRE_DEGIL",
+      "deger": {
+        "engel_fraksiyonu_raster": null,
+        "limit_fraksiyon": 0.2,
+        "cozunurluk_hedef_m": 5
+      },
+      "deger_kaynagi": "ihtiyac_belgesi",
+      "teyit_gerekiyor": true,
+      "notlar": "LROC NAC görüntüsü hazır kaya yoğunluğu rasterı değildir; kaya sınıflama doğrulanmadan değer yok."
+    },
+    {
+      "kod": "ENV-06",
+      "ad": "Diviner Yüzey Sıcaklık Haritası",
+      "veri_format": "Kelvin ($K$) veya $^\\circ\\text{C}$ Grid",
+      "gereken_olcek_ve_kapsam": "Ay Kutbu ($40\\text{ K} - 120\\text{ K}$)",
+      "hedef_modul": "`hard_constraints_catalog.yaml` (`HC-013`)",
+      "aciklama": "Safe haven ve iniş elipsi termal uygunluğu.",
+      "veri_durumu": "VERI_YOK",
+      "kod_durumu": "ENTEGRE_DEGIL",
+      "deger": {
+        "sicaklik_raster_kelvin": null,
+        "olcum_zamani_utc": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": "Diviner gerçek sıcaklık rastrı yok; 40–120K belge aralığı ölçüm yerine geçmez."
+    },
+    {
+      "kod": "VEH-01",
+      "ad": "Araç Kütlesi ($M_{\\text{rover}}$)",
+      "birim": "$\\text{kg}$",
+      "belgedeki_hedef_ve_aralik": "$100 - 300\\text{ kg}$",
+      "hedef_modul": "`vehicle/mobility-control`",
+      "oncelik": "P-MED",
+      "veri_durumu": "VIPER_REFERANSI",
+      "kod_durumu": "MEVCUT",
+      "deger": 447.0,
+      "deger_kaynagi": "ay_navigator.RoverParam [K]",
+      "teyit_gerekiyor": true,
+      "notlar": "447 kg VIPER referansı; belgedeki 100–300 kg genel beklenen aralıkla ÇELİŞİYOR."
+    },
+    {
+      "kod": "VEH-02",
+      "ad": "Maksimum Tırmanma Açısı ($\\theta_{\\text{climb}}$)",
+      "birim": "Derece ($^\\circ$)",
+      "belgedeki_hedef_ve_aralik": "$20^\\circ - 30^\\circ$",
+      "hedef_modul": "`HC-005` (Çevre Profil Eğimi)",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "TAKIM_VARSAYIMI",
+      "kod_durumu": "MEVCUT",
+      "deger": 15.0,
+      "deger_kaynagi": "ay_navigator.RoverParam [V]",
+      "teyit_gerekiyor": true,
+      "notlar": "Rota max=15°; belgedeki 20–30° tırmanma hedefiyle FARKLI; bu eşik araç tarafından kanıtlanmadı."
+    },
+    {
+      "kod": "VEH-03",
+      "ad": "Maksimum İniş Eğim Sınırı ($\\theta_{\\text{max}}$)",
+      "birim": "Derece ($^\\circ$)",
+      "belgedeki_hedef_ve_aralik": "$\\le 15^\\circ$",
+      "hedef_modul": "`HC-001` (İniş Alanı Eğimi)",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "SABIT_BELGE_ESIGI",
+      "kod_durumu": "MEVCUT",
+      "deger": 15.0,
+      "deger_kaynagi": "belge + ay_api",
+      "teyit_gerekiyor": false,
+      "notlar": "İniş elipsi eğim sınırı=15°. %95 eğim metrik kullanımı ile tüm hücrelerin <=15° olduğu garantisi farklıdır."
+    },
+    {
+      "kod": "VEH-04",
+      "ad": "Maksimum Yüzey Pürüzlülüğü ($RMS_{\\text{max}}$)",
+      "birim": "Metre ($\\text{m}$)",
+      "belgedeki_hedef_ve_aralik": "$\\le 0.30\\text{ m}$",
+      "hedef_modul": "`HC-002` (İniş Bacak Limiti)",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "ESIK_UYUMSUZ",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "belge_limit_m": 0.3,
+        "kod_puruz_skor_sifir_m": 10.0,
+        "kod_pencere_m": 100
+      },
+      "deger_kaynagi": "ihtiyac_belgesi ve ay_api",
+      "teyit_gerekiyor": true,
+      "notlar": "0.3m iniş bacağı limitini, kodun 100m penceredeki 10m skor eşiği sağlamıyor; altmetre veri ve sert kısıt gerekli."
+    },
+    {
+      "kod": "VEH-05",
+      "ad": "Nominal Gezinti Hızı ($v_{\\text{nom}}$)",
+      "birim": "$\\text{m/s}$",
+      "belgedeki_hedef_ve_aralik": "$0.05 - 0.15\\text{ m/s}$",
+      "hedef_modul": "`autonomy/global-planner`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "TAKIM_VARSAYIMI",
+      "kod_durumu": "MEVCUT",
+      "deger": 0.1,
+      "deger_kaynagi": "RoverParam [V]",
+      "teyit_gerekiyor": true,
+      "notlar": "0.10m/s; belge 0.05–0.15 m/s aralığına uyuyor."
+    },
+    {
+      "kod": "VEH-06",
+      "ad": "Zemin Enerji Tüketim Katsayısı ($e_{\\text{travel}}$)",
+      "birim": "$\\text{Wh/m}$",
+      "belgedeki_hedef_ve_aralik": "Araç tekerlek/motor eğrisi",
+      "hedef_modul": "`safety/safety_budget.md`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "TÜRETILMIS_VARSAYIM",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "model_Wh_m": 0.833333,
+        "olculmus_Wh_m": null
+      },
+      "deger_kaynagi": "300 W / (0.1 m/s * 3600 s/h)",
+      "teyit_gerekiyor": true,
+      "notlar": "Bu basitleştirilmiş Wh/m=0.8333 tahminidir. Regolit, eğim, kayma, ısıtma ve gerçek sürüş eğrisi içermez; P-CRIT kapanmadı."
+    },
+    {
+      "kod": "VEH-07",
+      "ad": "3-Sigma İniş Elipsi Yarı Eksenleri",
+      "birim": "Metre ($\\text{m}$)",
+      "belgedeki_hedef_ve_aralik": "$a=500\\text{m},\\ b=250\\text{m}$",
+      "hedef_modul": "`domain/crater/models.py`",
+      "oncelik": "P-MED",
+      "veri_durumu": "TAKIM_VARSAYIMI",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "a_yari_eksen_m": 500,
+        "b_yari_eksen_m": 250,
+        "anlam": "3sigma varsayim"
+      },
+      "deger_kaynagi": "ay_api.VARSAYILAN_AYAR",
+      "teyit_gerekiyor": true,
+      "notlar": "Yarı eksenler belgeye uyuyor fakat iniş GNC dağılımıyla teyit edilmedi."
+    },
+    {
+      "kod": "VEH-08",
+      "ad": "Mast / Anten Yüksekliği ($h_{\\text{mast}}$)",
+      "birim": "Metre ($\\text{m}$)",
+      "belgedeki_hedef_ve_aralik": "$0.5 - 2.0\\text{ m}$",
+      "hedef_modul": "`simulation/environment-model`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "VARSAYIM_OLCUM_YOK",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "kod_navigator_cli_m": 2.0,
+        "gercek_mast_m": null
+      },
+      "deger_kaynagi": "ay_navigator --anten-m",
+      "teyit_gerekiyor": true,
+      "notlar": "Varsayılan 2m yalnızca CLI için; ay_api Dünya oran hesabına mast yüksekliğini geçirmiyor."
+    },
+    {
+      "kod": "PWR-01",
+      "ad": "Toplam Batarya Kapasitesi ($C_{\\text{bat}}$)",
+      "birim": "$\\text{Wh}$",
+      "belgedeki_hedef_ve_aralik": "$500 - 1500\\text{ Wh}$",
+      "hedef_modul": "`resource_state.schema.yaml`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "VIPER_REFERANSI",
+      "kod_durumu": "MEVCUT",
+      "deger": 5420.0,
+      "deger_kaynagi": "RoverParam [K]",
+      "teyit_gerekiyor": true,
+      "notlar": "5420Wh VIPER referansı; belgedeki 500–1500Wh genel aralıkla ÇELİŞİYOR."
+    },
+    {
+      "kod": "PWR-02",
+      "ad": "Batarya Kimyası & Güvenli Sınırlar",
+      "birim": "Metin / Tip",
+      "belgedeki_hedef_ve_aralik": "LiFePO4 / NMC / Li-Po",
+      "hedef_modul": "`power/`, `thermal/`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "KIMYA_BELIRSIZ",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "kimya": null,
+        "soc_min": 0.1,
+        "soc_max": null
+      },
+      "deger_kaynagi": "RoverParam",
+      "teyit_gerekiyor": true,
+      "notlar": "Batarya kimyası ile donanım güvenli alt/üst SoC sınırları doğrulanmadı. 0.10 rezerv takım varsayımıdır."
+    },
+    {
+      "kod": "PWR-03",
+      "ad": "Minimum PSR Giriş SoC Eşiği",
+      "birim": "Yüzde ($\\%$)",
+      "belgedeki_hedef_ve_aralik": "$\\ge \\%80 - \\%90$",
+      "hedef_modul": "`HC-008`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "TAKIM_VARSAYIMI",
+      "kod_durumu": "MEVCUT",
+      "deger": 0.85,
+      "deger_kaynagi": "RoverParam [V]",
+      "teyit_gerekiyor": true,
+      "notlar": "0.85 (85%) belge aralığına uyuyor; ancak ay_api puanlamasında ve navigatörde zorunlu PSR giriş kontrolü olup olmadığı ayrıca doğrulanmalı."
+    },
+    {
+      "kod": "PWR-04",
+      "ad": "Dönüş Enerji Rezervi Modeli ($E_{\\text{reserve}}$)",
+      "birim": "$\\text{Wh}$",
+      "belgedeki_hedef_ve_aralik": "$(D \\times Wh/m) + E_{\\text{heat}} + Margin$",
+      "hedef_modul": "`HC-006`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "FORMUL_VAR_EKSIK_GIRDI",
+      "kod_durumu": "NİTELİKSEL_EŞIK",
+      "deger": {
+        "formul": "E_reserve_Wh = D_return_m * e_travel_Wh_m + P_heater_W * t_dark_h + margin_Wh",
+        "marj_Wh": null,
+        "gercek_izinli_rezerv_Wh": null
+      },
+      "deger_kaynagi": "belge",
+      "teyit_gerekiyor": true,
+      "notlar": "Kod mevcut batarya döngüsünü simüle eder ama heater+belirsizlik güvenlik marjı için doğrulanmış girdiler yok."
+    },
+    {
+      "kod": "PWR-05",
+      "ad": "Güneş Paneli Nominal Gücü ($P_{\\text{panel}}$)",
+      "birim": "$\\text{Watt}$",
+      "belgedeki_hedef_ve_aralik": "$300 - 800\\text{ W}$",
+      "hedef_modul": "`power/`, `HC-009`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "VIPER_REFERANSI",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "tek_yuz_pik_W": 320.0,
+        "total_panel_W": null
+      },
+      "deger_kaynagi": "RoverParam [K]",
+      "teyit_gerekiyor": true,
+      "notlar": "320W tek yüz TEPE güç; toplam/nominal tüm panel gücü değildir."
+    },
+    {
+      "kod": "PWR-06",
+      "ad": "Panel Yönelim / Verim Fonksiyonu",
+      "birim": "Model",
+      "belgedeki_hedef_ve_aralik": "$\\cos(\\theta_{\\text{sun}})$ veya servo takip",
+      "hedef_modul": "`domain/mission/models.py`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "TAKIM_VARSAYIMI",
+      "kod_durumu": "MEVCUT",
+      "deger": {
+        "model": "gunes_isin_acisina_bagli_yansima",
+        "panel_normal_el_deg": 0.0
+      },
+      "deger_kaynagi": "navigator isik_gucu_haritasi",
+      "teyit_gerekiyor": true,
+      "notlar": "Yönelim varsayımları araç kontrollü panel yönelimi ölçümü değildir."
+    },
+    {
+      "kod": "PWR-07",
+      "ad": "Sistem Taban Yükü (Avionik/Hotel)",
+      "birim": "$\\text{Watt}$",
+      "belgedeki_hedef_ve_aralik": "$50 - 100\\text{ W}$ (Sabit tüketim)",
+      "hedef_modul": "`power/`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "OLCUM_YOK",
+      "kod_durumu": "AYRICA_MODELLENMIYOR",
+      "deger": {
+        "belge_hedef_W": [
+          50,
+          100
+        ],
+        "gercek_avionik_W": null
+      },
+      "deger_kaynagi": "belge",
+      "teyit_gerekiyor": true,
+      "notlar": "P_hibernasyon=108W toplam türetilmiş yük, aviyonik taban yükü olduğunu kanıtlamaz."
+    },
+    {
+      "kod": "PWR-08",
+      "ad": "Enerji Tahmin Belirsizliği ($\\sigma_{\\text{energy}}$)",
+      "birim": "Yüzde ($\\%$)",
+      "belgedeki_hedef_ve_aralik": "$\\pm \\%10 - \\%20$",
+      "hedef_modul": "`domain/environment/uncertainty_policy.md`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "BELGE_HEDEF_ARALIGI",
+      "kod_durumu": "ENTEGRE_DEGIL",
+      "deger": {
+        "hedef_aralik_oran": [
+          0.1,
+          0.2
+        ],
+        "kalibre_sigma": null
+      },
+      "deger_kaynagi": "belge",
+      "teyit_gerekiyor": true,
+      "notlar": "±%10–20 güven aralığı değil hedef; enerji belirsizlik yayılımı kodda yok."
+    },
+    {
+      "kod": "THM-01",
+      "ad": "Termal Kütle ($m \\cdot c_p$) & İletkenlik ($G$)",
+      "birim": "$\\text{J/K}$ ve $\\text{W/K}$",
+      "belgedeki_hedef_ve_aralik": "Araç gövdesi & MLI izolasyonu",
+      "hedef_modul": "`thermal/`, `HC-007`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "VERI_YOK",
+      "kod_durumu": "ENTEGRE_DEGIL",
+      "deger": {
+        "mc_J_K": null,
+        "G_W_K": null,
+        "MLI_parametreleri": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": null
+    },
+    {
+      "kod": "THM-02",
+      "ad": "Isıtıcı Güç Tüketimi ($P_{\\text{heater}}$)",
+      "birim": "$\\text{Watt}$",
+      "belgedeki_hedef_ve_aralik": "$50 - 200\\text{ W}$",
+      "hedef_modul": "`safety/safety_budget.md`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "BELGE_HEDEF_ARALIGI",
+      "kod_durumu": "ENTEGRE_DEGIL",
+      "deger": {
+        "belge_araligi_W": [
+          50,
+          200
+        ],
+        "heater_W": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": "108W hibernasyon tüketimini ısıtıcı gücü olarak değerlendirmeyin."
+    },
+    {
+      "kod": "THM-03",
+      "ad": "Maksimum Karanlık Dayanım Süresi",
+      "birim": "Dakika",
+      "belgedeki_hedef_ve_aralik": "$30\\text{ dk} - 120\\text{ dk}$",
+      "hedef_modul": "`HC-007`, `HC-010`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "TERMIK_SURE_OLCULMEDI",
+      "kod_durumu": "SADECE_ENERJI_SIMULASYONU",
+      "deger": {
+        "belge_aralik_dakika": [
+          30,
+          120
+        ],
+        "termal_maks_dakika": null,
+        "enerjiye_gore_operasyon_saati": 8.13
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": "Karanlıkta enerjiyle çalışma saati, donmadan termal hayatta kalma süresi değildir."
+    },
+    {
+      "kod": "THM-04",
+      "ad": "Kritik Bileşen Min/Maks Çalışma Limitleri",
+      "birim": "$^\\circ\\text{C}$",
+      "belgedeki_hedef_ve_aralik": "Batarya: $[0^\\circ\\text{C}, 45^\\circ\\text{C}]$<br>Avionik: $[-40^\\circ\\text{C}, +60^\\circ\\text{C}]$",
+      "hedef_modul": "`interfaces/v1/thermal_state.py`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "BELGE_HEDEF_ARALIGI",
+      "kod_durumu": "ENTEGRE_DEGIL",
+      "deger": {
+        "batarya_belge_celcius": [
+          0,
+          45
+        ],
+        "avionik_belge_celcius": [
+          -40,
+          60
+        ],
+        "dogrulanmis_limitler": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": null
+    },
+    {
+      "kod": "THM-05",
+      "ad": "Termal Marj Güvenlik Eşiği ($\\Delta T_{\\text{margin}}$)",
+      "birim": "$^\\circ\\text{C}$",
+      "belgedeki_hedef_ve_aralik": "$5^\\circ\\text{C}$ (FDIR erken uyarı)",
+      "hedef_modul": "`safety/safety_budget.md`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "SABIT_BELGE_ESIGI",
+      "kod_durumu": "ENTEGRE_DEGIL",
+      "deger": {
+        "belge_termal_marj_c": 5,
+        "hesaplanabilir": false
+      },
+      "deger_kaynagi": "belge",
+      "teyit_gerekiyor": false,
+      "notlar": "5°C kabul eşiği var; sıcaklık tahmini ve sensör olmadan hesaplanamaz."
+    },
+    {
+      "kod": "NAV-01",
+      "ad": "Sensör Paketi Konfigürasyonu",
+      "birim": "Liste / Model",
+      "belgedeki_hedef_ve_aralik": "LiDAR (Menzil, FOV), Stereo Kamera",
+      "hedef_modul": "`vehicle/localization`, `perception`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "VERI_YOK",
+      "kod_durumu": "EKF_GNC_YOK",
+      "deger": {
+        "lidar": null,
+        "stereo_kamera": null,
+        "imu": null,
+        "sensor_konfig": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": null
+    },
+    {
+      "kod": "NAV-02",
+      "ad": "IMU Gyro/İvmeölçer Sürüklenme ($\\sigma_{\\text{drift}}$)",
+      "birim": "$^\\circ/\\text{hr},\\ \\text{m/s}^2$",
+      "belgedeki_hedef_ve_aralik": "EKF sensör gürültü kovaryansı",
+      "hedef_modul": "`uncertainty_policy.md §3.1`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "VERI_YOK",
+      "kod_durumu": "EKF_GNC_YOK",
+      "deger": {
+        "gyro_bias_deg_hr": null,
+        "accel_noise_m_s2": null,
+        "EKF_Q": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": null
+    },
+    {
+      "kod": "NAV-03",
+      "ad": "Tekerlek Odometri Hata Oranı ($\\sigma_{\\text{odo}}$)",
+      "birim": "Yüzde ($\\%$)",
+      "belgedeki_hedef_ve_aralik": "Mesafe başına kayma oranı",
+      "hedef_modul": "`uncertainty_policy.md §3.1`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "VERI_YOK",
+      "kod_durumu": "EKF_GNC_YOK",
+      "deger": {
+        "odometri_slip_sigma_oran": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": null
+    },
+    {
+      "kod": "NAV-04",
+      "ad": "İniş GNC Handover Konum Belirsizliği",
+      "birim": "Metre ($\\text{m}$)",
+      "belgedeki_hedef_ve_aralik": "Yüzeye iniş anındaki ilk hata",
+      "hedef_modul": "`vehicle/landing-gnc`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "VERI_YOK",
+      "kod_durumu": "INIS_GNC_YOK",
+      "deger": {
+        "handover_xy_sigma_m": null,
+        "handover_z_sigma_m": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": null
+    },
+    {
+      "kod": "NAV-05",
+      "ad": "İzin Verilen Maksimum Konum Hatası",
+      "birim": "Metre ($\\text{m}$)",
+      "belgedeki_hedef_ve_aralik": "Düz arazi: $<0.5\\text{m}$, PSR: $<1.0\\text{m}$, Alarm: $>2.0\\text{m}$",
+      "hedef_modul": "`docs/qar/QAR_TABLE.md` (`NAV-001..006`)",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "SABIT_BELGE_ESIGI",
+      "kod_durumu": "ENTEGRE_DEGIL",
+      "deger": {
+        "duz_arazi_hedef_m": 0.5,
+        "psr_hedef_m": 1.0,
+        "alarm_asimi_m": 2.0,
+        "olculen_konum_sigma_m": null
+      },
+      "deger_kaynagi": "belge",
+      "teyit_gerekiyor": false,
+      "notlar": "GNC takip/uyarı kuralı veri hedefidir; EKF konum hatası şu anda hesaplanmıyor."
+    },
+    {
+      "kod": "COM-01",
+      "ad": "Görev Başlangıç Tarihi (Epoch)",
+      "birim": "UTC (`YYYY-MM-DD`)",
+      "belgedeki_hedef_ve_aralik": "2024–2035 arası bir tarih",
+      "hedef_modul": "`config/open_inputs.md`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "DEMO_TARIH_VAR_GERCEK_YOK",
+      "kod_durumu": "TARIH_GIRISI_VAR",
+      "deger": {
+        "demo_utc": "2026-11-27T00:00:00Z",
+        "gorev_epoch_utc": null
+      },
+      "deger_kaynagi": "ay_api örnek kullanım",
+      "teyit_gerekiyor": true,
+      "notlar": "Demo tarihi kesin görev tarihi yerine kullanılamaz."
+    },
+    {
+      "kod": "COM-02",
+      "ad": "Anten Tipi ve Kazanç Profili",
+      "birim": "Tip / dBi",
+      "belgedeki_hedef_ve_aralik": "Low-Gain / High-Gain Anten",
+      "hedef_modul": "`communication/`, `HC-014`",
+      "oncelik": "P-CRIT",
+      "veri_durumu": "VERI_YOK",
+      "kod_durumu": "RF_LINK_HESABI_YOK",
+      "deger": {
+        "anten_tipi": null,
+        "kazanc_dbi": null,
+        "yer_istasyonu": null
+      },
+      "deger_kaynagi": "kod",
+      "teyit_gerekiyor": true,
+      "notlar": null
+    },
+    {
+      "kod": "COM-03",
+      "ad": "Minimum Dünya Görünürlük Açısı ($\\theta_{\\text{elev}}$)",
+      "birim": "Derece ($^\\circ$)",
+      "belgedeki_hedef_ve_aralik": "$\\ge 5^\\circ$ (Ufuk maskesi)",
+      "hedef_modul": "`HC-014`, `HC-018`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "SABIT_BELGE_ESIGI",
+      "kod_durumu": "MEVCUT",
+      "deger": 5.0,
+      "deger_kaynagi": "ay_api + belge",
+      "teyit_gerekiyor": false,
+      "notlar": "Sadece geometrik yerel görüş; RF bütçesi, anten kazancı ve istasyon kapsaması yok."
+    },
+    {
+      "kod": "COM-04",
+      "ad": "İletişim Zaman Aşımı (Link Timeout)",
+      "birim": "Saniye / Dk",
+      "belgedeki_hedef_ve_aralik": "Uyarı: $15\\text{ dk}$, Zorunlu Dönüş: $60\\text{ dk}$",
+      "hedef_modul": "`safety/safety_budget.md`",
+      "oncelik": "P-HIGH",
+      "veri_durumu": "SABIT_BELGE_ESIGI",
+      "kod_durumu": "FDIR_ENTEGRE_DEGIL",
+      "deger": {
+        "uyari_s": 900,
+        "zorunlu_donus_s": 3600,
+        "uygulandi": false
+      },
+      "deger_kaynagi": "belge",
+      "teyit_gerekiyor": false,
+      "notlar": "İletişim kaybı zaman aşımı beklenen sistem gereksinimi, çalışan koruma değil."
+    }
+  ]
+}
